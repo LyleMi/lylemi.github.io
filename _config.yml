@@ -18,6 +18,8 @@ root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 
+avatar: https://avatars2.githubusercontent.com/u/11925471?s=460&v=4
+
 # Directory
 source_dir: source
 public_dir: public
@@ -81,3 +83,8 @@ deploy:
   type: git
   repo: https://github.com/LyleMi/lylemi.github.io
   branch: master
+
+
+friends:
+
+aboutme: Focus on Web Security and Browser Fuzzing Research
