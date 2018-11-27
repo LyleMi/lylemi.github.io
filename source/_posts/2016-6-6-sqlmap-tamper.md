@@ -10,6 +10,8 @@ categories: web
 
 sqlmap是一个自动化的SQL注入工具，而tamper则是对其进行扩展的一系列脚本，主要功能是对本来的payload进行特定的更改以绕过waf。
 
+<!--more-->
+
 ## 0x01 一个最小的例子
 
 为了说明tamper的结构，让我们从一个最简单的例子开始

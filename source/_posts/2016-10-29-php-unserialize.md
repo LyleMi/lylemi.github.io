@@ -8,6 +8,7 @@ unserialize和serialize这里不做赘述。
 
 unserialize的漏洞在magic function上，如果一个类定义了\_\_wakup()和\_\_destruct()，则该类的实例被反序列化时，会自动调用\_\_wakeup(), 生命周期结束时，则调用\_\_desturct()。
 
+<!--more-->
 
 下面提供一个简单的demo.
 

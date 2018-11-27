@@ -17,6 +17,8 @@ Domato是Google Project Zero的研究员实现的一套DOM Fuzz工具，该Fuzze
 - ``grammar.py`` 解析参数然后调用基础引擎来生成样本
 - ``*.txt`` 用于生成HTML，CSS，js代码的语法库 
 
+<!--more-->
+
 ### 0x01 代码
 
 代码主要完成根据语法生成代码的功能，主要的代码是generator.py和grammar.py，另外的都是语法文件。

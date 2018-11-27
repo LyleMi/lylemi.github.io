@@ -6,6 +6,8 @@ tags:
 
 做SSRF测试的时候，常提到用类似 `ａ` 字符来bypass过滤器，之前没有做深究，偶然的一次机会，发现bａidu.com(\uff41)能跳转到百度，但是bаidu.com(\u0430)会被认为是一个新的IDN域名，并不指向baidu.com。
 
+<!--more-->
+
 先在浏览器中打开工具调试，发现第一个case在HTTP包中的Host字段的值是baidu.com，那么应该是先处理过再发送的请求。
 
 想到了其中可能会有编码转换，简单看了一下IDN的[RFC](http://www.ietf.org/rfc/rfc3490.txt)没有找到有价值的信息，于是开始找源码，以idna为关键字在[WebKit](https://github.com/WebKit/webkit)的源码中找到相关函数 `uidna_nameToUnicode` ，在Chromium中也找到这个函数。
