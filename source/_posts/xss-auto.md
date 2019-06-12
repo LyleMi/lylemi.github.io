@@ -6,7 +6,7 @@ tags: XSS 自动化
 
 ## 序
 
-我在之前的一篇[文章](https://blog.lyle.ac.cn/2019/04/06/Web-Application-Auto-Audit/)中简单讲解了Web应用代码自动化审计的几种实现方式。
+我在之前的一篇[文章](https://lylemi.github.io/2019/04/06/Web-Application-Auto-Audit/)中简单讲解了Web应用代码自动化审计的几种实现方式。
 
 这篇文章以自动化辅助挖掘XSS漏洞漏洞为例，简单的讲解一个实际的灰盒分析实现的例子。
 
