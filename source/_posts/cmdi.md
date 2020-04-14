@@ -1,9 +1,9 @@
 ---
 title: 命令注入成因小谈
 date: 2019-10-19 09:23:51
+categories: Web
 tags:
     - Command Injection
-    - Web Security
 ---
 
 最近做测试的时候，发现不同平台/语言下命令注入的结果会有一定的不同，于是尝试对命令注入的成因做了一个更细致的探索。

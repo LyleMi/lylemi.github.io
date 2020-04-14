@@ -2,7 +2,10 @@
 layout: post
 title:  "php unserialize()/wakeup()漏洞"
 date:   2016-10-29 09:31:40 +0800
-categories: web
+categories: Web
+tags:
+    - 反序列化
+    - PHP
 ---
 unserialize和serialize这里不做赘述。
 

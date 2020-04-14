@@ -1,7 +1,8 @@
 ---
 title: 基于Gadgets绕过XSS防御机制
 date: 2019-02-27 09:49:17
-tags:
+categories: Web
+tags: XSS
 ---
 
 这篇文章是之前对CCS 2018 `Code-Reuse Attacks for the Web Breaking Cross-Site Scripting Mitigations via Script Gadgets` 的阅读笔记，最近整理资料发现放了挺久，于是稍做了一些整理和扩展发了出来。

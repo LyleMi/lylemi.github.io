@@ -2,7 +2,8 @@
 layout: post
 title: IDN Spoof漏洞自动化挖掘
 date: 2018-12-08 09:34:39
-tags:
+categories: Misc
+tags: Unicode
 ---
 
 # 0x00 背景

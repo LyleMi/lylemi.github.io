@@ -1,6 +1,7 @@
 ---
 title: Web应用代码自动化审计浅谈
 date: 2019-04-06 18:17:22
+categories: Web
 tags: 自动化
 ---
 

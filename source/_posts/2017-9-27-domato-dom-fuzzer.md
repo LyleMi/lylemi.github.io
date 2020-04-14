@@ -2,7 +2,8 @@
 layout: post
 title:  "Domato - A DOM Fuzzer"
 date:   2017-09-27 09:31:40 +0800
-categories: browser fuzz
+categories: Fuzz
+tags: Browser
 ---
 
 ### 0x00 概述

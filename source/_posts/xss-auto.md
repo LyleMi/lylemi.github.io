@@ -1,6 +1,7 @@
 ---
 title: 基于污点分析的XSS漏洞辅助挖掘的一种方式
 date: 2019-06-12 10:37:07
+categories: Web
 tags:
     - XSS
     - 自动化

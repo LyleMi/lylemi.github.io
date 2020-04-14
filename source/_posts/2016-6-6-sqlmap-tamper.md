@@ -2,7 +2,7 @@
 layout: post
 title:  "sqlmap-tamper编写指南"
 date:   2016-6-06 09:31:40 +0800
-categories: web
+categories: Web
 ---
 > 注：最近遇到了一些奇奇怪怪的waf，想自己写一些tamper但是发现没有参考材料可以使用，因此写了这篇文章，以方便进行自定义的tamper编写。笔者笔力有限，如有错误，敬请读者们指正。
 

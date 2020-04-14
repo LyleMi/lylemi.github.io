@@ -1,7 +1,8 @@
 ---
 title: Unicode等价性浅谈
 date: 2018-10-29 16:56:53
-tags:
+categories: Misc
+tags: Unicode
 ---
 
 做SSRF测试的时候，常提到用类似 `ａ` 字符来bypass过滤器，之前没有做深究，偶然的一次机会，发现bａidu.com(\uff41)能跳转到百度，但是bаidu.com(\u0430)会被认为是一个新的IDN域名，并不指向baidu.com。
