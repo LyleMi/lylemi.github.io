@@ -88,3 +88,6 @@ deploy:
 friends:
 
 aboutme: Focus on Web Security and Browser Fuzzing Research
+
+sitemap:
+  path: sitemap.xml
