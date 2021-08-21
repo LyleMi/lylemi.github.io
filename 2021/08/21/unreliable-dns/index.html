@@ -6,15 +6,25 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Archives | Lyle&#39;s Blog</title>
+  <title>性能优先的隐忧：浅谈DNS的不可用性 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/archives/page/2/index.html">
+  <meta name="description" content="域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。">
+<meta name="keywords" content="DNS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="性能优先的隐忧：浅谈DNS的不可用性">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2021/08/21/unreliable-dns/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2021-08-21-unreliable-dns/failure.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2021-08-21-unreliable-dns/refuse.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2021-08-21-unreliable-dns/timeout.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2021-08-21-unreliable-dns/dirty.png">
+<meta property="og:updated_time" content="2021-08-21T13:16:09.386Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Lyle&#39;s Blog">
+<meta name="twitter:title" content="性能优先的隐忧：浅谈DNS的不可用性">
+<meta name="twitter:description" content="域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。">
+<meta name="twitter:image" content="https://blog.lyle.ac.cn/images/2021-08-21-unreliable-dns/failure.png">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
   
@@ -136,539 +146,223 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-unreliable-dns" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      性能优先的隐忧：浅谈DNS的不可用性
+    </h1>
+  
+
+        
+        <a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
+  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。</p>
+<a id="more"></a>
+<h2 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h2><p>发现这个问题是在实验网络空间测绘工具时，为了测试工具的可用性，面向子域名枚举工具设计了一个测试场景：使用当前应用较为广泛的子域名测试工具（massdns、ksubdomain）解析Aleax Top 10k的域名，计算最终获取到响应的域名占所有域名的比例。本文通过数次实验后发现可以获取响应的域名实际为总域名数量的70%-90%左右，这个比例可以通过调整参数、降低速率的方式在一定程度上提高，但是总体提升较为有限（在测试过程中，为了排除其他因素的影响，测试环境配置为4核 8G 100Mbps带宽的服务器，在测试过程中计算、存储、网络资源均留有冗余）。通过这个简单的测试实验我们得到了一个初步的想法：在一些极限场景下，DNS服务器的可用性是相对有限的。</p>
+<p>感兴趣的读者可以使用以下几条命令复现实验，其中massdns的性能可以通过 <code>--processes</code> / <code>--socket-count</code> / <code>--hashmap-size</code> 等参数进行调整。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">wget http://s3.amazonaws.com/alexa-static/top-1m.csv.zip &amp;&amp; unzip -p top-1m.csv.zip | cut -d, -f2 - |  head -n 10k &gt; domains.txt</span><br><span class="line">./massdns --resolvers ./resolvers.txt \</span><br><span class="line">    --output J --outfile ./out.txt \</span><br><span class="line">    --error-log ./err.log ./domains.txt</span><br><span class="line">./ksubdomain -f ./domains.txt -verify</span><br></pre></td></tr></table></figure>
+<p>对于产生这个结果的原因，我们尝试从子域名枚举的技术的演进过程进行探究。</p>
+<h2 id="子域名枚举技术演进"><a href="#子域名枚举技术演进" class="headerlink" title="子域名枚举技术演进"></a>子域名枚举技术演进</h2><p>子域名枚举技术是网络空间测绘的重要组成部分，考虑到在测绘过程中目标较多，速度是子域名枚举工具实现时考虑的核心指标之一，这也是子域名枚举工具演进的主线。在枚举子域名时，最直接的实现是使用字典遍历所有可能的子域名并查看是否存在有效的返回，但是这种简单的测试方案几乎无法测试稍大的域名列表。因此出现了第一版方案，即使用多进程、多线程、协程等技术，通过增加单位时间内发送请求的数量来提升子域名枚举的速度。</p>
+<p>随着技术的不断发展，zmap使用的无状态探测技术被子域名枚举领域关注，massdns将其应用到了子域名枚举中，该工具仅使用指定数量的数个socket进行网络包的发送和接收操作，在用户层通过hashmap管理网络状态，大幅度提升了子域名枚举的速度。ksubdomain则在massdns上更进一层，使用pcap库直接和网卡进行交互，完成数据包的发送和接收，减少了socket带来的性能开销。ksubdomain同样维护了一个状态表，对于超时的数据自动重传，直至获取到响应或重试测试超过限制为止。除了上述的技术之外还有一些其他的技巧，如预读字典、异步读写、域传送等，本文在此不进行更多的介绍。</p>
+<p>一个直观的想法是，上述的工具使用了堪称激进的速度提升方案，那么有着较高的漏报率是可以理解的。但是实际上massdns和ksubdomain都实现了状态表的功能，本文在测试时也在带宽和计算性能上都留出了较高的冗余，将漏报简单归因到高并发带来的丢包或者其他因素上并不正确。随后在进一步的分析中，我们发现高漏报是DNS服务器在部分场景下不可用造成的。</p>
+<h2 id="DNS的不可用性"><a href="#DNS的不可用性" class="headerlink" title="DNS的不可用性"></a>DNS的不可用性</h2><p>在讨论DNS的不可用性之前，本文先对数据的假阴性和假阳性做一下定义。</p>
+<ul>
+<li>假阴性：原本存在有效记录的域名，被认为是无效域名。</li>
+<li>假阳性：原本无效的域名，被认为是有效的域名。</li>
+</ul>
+<p>在实现的测试后，本文通过流量监控的方式对子域名枚举过程进行了更详细的分析，在分析中发现当发送DNS数据报文到达一定量级后，有一些域名解析服务器会表现出严重的不可用性，我们根据服务器的响应表现将其分为为服务宕机、拒绝服务、无响应、返回脏数据几类。</p>
+<h3 id="服务宕机"><a href="#服务宕机" class="headerlink" title="服务宕机"></a>服务宕机</h3><p>服务宕机指DNS响应码为 <code>Server failure</code> ，在RFC 1035中可以查询到对应的定义，该响应表示服务器出现了错误。可以在 wireshark 中 使用 <code>dns.flags.rcode==2 server failure</code> 来过滤出该响应的流量，其在流量中的表现如下图所示。</p>
+<p><img src="/images/2021-08-21-unreliable-dns/failure.png" alt=""></p>
+<h3 id="拒绝服务"><a href="#拒绝服务" class="headerlink" title="拒绝服务"></a>拒绝服务</h3><p>拒绝服务指DNS响应码为 <code>Refused</code> ，同样可以在RFC 1035中可以查询到对应的定义，该响应表示域名服务器由于配置的原因拒绝了请求。可以在 wireshark 中使用 <code>dns.flags.rcode==5 server refuse</code> 来过滤出该响应的流量，其在流量中的表现如下图所示。</p>
+<p><img src="/images/2021-08-21-unreliable-dns/refuse.png" alt=""></p>
+<h3 id="无响应"><a href="#无响应" class="headerlink" title="无响应"></a>无响应</h3><p>无响应指DNS服务器没有对查询包进行响应，可能是网络抖动造成的丢包、服务器下线等原因，其在流量中的表现如下图所示。</p>
+<p><img src="/images/2021-08-21-unreliable-dns/timeout.png" alt=""></p>
+<p>在上图中直至测试到第8个域名解析服务器，才获取到了响应，而在一些极端情况下（带宽占满、大量并发、源IP被禁），可能数十个域名解析服务器都没有响应。</p>
+<h3 id="脏数据"><a href="#脏数据" class="headerlink" title="脏数据"></a>脏数据</h3><p>脏数据是指对于原本应返回NX响应的数据，服务器会返回一个虚假的A记录。以下图的域名为例，对于一个实际不存在的子域名，一些DNS服务器仍然返回了A记录。</p>
+<p><img src="/images/2021-08-21-unreliable-dns/dirty.png" alt=""></p>
+<p>经过测试，发现常见的虚假A记录IP如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">4.36.66.178, 8.7.198.45, 37.61.54.158, 46.82.174.68, 59.24.3.173, 64.33.88.161, 64.33.99.47, 64.66.163.251, 65.104.202.252, 65.160.219.113, 66.45.252.237, 72.14.205.99, 72.14.205.104, 78.16.49.15, 93.46.8.89, 128.121.126.139, 159.106.121.75, 169.132.13.103, 192.67.198.6, 202.106.1.2, 202.181.7.85, 203.161.230.171, 207.12.88.98, 208.56.31.43, 209.36.73.33, 209.145.54.50, 209.220.30.174, 211.94.66.147, 213.169.251.35, 216.221.188.182, 216.234.179.13</span><br></pre></td></tr></table></figure>
+<p>这一类的响应就是假阳性数据，这种响应部分是因ISP劫持DNS引发的，部分是由域名污染引发的，具体的介绍可以参考文末的DNS hijacking wiki链接或其他材料。</p>
+<p>通过对上述几个场景的分析，我们可以发现，当有一个DNS服务器返回了 <code>Server failure</code> / <code>Refused</code> ，域名枚举工具会认为收到了响应，从而停止测试该子域名，即造成假阴性的结果。如果有大量的DNS服务器都没有返回响应至达到域名枚举工具的阈值，同样也会造成假阴性的结果。而只要有一个DNS服务器返回了假阳性的结果，由于枚举工具的状态表特性，就会造成假阳性的结果。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>在实际测试中我们发现，即使是一些使用广泛的域名解析服务提供商，在特定场景中也会表现出上文提到的不可用性，所以这个现象是需要在一些工具的实现中被考虑的。对于网络带宽占满、短时间发起大量DNS请求等场景可能遇到的域名解析服务器不可用问题，本文认为有以下的一些解决方案：</p>
+<ul>
+<li>尽量组合使用多个DNSPod、114等较为专业的域名解析服务提供商</li>
+<li>在要求服务的稳定性和安全性时，可以使用TCP协议、DNSSEC、DNS over HTTPS进行DNS解析</li>
+<li>对解析结果预设一定的ASN或IP范围，或通过黑名单机制去掉应答污染IP的响应</li>
+<li>定时检查域名解析服务提供的响应，去掉其中不稳定的域名服务器</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><h3 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h3><ul>
+<li><a href="https://github.com/knownsec/ksubdomain" target="_blank" rel="noopener">https://github.com/knownsec/ksubdomain</a></li>
+<li><a href="https://github.com/blechschmidt/massdns" target="_blank" rel="noopener">https://github.com/blechschmidt/massdns</a></li>
+<li><a href="https://github.com/lijiejie/subDomainsBrute" target="_blank" rel="noopener">https://github.com/lijiejie/subDomainsBrute</a></li>
+<li><a href="https://github.com/aboul3la/Sublist3r" target="_blank" rel="noopener">https://github.com/aboul3la/Sublist3r</a></li>
+</ul>
+<h3 id="其他链接"><a href="#其他链接" class="headerlink" title="其他链接"></a>其他链接</h3><ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc1035.txt" target="_blank" rel="noopener">RFC 1035: DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION</a></li>
+<li><a href="https://en.wikipedia.org/wiki/DNS_hijacking" target="_blank" rel="noopener">DNS hijacking</a></li>
+<li><a href="https://paper.seebug.org/1292/" target="_blank" rel="noopener">从代码角度看各类子域名收集工具</a></li>
+<li><a href="https://paper.seebug.org/1325/" target="_blank" rel="noopener">ksubdomain 无状态域名爆破工具</a></li>
+</ul>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/18/unicode-sec-1/" class="archive-article-date">
-  	<time datetime="2019-06-18T14:41:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/18/unicode-sec-1/">浅谈Unicode设计的安全性</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/12/xss-auto/" class="archive-article-date">
-  	<time datetime="2019-06-12T02:37:07.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/12/xss-auto/">基于污点分析的XSS漏洞辅助挖掘的一种方式</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">自动化</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/04/20/cve-2019-0232/" class="archive-article-date">
-  	<time datetime="2019-04-20T04:43:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/04/20/cve-2019-0232/">CVE-2019-0232：Apache Tomcat RCE漏洞分析</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/04/06/Web-Application-Auto-Audit/" class="archive-article-date">
-  	<time datetime="2019-04-06T10:17:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-06</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/04/06/Web-Application-Auto-Audit/">Web应用代码自动化审计浅谈</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">自动化</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/02/27/bypass-xss-mitigation-via-gadgets/" class="archive-article-date">
-  	<time datetime="2019-02-27T01:49:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-02-27</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/02/27/bypass-xss-mitigation-via-gadgets/">基于Gadgets绕过XSS防御机制</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/12/08/idnfuzz/" class="archive-article-date">
-  	<time datetime="2018-12-08T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-08</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/12/08/idnfuzz/">IDN Spoof漏洞自动化挖掘</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
+        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
         		</li>
       		
 		</ul>
 	</div>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/10/29/unicode-normalization/" class="archive-article-date">
-  	<time datetime="2018-10-29T08:56:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/10/29/unicode-normalization/">Unicode等价性浅谈</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2021/08/21/unreliable-dns/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2017" class="archive-year">2017</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/09/27/2017-9-27-domato-dom-fuzzer/" class="archive-article-date">
-  	<time datetime="2017-09-27T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-27</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">Domato - A DOM Fuzzer</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Browser</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/14/2017-8-14-cve-2017-8496/" class="archive-article-date">
-  	<time datetime="2017-08-14T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-14</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2021/07/09/uemu/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">基于用户态虚拟化的物联网设备仿真方法</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/14/2017-8-14-cve-2017-8496/">CVE-2017-8496 Edge Type confusion</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2017/08/11/2017-8-11-cve-2016-0003/" class="archive-article-date">
-  	<time datetime="2017-08-11T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-11</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2017/08/11/2017-8-11-cve-2016-0003/">CVE-2016-0003 Edge Type Confusion</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/3/">Next &raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -694,8 +388,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
