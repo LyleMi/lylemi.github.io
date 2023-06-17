@@ -6,13 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Archives | Lyle&#39;s Blog</title>
+  <title>全网测绘的成本探究 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/archives/page/2/index.html">
+  <meta name="description" content="有时候会好奇一个问题，如果不考虑人员、合规等成本，想测绘一次全网的成本是什么样的？尝试做了一些理论计算，形成这篇文章，供各位感兴趣的同学参考。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="全网测绘的成本探究">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2023/06/17/scan-cost/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="有时候会好奇一个问题，如果不考虑人员、合规等成本，想测绘一次全网的成本是什么样的？尝试做了一些理论计算，形成这篇文章，供各位感兴趣的同学参考。">
 <meta property="og:locale">
+<meta property="article:published_time" content="2023-06-17T05:44:44.000Z">
+<meta property="article:modified_time" content="2023-06-17T05:58:53.008Z">
 <meta property="article:author" content="Lyle">
 <meta name="twitter:card" content="summary">
   
@@ -136,522 +140,240 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-scan-cost" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      全网测绘的成本探究
+    </h1>
+  
+
+        
+        <a href="/2023/06/17/scan-cost/" class="archive-article-date">
+  	<time datetime="2023-06-17T05:44:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-06-17</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>有时候会好奇一个问题，如果不考虑人员、合规等成本，想测绘一次全网的成本是什么样的？尝试做了一些理论计算，形成这篇文章，供各位感兴趣的同学参考。</p>
+<span id="more"></span>
+
+<h2 id="理论计算"><a href="#理论计算" class="headerlink" title="理论计算"></a>理论计算</h2><h3 id="IP地址数量"><a href="#IP地址数量" class="headerlink" title="IP地址数量"></a>IP地址数量</h3><p>在开始探讨全网测绘的成本之前，让我们先进行一些简单的理论计算。IPv4地址由32位二进制数字组成，因此在理论上有2^32个不同的地址，换算成十进制，这个数字是4,294,967,296。然而，在现实世界中，并非所有的IP地址都可用于公网，因为有一些特殊的保留地址范围存在。</p>
+<p>首先，我们有私有地址空间，包括以下范围：</p>
+<ul>
+<li>10.0.0.0&#x2F;8</li>
+<li>172.16.0.0&#x2F;12</li>
+<li>192.168.0.0&#x2F;16</li>
+</ul>
+<p>然后，还有一些其他的保留地址范围，包括：</p>
+<ul>
+<li>0.0.0.0&#x2F;8：当前网络（仅限于源地址）</li>
+<li>127.0.0.0&#x2F;8：本地回环地址</li>
+<li>169.254.0.0&#x2F;16：链路本地地址（用于自动配置）</li>
+<li>192.0.0.0&#x2F;24：IETF 协议相关 （RFC 5736）</li>
+<li>192.0.2.0&#x2F;24：TEST-NET-1，用于文档和示例</li>
+<li>192.88.99.0&#x2F;24：6to4 Relay Anycast</li>
+<li>198.18.0.0&#x2F;15：用于网络性能测试和测量 （RFC 2544）</li>
+<li>198.51.100.0&#x2F;24：TEST-NET-2，用于文档和示例</li>
+<li>203.0.113.0&#x2F;24：TEST-NET-3，用于文档和示例</li>
+<li>224.0.0.0&#x2F;4：多播地址</li>
+<li>240.0.0.0&#x2F;4：保留地址，未来使用</li>
+</ul>
+<p>为了计算可用的公网IPv4地址，我们需要从总数中减去这些保留地址。以下是每个保留范围的地址数量：</p>
+<ul>
+<li>私有地址空间：<ul>
+<li>10.0.0.0&#x2F;8：2^24 &#x3D; 16,777,216</li>
+<li>172.16.0.0&#x2F;12：2^20 &#x3D; 1,048,576</li>
+<li>192.168.0.0&#x2F;16：2^16 &#x3D; 65,536</li>
+</ul>
+</li>
+<li>保留地址：<ul>
+<li>0.0.0.0&#x2F;8：2^24 &#x3D; 16,777,216</li>
+<li>127.0.0.0&#x2F;8：2^24 &#x3D; 16,777,216</li>
+<li>169.254.0.0&#x2F;16：2^16 &#x3D; 65,536</li>
+<li>192.0.0.0&#x2F;24：2^8 &#x3D; 256</li>
+<li>192.0.2.0&#x2F;24：2^8 &#x3D; 256</li>
+<li>198.18.0.0&#x2F;15：2^17 &#x3D; 131,072</li>
+<li>192.88.99.0&#x2F;24：2^8 &#x3D; 256</li>
+<li>198.51.100.0&#x2F;24：2^8 &#x3D; 256</li>
+<li>203.0.113.0&#x2F;24：2^8 &#x3D; 256</li>
+<li>224.0.0.0&#x2F;4：2^28 &#x3D; 268,435,456</li>
+<li>240.0.0.0&#x2F;4：2^28 &#x3D; 268,435,456</li>
+<li>255.255.255.255&#x2F;32：1</li>
+</ul>
+</li>
+</ul>
+<p>将这些数字相加，我们得到：16777216 + 1048576 + 65536 + 16777216 + 16777216 + 65536 + 256 + 256 + 131072 + 256 + 256 + 256 + 268435456 + 268435456 + 1 &#x3D; 588514561</p>
+<p>现在，我们可以从总数中减去保留地址的数量：4294967296 - 588514561 &#x3D; 3706452735。</p>
+<p>值得注意的是，在现实世界中，并非所有的地址都已经分配和使用，因此实际的可用公网IPv4地址数量略小于37亿，这个结果仅提供了一个用于大致估计的上限值。如果需要实时的、完整的已分配的IP列表，可以通过相关的组织获取。</p>
+<h3 id="测绘时间成本"><a href="#测绘时间成本" class="headerlink" title="测绘时间成本"></a>测绘时间成本</h3><p>基于IP地址的数量，让我们按SYN扫描来计算一下发送报文所需的时间。</p>
+<p>首先，一个TCP SYN报文的大小为54字节（包括14字节的MAC层、20字节的IP报文和20字节的TCP报文）。<br>1 Gbps的传输速率等于每秒传输125,000,000字节，将这个速率除以每个报文的大小54字节，得到大约2314815个报文每秒。</p>
+<p>接下来，我们将使用之前计算得到的可用公网IPv4地址数量（3706452735个）除以每秒发送的报文数量（2314815个），得到约1601秒。</p>
+<p>根据2013年ZMap论文的数据，大约有3450万个开放的443端口，大约占IPv4地址空间的百分之一。</p>
+<p>考虑到TLS握手的长度，最长的情况下使用RSA算法进行完整的证书链验证和客户端身份验证，总长度可能超过数万字节。最短的情况下使用ECDHE密钥交换算法，并且不进行证书链验证和客户端身份验证，总长度大约在几百字节。</p>
+<p>为了折中考虑，我们以5000字节为一个TLS握手的长度来计算。也就是说，约有百分之一的扫描需要占用百倍的带宽。因此，在之前计算的总时长上乘以2，得到3200秒，即54分钟。</p>
+<p>这个计算给我们提供了一个大致的时间估计，说明在当前条件下进行全网测绘可能需要约54分钟的时间。</p>
+<p>在Zmap论文中有提到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">We introduce ZMap, a modular, open-source network scanner specifically architected to perform Internet-wide scans and capable of surveying the entire IPv4 address space in under 45 minutes from user space on a single machine, approaching the theoretical maximum speed of gigabit Ethernet.</span><br></pre></td></tr></table></figure>
+
+<p>Zmaps使用Gb级别的网卡在45分钟扫描完互联网空间的 443 端口，与我们之前的计算结果非常接近，说明我们的计算是有参考意义的。</p>
+<p>不妨采用乐观估计，假设互联网是稀疏的，大多数IP只开放一个到数十个端口，且只使用SYN扫描。在这种情况下，我们不需要考虑回包的时间。按照这个假设，要扫描完整个互联网所需的时间可以按以下公式计算：</p>
+<p>3706452735（可用的公网IPv4地址数量） × 65536（每个地址可扫描的端口数） ÷ 2314815（每秒发送的报文数量） ÷ 60（转换为分钟） ÷ 60（转换为小时） ÷ 24（转换为天数） ≈ 1215天</p>
+<p>也就是说，即使使用了Gb级别的网卡，乐观估计下完成整个互联网的扫描也需要超过一千两百天的时间。</p>
+<h3 id="测绘经济成本"><a href="#测绘经济成本" class="headerlink" title="测绘经济成本"></a>测绘经济成本</h3><p>不难想到的是，除了时间成本，大流量还需要经济资源。根据当前腾讯云的无折扣价格计算，一个配置为1核1G内存、200Mbps带宽的云主机每月需要17747元。为了达到Gbps级别的网速，需要使用50台这样的云主机。</p>
+<blockquote>
+<p>注：当带宽利用率高于10%时，按带宽计费成本低于按流量计费。</p>
+</blockquote>
+<p>根据计算公式：(1215 &#x2F; 30) * 17747 * 50 &#x3D; 35937675</p>
+<p>因此，根据理论计算，完成一次完整的互联网IPv4地址空间的扫描成本约为三千万左右。</p>
+<p>需要注意的是，这个测算模型主要考虑了发送流量所需的时间。如果我们希望缩短测绘的时间，只需要按比例增加使用的机器数量即可。</p>
+<p>上述的时间和经济的估计给我们提供了一个实际情况下的时间框架和资金量级的参考，以更好地理解全网测绘的成本和挑战。</p>
+<h2 id="工程实践"><a href="#工程实践" class="headerlink" title="工程实践"></a>工程实践</h2><p>当然，仅通过纸面计算成本是不现实的，因为工程实践中需要进行更多的权衡和实际操作。在面对不可接受的成本时，我们可以考虑一些方法来控制成本。</p>
+<p>首先，我们并不一定需要对所有地址进行测绘，可以将范围缩小到某个国家或地区，这样数量级会大大减小。</p>
+<p>同时，我们可以借鉴单机测绘工具如nmap的做法，在进行全端口测绘之前进行活跃探测。这样可以避免对不活跃的IP进行全端口测绘，从而在很大程度上节省成本。</p>
+<p>此外，如果全端口测绘并非刚需，可以参考IANA的<a target="_blank" rel="noopener" href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml">端口注册表</a> 和工程实践的经验，实际常用端口的数量相对较少。除非有特定需求，否则在测绘过程中仅关注常见端口的成本会大大降低。</p>
+<p>让我们重新计算一下，假设将测绘范围缩小到国内IP的10%和活跃IP的10%，仅测绘600个端口。根据这个假设，成本将从千万级降低到万级。</p>
+<p>在缩减成本的同时，我们也需要考虑结果的有效性，这涉及到以下几个问题：</p>
+<p><strong>简单的、基于单次 SYN 报文能否保证测绘准确？</strong></p>
+<p>毫无疑问的，考虑到丢包率，单次单报文探测肯定存在漏报率。<br>根据《Census and Survey of the Visible Internet》论文的数据，单个报文在互联网上传输的丢包率约为 2% 左右。因此，单次探测的准确率大约在 98% 左右。对于一些成本敏感、结果要求不高的情况而言，这个准确率已经足够。</p>
+<p><strong>如果想识别应用指纹，需要多少报文？</strong></p>
+<p>单个 SYN 报文只能检测端口的开放情况。要完成对应用的交互和识别，需要进行完整的 TCP 握手以及后续的应用层交互。</p>
+<p>当前的nmap<a target="_blank" rel="noopener" href="https://github.com/nmap/nmap/blob/master/nmap-service-probes">服务探针</a>超过100个，而要完成服务的交互，则需要完成完整的TCP握手以及后续的应用层交互，又是倍数级的消耗。</p>
+<p>显然对于单个开放端口用数百个探针进行测绘，扩散到全网成本的基数，又是不可接受的。这就又需要对探针和效果进行取舍。</p>
+<p><strong>运行测绘系统是否有其它成本？</strong></p>
+<p>还需要注意的是，运行测绘系统还涉及到其他成本，数据存储、数据索引、任务分发、日志收集等等都需要计算、存储、网络资源，随着测绘规模不断地加大，对应存储计算的资源也会相应提升。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本文通过粗略的纸面计算，对全网测绘的成本进行了估算，给出了测绘资源消耗的参考值。仅为工作之余闲暇之作，文中计算和推理都有非常多不严谨的部分，结论仅供参考。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><h3 id="文档与规范"><a href="#文档与规范" class="headerlink" title="文档与规范"></a>文档与规范</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc2544">RFC2544 Benchmarking Methodology for Network Interconnect Devices</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc5735">RFC3735 Special Use IPv4 Addresses</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc5736">RFC5736 IANA IPv4 Special Purpose Address Registry</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc6335.html">RFC6335 Internet Assigned Numbers Authority (IANA) Procedures for the Management of the Service Name and Transport Protocol Port Number Registry</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/document/product/213/10578">腾讯云公网计费模式</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml">IANA Service Name and Transport Protocol Port Number Registry</a></li>
+</ul>
+<h3 id="论文"><a href="#论文" class="headerlink" title="论文"></a>论文</h3><ul>
+<li>Izhikevich L, Teixeira R, Durumeric Z. LZR: Identifying Unexpected Internet Services[C]&#x2F;&#x2F;USENIX Security Symposium. 2021: 3111-3128.</li>
+<li>Durumeric Z, Wustrow E, Halderman J A. ZMap: Fast Internet-wide Scanning and Its Security Applications[C]&#x2F;&#x2F;USENIX Security Symposium. 2013, 8: 47-53.</li>
+<li>Heidemann J, Pradkin Y, Govindan R, et al. Census and survey of the visible Internet[C]&#x2F;&#x2F;Proceedings of the 8th ACM SIGCOMM conference on Internet measurement. 2008: 169-182.</li>
+</ul>
+<h3 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://buy.cloud.tencent.com/price/cvm/calculator?devPayMode=monthly&imageType=linux">腾讯云价格计算器</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/nmap/nmap">nmap</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/zmap/zmap">zmap</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/nmap/nmap/blob/master/nmap-service-probes">nmap 服务探针</a></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/06/30/cve-2019-5096/" class="archive-article-date">
-  	<time datetime="2020-06-30T11:34:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-30</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/06/30/cve-2019-5096/">CVE-2019-5096 GoAhead Double Free 漏洞分析</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/06/15/python-coroutine-thread-and-process/" class="archive-article-date">
-  	<time datetime="2020-06-15T11:48:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/06/15/python-coroutine-thread-and-process/">Python 进程、线程与协程</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Python</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Programing//" class="article-tag-list-link color1">Programing</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/" class="archive-article-date">
-  	<time datetime="2020-04-14T03:23:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">基于QEMU和binfmt-misc透明运行不同架构程序</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">QEMU</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">工具</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Bin//" class="article-tag-list-link color4">Bin</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/13/tricks-1/" class="archive-article-date">
-  	<time datetime="2020-04-13T13:08:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-13</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/13/tricks-1/">语言Tricks系列之一</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Tricks</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/19/cmdi/" class="archive-article-date">
-  	<time datetime="2019-10-19T01:23:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-19</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/19/cmdi/">命令注入成因小谈</a>
-    </h1>
-  
+      </div>
+    </span>
+  </div>
+</div>
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Command Injection</a>
-        		</li>
-      		
-		</ul>
-	</div>
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2023/06/17/scan-cost/" alt="微信分享二维码">
+    </div>
+</div>
 
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/18/unicode-sec-1/" class="archive-article-date">
-  	<time datetime="2019-06-18T14:41:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-18</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2023/05/17/why-nmap-not-work/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">攻击面测绘：浅谈自研端扫的必要性</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/18/unicode-sec-1/">浅谈Unicode设计的安全性</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/12/xss-auto/" class="archive-article-date">
-  	<time datetime="2019-06-12T02:37:07.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/12/xss-auto/">基于污点分析的XSS漏洞辅助挖掘的一种方式</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">自动化</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/04/20/cve-2019-0232/" class="archive-article-date">
-  	<time datetime="2019-04-20T04:43:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/04/20/cve-2019-0232/">CVE-2019-0232：Apache Tomcat RCE漏洞分析</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/04/06/Web-Application-Auto-Audit/" class="archive-article-date">
-  	<time datetime="2019-04-06T10:17:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-06</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/04/06/Web-Application-Auto-Audit/">Web应用代码自动化审计浅谈</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">自动化</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/02/27/bypass-xss-mitigation-via-gadgets/" class="archive-article-date">
-  	<time datetime="2019-02-27T01:49:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-02-27</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/02/27/bypass-xss-mitigation-via-gadgets/">基于Gadgets绕过XSS防御机制</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/">&amp;laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/3/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -676,8 +398,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

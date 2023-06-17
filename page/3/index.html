@@ -138,6 +138,94 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-idnfuzz" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/12/08/idnfuzz/">IDN Spoof漏洞自动化挖掘</a>
+    </h1>
+  
+
+        
+        <a href="/2018/12/08/idnfuzz/" class="archive-article-date">
+  	<time datetime="2018-12-08T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-08</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="0x00-背景"><a href="#0x00-背景" class="headerlink" title="0x00 背景"></a>0x00 背景</h1><h2 id="国际化域名"><a href="#国际化域名" class="headerlink" title="国际化域名"></a>国际化域名</h2><p>国际化域名（Internationalized Domain Name，IDN）又称特殊字符域名，是指部分或完全使用特殊的文字或字母组成的互联网域名，包括中文、法语、阿拉伯语、希伯来语或拉丁字母等非英文字母，这些文字经多字节万国码编码而成。在域名系统中，国际化域名使用Punycode转写并以ASCII字符串储存。</p>
+<h2 id="同形异义攻击"><a href="#同形异义攻击" class="headerlink" title="同形异义攻击"></a>同形异义攻击</h2><p>同形异义字是利用IDN中一些非拉丁字符语种的字母与拉丁字符非常相似，字面看很难区分的特性，找到对应的字符来实现钓鱼攻击。例如16ვ.com(U+10D5)、16ဒ.com (U+1012)、16ҙ.com (U+0499) 都在一定程度上和163.com有相似性，基于一些开放的https证书服务这些域名还能取得相应的证书，进一步增加钓鱼成功的可能性。</p>
+        
+          <a class="article-more-a" href="/2018/12/08/idnfuzz/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/12/08/idnfuzz/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-unicode-normalization" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
