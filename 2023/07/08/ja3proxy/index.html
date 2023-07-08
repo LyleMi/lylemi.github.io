@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Archives | Lyle&#39;s Blog</title>
+  <title>Ja3：计算原理、应用场景与指纹伪造 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/archives/index.html">
+  <meta name="description" content="随着Ja3指纹应用范围越来越广，修改请求指纹以绕开防护逐渐成为需求。而由于大部分库和框架抽象化了TLS交互，使得修改不易。为此，笔者实现了一种基于HTTP代理的快速方案来解决这个问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ja3：计算原理、应用场景与指纹伪造">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2023/07/08/ja3proxy/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="随着Ja3指纹应用范围越来越广，修改请求指纹以绕开防护逐渐成为需求。而由于大部分库和框架抽象化了TLS交互，使得修改不易。为此，笔者实现了一种基于HTTP代理的快速方案来解决这个问题。">
 <meta property="og:locale">
+<meta property="article:published_time" content="2023-07-08T08:35:15.000Z">
+<meta property="article:modified_time" content="2023-07-08T08:45:11.926Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="tls">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
@@ -136,36 +141,82 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-ja3proxy" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2023" class="archive-year">2023</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/07/08/ja3proxy/" class="archive-article-date">
-  	<time datetime="2023-07-08T08:35:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-08</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/07/08/ja3proxy/">Ja3：计算原理、应用场景与指纹伪造</a>
+    <h1 class="article-title" itemprop="name">
+      Ja3：计算原理、应用场景与指纹伪造
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2023/07/08/ja3proxy/" class="archive-article-date">
+  	<time datetime="2023-07-08T08:35:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-08</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>随着Ja3指纹应用范围越来越广，修改请求指纹以绕开防护逐渐成为需求。而由于大部分库和框架抽象化了TLS交互，使得修改不易。为此，笔者实现了一种基于HTTP代理的快速方案来解决这个问题。</p>
+<span id="more"></span>
+
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>关于 TLS 指纹，最开始是 <a target="_blank" rel="noopener" href="https://twitter.com/synackpse">Lee Brotherston</a> 在2015年的一次 <a target="_blank" rel="noopener" href="https://blog.squarelemon.com/tls-fingerprinting/">talk</a> 中提到的，同时给出了对应的<a target="_blank" rel="noopener" href="https://github.com/LeeBrotherston/tls-fingerprinting">工具</a>。</p>
+<p>而后 Salesforce 的安全研究员 John Althouse、Jeff Atkinson 和 Josh Atkins 三人在2017年一篇名为 <a target="_blank" rel="noopener" href="https://engineering.salesforce.com/tls-fingerprinting-with-ja3-and-ja3s-247362855967/">TLS Fingerprinting with JA3 and JA3S</a> 的博客文章中详细介绍了这项技术，并提供了一个<a target="_blank" rel="noopener" href="https://github.com/salesforce/ja3">开源工具</a>，用于生成和分析tls指纹。</p>
+<p>因为他们三人的名字都是ja开头，所以该指纹也被称为ja3指纹，对应的服务端指纹被称为ja3指纹。</p>
+<h2 id="计算"><a href="#计算" class="headerlink" title="计算"></a>计算</h2><h3 id="JA3"><a href="#JA3" class="headerlink" title="JA3"></a>JA3</h3><p>ja3设计思路主要基于这样一个事实：尽管加密流量的内容可能被隐藏，但SSL&#x2F;TLS客户端和服务器在握手阶段的交互过程却是可见的。这个握手过程包含了大量的元数据，这些元数据可以被用来生成一个唯一的指纹，即JA3指纹。</p>
+<p>具体来说，计算流程如下：</p>
+<ul>
+<li>从 Client Hello 中提取TLS版本号，加密套件列表，扩展列表，以及椭圆曲线点格式列表（TLSVersion,Ciphers,Extensions,EllipticCurves,EllipticCurvePointFormats）</li>
+<li>将这些值转换为十进制，并用逗号分隔。</li>
+<li>将这些值按照特定的顺序连接在一起，形成一个字符串。顺序是：SSL版本号，加密套件列表，扩展列表，椭圆曲线点格式列表（如果存在）。</li>
+<li>对这个字符串进行MD5哈希，生成一个32位的哈希值。</li>
+</ul>
+<p>其中TLS参数规范是由IANA（Internet Assigned Numbers Authority）维护的，可以在对应 <a target="_blank" rel="noopener" href="https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml">站点</a> 查看。</p>
+<h3 id="JA3S"><a href="#JA3S" class="headerlink" title="JA3S"></a>JA3S</h3><p>JA3S是JA3的服务器端版本，用于识别和分类网络中的SSL&#x2F;TLS服务器。与JA3类似，JA3S也是通过分析握手阶段的元数据来生成指纹的。不过，JA3S关注的是服务器在握手阶段发送的 Server Hello 包。</p>
+<p>Server Hello 包中包含了SSL&#x2F;TLS版本号、选定的加密套件和扩展列表等信息。JA3S通过收集这些信息，然后将它们按照特定的顺序连接在一起，形成一个字符串。接着，JA3S会对这个字符串进行MD5哈希，生成一个32位的哈希值，这就是JA3S指纹。</p>
+<p>具体的计算流程如下：</p>
+<ul>
+<li>从 Server Hello 包中提取SSL版本号，选定的加密套件和扩展列表。</li>
+<li>将这些值转换为十进制，并用逗号分隔。</li>
+<li>将这些值按照特定的顺序连接在一起，形成一个字符串。顺序是：SSL版本号，选定的加密套件，扩展列表。</li>
+<li>对这个字符串进行MD5哈希，生成一个32位的哈希值。</li>
+</ul>
+<h3 id="JARM"><a href="#JARM" class="headerlink" title="JARM"></a>JARM</h3><p>不难想到，JA3S指纹并不是固定的，它会受到客户端在 Client Hello 消息中提供的信息的影响。这是因为在收到 Client Hello 后， 服务器会根据这些信息来选择一个共同支持的配置，并在 Server Hello 消息中进行确认。因此， Client Hello 消息中的内容会直接影响 Server Hello 消息中的选择。于是研究者们提出了 <a target="_blank" rel="noopener" href="https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a/">jarm</a> ，同样开源了对应的<a target="_blank" rel="noopener" href="https://github.com/salesforce/jarm">工具</a> 。</p>
+<p>JARM使用预设的10个不同的 Client Hello 向服务器发起请求，记录服务器的响应，最后输出一个62个字符的字符串。其中前30个字符是服务器返回的 TLS 版本和 cipher，后32个字符是sha256哈希。这让JARM在一定程度上有模糊哈希的特征，可以通过前32个字符来聚类类似的服务器。</p>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>Ja3指纹技术在识别爬虫、扫描器和攻击工具方面有着广泛的应用。通常情况下，爬虫代码会修改UA，但很少会修改TLS配置。因此，Ja3指纹技术可以轻松地识别这些爬虫。此外，攻击工具如特定版本的Burp也很容易被Ja3指纹技术识别，从而被WAF等防护设施拦截。除此之外，Jarm指纹技术还可以用于识别僵尸网络、矿池等通信。这些特性使得Ja3指纹技术成为一种非常有用的安全工具。</p>
+<h2 id="攻防对抗"><a href="#攻防对抗" class="headerlink" title="攻防对抗"></a>攻防对抗</h2><p>以上是JA3指纹的科普部分，下面让我们聊聊攻防对抗的思路。</p>
+<h3 id="服务端修改"><a href="#服务端修改" class="headerlink" title="服务端修改"></a>服务端修改</h3><p>作为攻击者，C2服务器容易被识别。而对于防守方来说，蜜罐等服务器的特征也容易被识别。然而，在当前的网络架构中，大多数服务器前端都是CDN，客户端实际上是与非实际服务器的前端握手。因此，在大多数情况下，只需使用前置反向代理即可绕过JARM识别。</p>
+<h3 id="客户端修改"><a href="#客户端修改" class="headerlink" title="客户端修改"></a>客户端修改</h3><p>在客户端修改方面，有两种思路。第一种是将指纹修改为任意的指纹。在TLS交互中，cipher等配置都是有序的，因此在测试中往往对安全要求不高。也就是说，无论是交换cipher的优先级，还是在cipher中增加低优先级的废弃cipher配置，都可以容易地配置。这种方式的缺点是容易被聚类，但几乎可以绕过大部分黑名单机制。但是实际很少有防守方会将少见的工具加入到黑名单列表中。</p>
+<p>第二种思路是将指纹修改为几乎不会被封的指纹，例如主流浏览器的指纹，大多数工具都采用了这种思路。</p>
+<h3 id="修改方案"><a href="#修改方案" class="headerlink" title="修改方案"></a>修改方案</h3><p>相对于服务端的指纹修改方案，客户端的修改方案要复杂一些。如果是自研代码，可以相对容易地修改指纹，例如修改库的配置等。这种方式有开源实现可以参考，例如 Max Harley 等人提出了伪造 ja3 的方法 <a target="_blank" rel="noopener" href="https://medium.com/cu-cyber/impersonating-ja3-fingerprints-b9f555880e42">Impersonating JA3 Fingerprints</a> 并给出了工具 <a target="_blank" rel="noopener" href="https://github.com/CUCyber/ja3transport">ja3transport</a>。对于前文提到的 burp 对抗，也有人给出了工具 <a target="_blank" rel="noopener" href="https://github.com/sleeyax/burp-awesome-tls">Burp Awesome TLS</a> 。</p>
+<p>但是，如果是第三方工具，大多数不会暴露对应的接口，而TLS也没有很好的hook的方案。那么有没有一种合适的方案呢？如果不修改工具本身，修改请求的一个常见方案是代理。但是，无修改的socks代理由于会直接转发报文，所以不能实现这种能力。而HTTP代理则可以相对方便地劫持客户端HTTP连接，实际上客户端和代理握手，代理和目标服务器握手，从而实现了修改TLS指纹的目的。</p>
+<p>本文基于golang做了一个简单的demo，相关代码已经开源，可以在<a target="_blank" rel="noopener" href="https://github.com/LyleMi/ja3proxy">这里</a>查看。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://twitter.com/synackpse">https://twitter.com/synackpse</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.squarelemon.com/tls-fingerprinting/">https://blog.squarelemon.com/tls-fingerprinting/</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/LeeBrotherston/tls-fingerprinting">https://github.com/LeeBrotherston/tls-fingerprinting</a></li>
+<li><a target="_blank" rel="noopener" href="https://engineering.salesforce.com/tls-fingerprinting-with-ja3-and-ja3s-247362855967/">https://engineering.salesforce.com/tls-fingerprinting-with-ja3-and-ja3s-247362855967/</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/salesforce/ja3">https://github.com/salesforce/ja3</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml">https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml</a></li>
+<li><a target="_blank" rel="noopener" href="https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a/">https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a/</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/salesforce/jarm">https://github.com/salesforce/jarm</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/cu-cyber/impersonating-ja3-fingerprints-b9f555880e42">https://medium.com/cu-cyber/impersonating-ja3-fingerprints-b9f555880e42</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/CUCyber/ja3transport">https://github.com/CUCyber/ja3transport</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/sleeyax/burp-awesome-tls">https://github.com/sleeyax/burp-awesome-tls</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/LyleMi/ja3proxy">https://github.com/LyleMi/ja3proxy</a></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -177,416 +228,105 @@
 		</ul>
 	</div>
 
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/06/17/scan-cost/" class="archive-article-date">
-  	<time datetime="2023-06-17T05:44:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-06-17</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/06/17/scan-cost/">全网测绘的成本探究</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/05/17/why-nmap-not-work/" class="archive-article-date">
-  	<time datetime="2023-05-17T13:41:10.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-05-17</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/05/17/why-nmap-not-work/">攻击面测绘：浅谈自研端扫的必要性</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/02/12/ip-geolocation/" class="archive-article-date">
-  	<time datetime="2023-02-12T01:53:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-02-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/02/12/ip-geolocation/">浅谈IP-地理位置映射关系构建</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/12/03/python-ssl-debug/" class="archive-article-date">
-  	<time datetime="2022-12-03T00:12:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-12-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/12/03/python-ssl-debug/">一次Python TLS适配出错的调试过程</a>
-    </h1>
-  
+      </div>
+    </span>
+  </div>
+</div>
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
-        		</li>
-      		
-		</ul>
-	</div>
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2023/07/08/ja3proxy/" alt="微信分享二维码">
+    </div>
+</div>
 
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/10/25/cyberscan/" class="archive-article-date">
-  	<time datetime="2022-10-25T12:20:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-10-25</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2023/06/17/scan-cost/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">全网测绘的成本探究</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/10/25/cyberscan/">网络空间测绘从1到2：从单机到规模化测绘</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/测绘//" class="article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-      
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2021" class="archive-year">2021</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
-  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/21/unreliable-dns/">性能优先的隐忧：浅谈DNS的不可用性</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/07/09/uemu/" class="archive-article-date">
-  	<time datetime="2021-07-09T14:13:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-09</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/07/09/uemu/">基于用户态虚拟化的物联网设备仿真方法</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">虚拟化</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/IoT//" class="article-tag-list-link color4">IoT</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-      
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/12/18/aflnw/" class="archive-article-date">
-  	<time datetime="2020-12-18T09:03:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-12-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/12/18/aflnw/">一种基于AFL测试网络服务程序的小技巧</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">AFL</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/07/04/2020-7-4-p2im-reading-notes/" class="archive-article-date">
-  	<time datetime="2020-07-04T02:52:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-04</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/07/04/2020-7-4-p2im-reading-notes/">Usenix 2020 P²IM 论文阅读笔记</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">论文阅读</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/2/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -611,8 +351,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
