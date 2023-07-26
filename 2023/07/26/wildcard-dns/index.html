@@ -6,14 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Archives: 2023 | Lyle&#39;s Blog</title>
+  <title>基于时序的泛解析域名判断 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/archives/2023/index.html">
+  <meta name="description" content="在实践中，泛解析域名会在网络测绘过程中产生大量的脏数据，给信息收集带来困扰。本文提出了一种基于时序的泛解析域名判断方法，从泛解析域名列表中分离出有意义的域名。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于时序的泛解析域名判断">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2023/07/26/wildcard-dns/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="在实践中，泛解析域名会在网络测绘过程中产生大量的脏数据，给信息收集带来困扰。本文提出了一种基于时序的泛解析域名判断方法，从泛解析域名列表中分离出有意义的域名。">
 <meta property="og:locale">
+<meta property="article:published_time" content="2023-07-26T13:35:30.000Z">
+<meta property="article:modified_time" content="2023-07-26T14:18:19.568Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="DNS">
+<meta property="article:tag" content="测绘">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
@@ -136,36 +142,104 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-wildcard-dns" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2023" class="archive-year">2023</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/07/26/wildcard-dns/" class="archive-article-date">
-  	<time datetime="2023-07-26T13:35:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-26</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/07/26/wildcard-dns/">基于时序的泛解析域名判断</a>
+    <h1 class="article-title" itemprop="name">
+      基于时序的泛解析域名判断
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2023/07/26/wildcard-dns/" class="archive-article-date">
+  	<time datetime="2023-07-26T13:35:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-26</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在实践中，泛解析域名会在网络测绘过程中产生大量的脏数据，给信息收集带来困扰。本文提出了一种基于时序的泛解析域名判断方法，从泛解析域名列表中分离出有意义的域名。</p>
+<span id="more"></span>
+
+<h2 id="泛解析简介"><a href="#泛解析简介" class="headerlink" title="泛解析简介"></a>泛解析简介</h2><p>泛解析（Wildcard DNS）是一种域名解析技术，通过在域名服务器上配置通配符，可以将任意未明确指定的子域名解析到同一IP地址。</p>
+<h2 id="测绘中的泛解析"><a href="#测绘中的泛解析" class="headerlink" title="测绘中的泛解析"></a>测绘中的泛解析</h2><p>在实践中，泛解析域名的特点会为网络测绘产生大量的脏数据，给信息收集带来困扰。当前子域名爆破工具在遇到泛解析时大多会全量丢弃泛解析域名，但是简单地丢弃所有泛解析域名会导致丢失部分有价值的数据。</p>
+<p>举例来说，虽然 <code>*.taobao.com</code> 配置了泛解析，但是该配置对应有许多有价值的子域名例如主站 <code>www.taobao.com</code> 、 盒马 <code>hema.taobao.com</code> 等，如果直接丢弃这个泛解析域名，会导致测绘遗漏非常多数据。因此，需要一种方法来区分泛解析域名中有业务的域名。为了方便表述，在后文中将有具体业务的符合泛解析规则的子域名称为业务域名，只是因为泛解析规则而有解析记录并没有实际应用的域名称为无效域名。</p>
+<h2 id="基于时序的泛解析业务域名分类"><a href="#基于时序的泛解析业务域名分类" class="headerlink" title="基于时序的泛解析业务域名分类"></a>基于时序的泛解析业务域名分类</h2><p>让我们简单回顾一下端上DNS递归请求的链路：</p>
+<ul>
+<li>程序向本地DNS服务器请求解析</li>
+<li>如果本地DNS服务器缓存没有命中，向配置的公共DNS服务器发送一个查询请求</li>
+<li>如果公共DNS服务器上有缓存，直接返回；否则公共DNS服务器查询对应域名的NS服务器获得结果后再返回</li>
+<li>公共服务器向NS服务器发送查询请求，将查询结果返回给本地DNS</li>
+</ul>
+<p>对于直接向对应域名的NS服务器查询的情况，由于泛解析在目标的NS上配置的是通配符，所以业务域名和无效域名解析耗时相同。而选择常用的公共DNS服务器进行DNS请求时，业务域名由于正常业务使用被其它用户访问过，大多在公共DNS服务器上存在缓存，会以更短的时间返回。</p>
+<p>即业务域名的命中链路为：程序-&gt;本地DNS-&gt;公共DNS，无效域名的命中链路为：程序-&gt;本地DNS-&gt;公共DNS-&gt;NS服务器，多出的一次查询会显著增加解析时间。因此我们可以通过解析耗时来一定程度上自动化区分出泛解析域名。</p>
+<p>具体来说，可以串行解析泛解析域名对应的多个子域名之后，采用统计算法或聚类算法来实现自动化区分，如贪心算法或K-Means算法等。这里简单考虑使用差值排序方法，具体步骤如下：</p>
+<ul>
+<li>串行解析要测试的域名列表</li>
+<li>将解析时长数据从小到大排序</li>
+<li>计算出所有相邻两个时长数据之间的差值</li>
+<li>将这些差值从小到大排序</li>
+<li>选择差值最大的两个数据，将时长数据分为两组</li>
+</ul>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>以常见的配置了泛解析的域名（如taobao.com）为例进行验证。一组结果如下：</p>
+<table>
+<thead>
+<tr>
+<th>子域名</th>
+<th>解析耗时</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="http://www.taobao.com/">www.taobao.com</a></td>
+<td>77.4855ms</td>
+</tr>
+<tr>
+<td>world.taobao.com</td>
+<td>84.9071ms</td>
+</tr>
+<tr>
+<td>job.taobao.com</td>
+<td>84.8757ms</td>
+</tr>
+<tr>
+<td>hema.taobao.com</td>
+<td>84.8757ms</td>
+</tr>
+<tr>
+<td>not-exists-1.taobao.com</td>
+<td>295.3502ms</td>
+</tr>
+<tr>
+<td>not-exists-0.taobao.com</td>
+<td>294.8052ms</td>
+</tr>
+</tbody></table>
+<p>可以看到有很明显的时间差距，时间小于100ms的均是业务域名，其他的是无效域名。</p>
+<p>需要注意的有：</p>
+<ul>
+<li>测试时需要保证本地的网络稳定，没有明显的网络波动、丢包等情况</li>
+<li>在测试前需要进行预热，即使用非测试范围内的无效子域名进行查询，确保公共DNS和目标NS之间已经建立起了链路，使得后续请求没有额外的路由等开销</li>
+<li>需要确保公共服务器和目标NS之前网络稳定，例如用国内114dns来测试 <code>github.io</code> 的泛解析可能会导致结果有明显的网络波动</li>
+</ul>
+<h2 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h2><p>基于时序的泛解析判断方法存在以下限制：</p>
+<ul>
+<li>该方法依赖于缓存，如果域名对应业务访问量小，公共DNS服务器没有缓存，则无法保证正确率</li>
+<li>需要向特定的服务器发送数据包，可能给目标服务器带来网络负担</li>
+<li>基于时效的方案对网络状况有很大的依赖，不稳定的网络环境会显著影响结果</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文提出了一种基于时序的泛解析域名判断方法，通过分析DNS请求链路的时长数据，实现了对泛解析域名和非泛解析域名的自动化区分。尽管该方法存在一定的局限性，但在一定程度上可以帮助解决网络测绘过程中泛解析域名带来的问题。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -181,149 +255,106 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2023/07/26/wildcard-dns/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/07/08/ja3proxy/" class="archive-article-date">
-  	<time datetime="2023-07-08T08:35:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-08</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2023/07/08/ja3proxy/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Ja3：计算原理、应用场景与指纹伪造</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/07/08/ja3proxy/">Ja3：计算原理、应用场景与指纹伪造</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">tls</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/06/17/scan-cost/" class="archive-article-date">
-  	<time datetime="2023-06-17T05:44:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-06-17</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/06/17/scan-cost/">全网测绘的成本探究</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/05/17/why-nmap-not-work/" class="archive-article-date">
-  	<time datetime="2023-05-17T13:41:10.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-05-17</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/05/17/why-nmap-not-work/">攻击面测绘：浅谈自研端扫的必要性</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/02/12/ip-geolocation/" class="archive-article-date">
-  	<time datetime="2023-02-12T01:53:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-02-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/02/12/ip-geolocation/">浅谈IP-地理位置映射关系构建</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
 
 
           </div>
@@ -347,8 +378,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
