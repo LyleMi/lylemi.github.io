@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Lyle&#39;s Blog</title>
+  <title>聊聊RDAP协议 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/page/3/index.html">
+  <meta name="description" content="最近在工作中接触到了RDAP协议，然而关于这个协议的中文资料并不多。因此，简单研究了相关内容完成了一个简单的分享，希望能对读者有所帮助。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊聊RDAP协议">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2023/10/08/rdap/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="最近在工作中接触到了RDAP协议，然而关于这个协议的中文资料并不多。因此，简单研究了相关内容完成了一个简单的分享，希望能对读者有所帮助。">
 <meta property="og:locale">
+<meta property="article:published_time" content="2023-10-08T13:17:15.000Z">
+<meta property="article:modified_time" content="2023-10-08T13:18:50.672Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="protocol">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
@@ -136,563 +141,59 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-cve-2019-0232" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-rdap" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/20/cve-2019-0232/">CVE-2019-0232：Apache Tomcat RCE漏洞分析</a>
+    <h1 class="article-title" itemprop="name">
+      聊聊RDAP协议
     </h1>
   
 
         
-        <a href="/2019/04/20/cve-2019-0232/" class="archive-article-date">
-  	<time datetime="2019-04-20T04:43:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-20</time>
+        <a href="/2023/10/08/rdap/" class="archive-article-date">
+  	<time datetime="2023-10-08T13:17:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-10-08</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="简述"><a href="#简述" class="headerlink" title="简述"></a>简述</h2><h3 id="利用前提"><a href="#利用前提" class="headerlink" title="利用前提"></a>利用前提</h3><p>该漏洞是由于Tomcat CGI将命令行参数传递给Windows程序的方式存在错误，使得CGIServlet被命令注入影响。</p>
-<p>该漏洞只影响Windows平台，要求启用了CGIServlet和enableCmdLineArguments参数。但是CGIServlet和enableCmdLineArguments参数默认情况下都不启用。</p>
-        
-          <a class="article-more-a" href="/2019/04/20/cve-2019-0232/#more">more >></a>
-        
-      
+        <p>最近在工作中接触到了RDAP协议，然而关于这个协议的中文资料并不多。因此，简单研究了相关内容完成了一个简单的分享，希望能对读者有所帮助。</p>
+<span id="more"></span>
 
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/04/20/cve-2019-0232/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-Web-Application-Auto-Audit" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/06/Web-Application-Auto-Audit/">Web应用代码自动化审计浅谈</a>
-    </h1>
-  
-
-        
-        <a href="/2019/04/06/Web-Application-Auto-Audit/" class="archive-article-date">
-  	<time datetime="2019-04-06T10:17:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="0-序"><a href="#0-序" class="headerlink" title="0. 序"></a>0. 序</h1><p>代码审计是找到应用缺陷的过程。自动化审计通常有白盒、黑盒、灰盒等多种方式。白盒指通过对源代码的分析找到应用缺陷；黑盒通常不涉及到源代码，多使用模糊测试等方式来找到漏洞；而灰盒则是黑白结合的方式，利用黑盒特性来减少白盒的计算复杂度，使用白盒的信息来衡量漏洞的有效性。</p>
-        
-          <a class="article-more-a" href="/2019/04/06/Web-Application-Auto-Audit/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">自动化</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/04/06/Web-Application-Auto-Audit/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-bypass-xss-mitigation-via-gadgets" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/27/bypass-xss-mitigation-via-gadgets/">基于Gadgets绕过XSS防御机制</a>
-    </h1>
-  
-
-        
-        <a href="/2019/02/27/bypass-xss-mitigation-via-gadgets/" class="archive-article-date">
-  	<time datetime="2019-02-27T01:49:17.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-02-27</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这篇文章是之前对CCS 2018 <code>Code-Reuse Attacks for the Web Breaking Cross-Site Scripting Mitigations via Script Gadgets</code> 的阅读笔记，最近整理资料发现放了挺久，于是稍做了一些整理和扩展发了出来。</p>
-        
-          <a class="article-more-a" href="/2019/02/27/bypass-xss-mitigation-via-gadgets/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">XSS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/02/27/bypass-xss-mitigation-via-gadgets/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-idnfuzz" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/08/idnfuzz/">IDN Spoof漏洞自动化挖掘</a>
-    </h1>
-  
-
-        
-        <a href="/2018/12/08/idnfuzz/" class="archive-article-date">
-  	<time datetime="2018-12-08T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-08</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="0x00-背景"><a href="#0x00-背景" class="headerlink" title="0x00 背景"></a>0x00 背景</h1><h2 id="国际化域名"><a href="#国际化域名" class="headerlink" title="国际化域名"></a>国际化域名</h2><p>国际化域名（Internationalized Domain Name，IDN）又称特殊字符域名，是指部分或完全使用特殊的文字或字母组成的互联网域名，包括中文、法语、阿拉伯语、希伯来语或拉丁字母等非英文字母，这些文字经多字节万国码编码而成。在域名系统中，国际化域名使用Punycode转写并以ASCII字符串储存。</p>
-<h2 id="同形异义攻击"><a href="#同形异义攻击" class="headerlink" title="同形异义攻击"></a>同形异义攻击</h2><p>同形异义字是利用IDN中一些非拉丁字符语种的字母与拉丁字符非常相似，字面看很难区分的特性，找到对应的字符来实现钓鱼攻击。例如16ვ.com(U+10D5)、16ဒ.com (U+1012)、16ҙ.com (U+0499) 都在一定程度上和163.com有相似性，基于一些开放的https证书服务这些域名还能取得相应的证书，进一步增加钓鱼成功的可能性。</p>
-        
-          <a class="article-more-a" href="/2018/12/08/idnfuzz/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/12/08/idnfuzz/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-unicode-normalization" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/10/29/unicode-normalization/">Unicode等价性浅谈</a>
-    </h1>
-  
-
-        
-        <a href="/2018/10/29/unicode-normalization/" class="archive-article-date">
-  	<time datetime="2018-10-29T08:56:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-10-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>做SSRF测试的时候，常提到用类似 <code>ａ</code> 字符来bypass过滤器，之前没有做深究，偶然的一次机会，发现bａidu.com(\uff41)能跳转到百度，但是bаidu.com(\u0430)会被认为是一个新的IDN域名，并不指向baidu.com。</p>
-        
-          <a class="article-more-a" href="/2018/10/29/unicode-normalization/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Unicode</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/10/29/unicode-normalization/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2017-9-27-domato-dom-fuzzer" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">Domato - A DOM Fuzzer</a>
-    </h1>
-  
-
-        
-        <a href="/2017/09/27/2017-9-27-domato-dom-fuzzer/" class="archive-article-date">
-  	<time datetime="2017-09-27T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-27</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="0x00-概述"><a href="#0x00-概述" class="headerlink" title="0x00 概述"></a>0x00 概述</h3><p>Domato是Google Project Zero的研究员实现的一套DOM Fuzz工具，该Fuzzer挖掘出了30+来自各浏览器的漏洞，是一款比较高效的Fuzzer。</p>
-<p>其基本思路和正常的fuzzer一样，也是利用从各个地方抓取的HTML&#x2F;CSS&#x2F;JS样本中所包含的语法结构和属性来生成样本。</p>
-<p>整个fuzzer大概可以分为以下几个部分：</p>
+<h2 id="Whois与RDAP"><a href="#Whois与RDAP" class="headerlink" title="Whois与RDAP"></a>Whois与RDAP</h2><p>要谈RDAP，离不开Whois协议。作为互联网早期的一种协议，Whois在获取域名和IP地址注册信息方面发挥了重要作用。然而，随着互联网的发展，我们发现Whois协议存在一些明显的缺陷：</p>
 <ul>
-<li><code>generator.py</code> 根据输入的语法生成样本的引擎</li>
-<li><code>grammar.py</code> 解析参数然后调用基础引擎来生成样本</li>
-<li><code>*.txt</code> 用于生成HTML，CSS，js代码的语法库</li>
+<li>查询和响应格式不统一：这使得数据解析变得困难。</li>
+<li>缺乏用户身份验证或访问控制：这意味着无法实现差异化访问，从而在一定程度上影响了数据的安全性。</li>
+<li>不支持国际化：Whois无法支持国际化域名 (IDN)</li>
 </ul>
-        
-          <a class="article-more-a" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/#more">more >></a>
-        
-      
+<p>为了解决这些问题，<a target="_blank" rel="noopener" href="https://www.icann.org/rdap">Registration Data Access Protocol (RDAP)</a> 协议应运而生。RDAP协议是一种用于获取域名和IP地址注册信息的新协议，旨在取代传统的WHOIS协议，提供更加标准化、结构化和安全的注册数据访问方式。</p>
+<p>与Whois对应，RDAP协议具有以下特点：</p>
+<ul>
+<li>结构化数据：RDAP返回的数据以JSON格式呈现，相比于WHOIS的文本格式，更易于解析和处理。</li>
+<li>统一的查询语法：RDAP使用统一的查询语法，使得查询语句在不同的注册机构之间具有一致性。</li>
+<li>访问控制和安全性：RDAP支持访问控制和身份验证机制，可以提供更安全的注册数据访问。</li>
+<li>国际化支持：RDAP支持国际化域名和多语言字符集，可以更好地处理多语言环境下的域名查询。</li>
+</ul>
+<h2 id="协议细节"><a href="#协议细节" class="headerlink" title="协议细节"></a>协议细节</h2><p>在没有更多资料的情况下，一个合适的了解协议的方式是从RFC入手，容易搜到，和RDAP协议相关的RFC有RFC 7480-7484共五份文档。这五份文档详细地描述了RDAP协议的各个方面。</p>
+<p>第一份协议草案 <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7480">RFC7480 HTTP Usage in the Registration Data Access Protocol (RDAP)</a> 是RDAP协议的基础，描述了RDAP的基本交互方式。RDAP协议主要是借用了相对成熟的HTTP协议来进行数据交互，放弃了Whois协议的专有协议类型。</p>
+<p>第二份协议草案 <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7481">RFC7481 Security Services for the Registration Data Access Protocol (RDAP)</a> 主要关注了RDAP协议的安全性，包括身份验证、访问控制和数据保护等。这些都是Whois协议所缺乏的。在设计RDAP协议时，开发者直接复用了HTTP&#x2F;HTTPS标准的能力，以实现访问控制、可用性、数据完整性等功能。</p>
+<p>第三份协议草案 <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7482">RFC7482 Registration Data Access Protocol (RDAP) Query Format</a> 定义了RDAP的完整交互方式，包括IP、ASN、域名、实体等查询格式。此外，RFC 7482 还引入了搜索的能力，并考虑了国际化域名（IDN）的支持。</p>
+<p>具体来说：IP、ASN、域名、实体等查询格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;server&gt;/ip/&lt;IP address&gt; or ip/&lt;CIDR prefix&gt;/&lt;CIDR length&gt;</span><br><span class="line">&lt;server&gt;/autnum/&lt;autonomous system number&gt;</span><br><span class="line">&lt;server&gt;/domain/&lt;domain name&gt;</span><br><span class="line">&lt;server&gt;/nameserver/&lt;nameserver name&gt;</span><br><span class="line">&lt;server&gt;/entity/&lt;handle&gt;</span><br><span class="line">&lt;server&gt;/help</span><br></pre></td></tr></table></figure>
 
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Browser</a>
-        		</li>
-      		
-		</ul>
-	</div>
+<p>请求有了，接下来是响应，第四份协议草案 <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7483">RFC7483 Registration Data Access Protocol (RDAP) Query Format</a> 定义了RDAP的响应格式，给出了相对标准的JSON定义与数据实体定义。</p>
+<p>然而，在使用RDAP协议时，我们可能会遇到一个问题：我们应该向哪个服务器发送查询请求？这是因为存在多个RDAP服务器。例如，如果我们向亚太地区的服务器请求欧洲地区的IP，显然是得不到回应的。为了解决这个问题，<a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7484">RFC7484 Finding the Authoritative Registration Data (RDAP) Service</a> 提出了 bootstrap 标准，会对响应做自动跳转。</p>
+<p>例如请求 <a target="_blank" rel="noopener" href="https://rdap-bootstrap.arin.net/bootstrap/ip/1.1.1.1">https://rdap-bootstrap.arin.net/bootstrap/ip/1.1.1.1</a> 会自动跳转到 <a target="_blank" rel="noopener" href="https://rdap.apnic.net/ip/1.1.1.1">https://rdap.apnic.net/ip/1.1.1.1</a> 。</p>
+<p>总的来说，RFC 7480-7484 五份文档从协议蓝图到安全性考虑、请求与响应、工程实现给出了详细的描述，对于理解RDAP协议非常有帮助。</p>
+<h2 id="协议使用"><a href="#协议使用" class="headerlink" title="协议使用"></a>协议使用</h2><p>如果想在命令行中使用RDAP协议，可以使用开源组织提供的工具，如 <a target="_blank" rel="noopener" href="https://github.com/openrdap/rdap">https://github.com/openrdap/rdap</a> 。</p>
+<p>如果需要在项目中集成RDAP协议，可以参考pypi的库，如 <a target="_blank" rel="noopener" href="https://github.com/20c/rdap">https://github.com/20c/rdap</a> 。</p>
+<p>如果只是想简单地使用RDAP协议，可以在浏览器中直接输入查询URL，如 <a target="_blank" rel="noopener" href="https://rdap.apnic.net/ip/1.1.1.1">https://rdap.apnic.net/ip/1.1.1.1</a> 。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p>[1] Registration Data Access Protocol (RDAP): <a target="_blank" rel="noopener" href="https://www.icann.org/rdap">https://www.icann.org/rdap</a><br>[2] RFC7480 HTTP Usage in the Registration Data Access Protocol (RDAP): <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7480">https://datatracker.ietf.org/doc/html/rfc7480</a><br>[3] RFC7481 Security Services for the Registration Data Access Protocol (RDAP): <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7481">https://datatracker.ietf.org/doc/html/rfc7481</a><br>[4] RFC7482 Registration Data Access Protocol (RDAP) Query Format: <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7482">https://datatracker.ietf.org/doc/html/rfc7482</a><br>[5] RFC7483 Registration Data Access Protocol (RDAP) Query Format: <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7483">https://datatracker.ietf.org/doc/html/rfc7483</a><br>[6] RFC7484 Finding the Authoritative Registration Data (RDAP) Service: <a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc7484">https://datatracker.ietf.org/doc/html/rfc7484</a></p>
 
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2017-8-14-cve-2017-8496" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/14/2017-8-14-cve-2017-8496/">CVE-2017-8496 Edge Type confusion</a>
-    </h1>
-  
-
-        
-        <a href="/2017/08/14/2017-8-14-cve-2017-8496/" class="archive-article-date">
-  	<time datetime="2017-08-14T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="1-Vulnerability-Description"><a href="#1-Vulnerability-Description" class="headerlink" title="1. Vulnerability Description"></a>1. Vulnerability Description</h3><h4 id="1-1-The-Issue"><a href="#1-1-The-Issue" class="headerlink" title="1.1 The Issue"></a>1.1 The Issue</h4><p>崩溃发生在CAttrArray::PrivateFindInl函数中。 在函数中rcx（this）指针应该指向一个CAttrArray，但它实际上指向一个CAttribute。<br>CAttrArray::PrivateFindInl只会执行读取操作，其返回值将被调用函数（CAttrArray::SetParsed）抛弃。 </p>
-        
-          <a class="article-more-a" href="/2017/08/14/2017-8-14-cve-2017-8496/#more">more >></a>
-        
       
 
       
@@ -705,36 +206,84 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">protocol</a>
         		</li>
       		
 		</ul>
 	</div>
 
       
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/08/14/2017-8-14-cve-2017-8496/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2023/10/08/rdap/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2023/07/26/wildcard-dns/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">基于时序的泛解析域名判断</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -754,271 +303,14 @@
 
 
 
-
-  
-    <article id="post-2017-8-11-cve-2016-0003" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/11/2017-8-11-cve-2016-0003/">CVE-2016-0003 Edge Type Confusion</a>
-    </h1>
-  
-
-        
-        <a href="/2017/08/11/2017-8-11-cve-2016-0003/" class="archive-article-date">
-  	<time datetime="2017-08-11T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-11</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="1-Vulnerability-Description"><a href="#1-Vulnerability-Description" class="headerlink" title="1. Vulnerability Description"></a>1. Vulnerability Description</h3><h4 id="1-1-The-Issue"><a href="#1-1-The-Issue" class="headerlink" title="1.1 The Issue"></a>1.1 The Issue</h4><p>MS Edge CDOMTextNode::get_data type confusion</p>
-<p>特别构造的JavaScript脚本可以触发Microsoft Edge的type confusion，使得可以像访问字符串一样访问C++对象。 这可能导致信息泄露，例如允许攻击者确定指向其他对象或函数的指针的值。</p>
-        
-          <a class="article-more-a" href="/2017/08/11/2017-8-11-cve-2016-0003/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/08/11/2017-8-11-cve-2016-0003/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-php-unserialize" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/10/29/php-unserialize/">php unserialize()/wakeup()漏洞</a>
-    </h1>
-  
-
-        
-        <a href="/2016/10/29/php-unserialize/" class="archive-article-date">
-  	<time datetime="2016-10-29T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-10-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>unserialize和serialize这里不做赘述。</p>
-<p>unserialize的漏洞在magic function上，如果一个类定义了__wakup()和__destruct()，则该类的实例被反序列化时，会自动调用__wakeup(), 生命周期结束时，则调用__desturct()。</p>
-        
-          <a class="article-more-a" href="/2016/10/29/php-unserialize/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">反序列化</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">PHP</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2016/10/29/php-unserialize/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2016-6-6-sqlmap-tamper" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/06/06/2016-6-6-sqlmap-tamper/">sqlmap-tamper编写指南</a>
-    </h1>
-  
-
-        
-        <a href="/2016/06/06/2016-6-6-sqlmap-tamper/" class="archive-article-date">
-  	<time datetime="2016-06-06T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2016-06-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <blockquote>
-<p>注：最近遇到了一些奇奇怪怪的waf，想自己写一些tamper但是发现没有参考材料可以使用，因此写了这篇文章，以方便进行自定义的tamper编写。笔者笔力有限，如有错误，敬请读者们指正。</p>
-</blockquote>
-<h2 id="0x00-sqlmap-tamper简介"><a href="#0x00-sqlmap-tamper简介" class="headerlink" title="0x00 sqlmap tamper简介"></a>0x00 sqlmap tamper简介</h2><p>sqlmap是一个自动化的SQL注入工具，而tamper则是对其进行扩展的一系列脚本，主要功能是对本来的payload进行特定的更改以绕过waf。</p>
-        
-          <a class="article-more-a" href="/2016/06/06/2016-6-6-sqlmap-tamper/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Web//" class="article-tag-list-link color4">Web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2016/06/06/2016-6-6-sqlmap-tamper/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
   
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/2/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
-    </nav>
+  
+
+  
+
+  
+
   
 
 
@@ -1042,8 +334,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
