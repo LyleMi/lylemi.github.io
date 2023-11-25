@@ -6,15 +6,26 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Lyle&#39;s Blog</title>
+  <title>服务识别方案探索：单TCP流识别 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/index.html">
+  <meta name="description" content="在攻击面管理&#x2F;渗透测试中，服务识别无疑是一项至关重要的任务。然而，现有的服务识别方法通常依赖于多报文探测，这种方式在大量扫描时会严重影响效率甚至触发防火墙导致识别失败。因此，本文提出了一种基于单次TCP连接进行服务识别的方案，隐蔽性强、探测效率高。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务识别方案探索：单TCP流识别">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2023/11/25/single-tcp-service-probe/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="在攻击面管理&#x2F;渗透测试中，服务识别无疑是一项至关重要的任务。然而，现有的服务识别方法通常依赖于多报文探测，这种方式在大量扫描时会严重影响效率甚至触发防火墙导致识别失败。因此，本文提出了一种基于单次TCP连接进行服务识别的方案，隐蔽性强、探测效率高。">
 <meta property="og:locale">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2023-11/nmap.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2023-11/merge-empty.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2023-11/postgres.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2023-11/mssql.png">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2023-11/rst-based-algo.png">
+<meta property="article:published_time" content="2023-11-25T07:29:24.000Z">
+<meta property="article:modified_time" content="2023-11-25T07:36:42.014Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="测绘">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.lyle.ac.cn/images/2023-11/nmap.png">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
   
@@ -136,16 +147,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-single-tcp-service-probe" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-single-tcp-service-probe" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/11/25/single-tcp-service-probe/">服务识别方案探索：单TCP流识别</a>
+    <h1 class="article-title" itemprop="name">
+      服务识别方案探索：单TCP流识别
     </h1>
   
 
@@ -159,9 +168,42 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>在攻击面管理&#x2F;渗透测试中，服务识别无疑是一项至关重要的任务。然而，现有的服务识别方法通常依赖于多报文探测，这种方式在大量扫描时会严重影响效率甚至触发防火墙导致识别失败。因此，本文提出了一种基于单次TCP连接进行服务识别的方案，隐蔽性强、探测效率高。</p>
-        
-          <a class="article-more-a" href="/2023/11/25/single-tcp-service-probe/#more">more >></a>
-        
+<span id="more"></span>
+
+<h2 id="已有方案"><a href="#已有方案" class="headerlink" title="已有方案"></a>已有方案</h2><p>以nmap为例，其主要通过指纹识别进行服务识别，即使用不同的TCP探针多次建立TCP连接识别目标服务。主要算法如下图所示：</p>
+<p>在其当前版本的<a target="_blank" rel="noopener" href="https://github.com/nmap/nmap/blob/master/nmap-service-probes">指纹文件</a>中，包含了143个探针。这意味着在极端情况下，我们需要发送143个报文才能识别目标服务。显然，这种方式的代价是相当大的。</p>
+<p><img src="/images/2023-11/nmap.png" alt="nmap 探测算法"></p>
+<h2 id="方案优化"><a href="#方案优化" class="headerlink" title="方案优化"></a>方案优化</h2><p>那么，我们是否能找到一种方式，只需要单个TCP流就能识别绝大部分协议呢？</p>
+<h3 id="合并空探针"><a href="#合并空探针" class="headerlink" title="合并空探针"></a>合并空探针</h3><p>在网络扫描工具nmap中，第一个探针被命名为null probe，即不发送任何报文，而是等待服务端先发送报文。这种探针主要用于探测SSH等服务。</p>
+<p>容易想到，这种探针可以被其它探针合并。具体来说，我们可以在建立连接之后，等待一段时间，如果服务端没有发送报文，则切换到下一个主动探针，发送探测报文。这种方法可以减少一次TCP握手，从而提高效率。</p>
+<p><img src="/images/2023-11/merge-empty.png" alt="合并空探针探测算法"></p>
+<p>对于常用协议，如HTTP等，我们可以通过合并空探针和HTTP探针，将两次探测变为一次探测，从而显著减少报文数量和握手次数。</p>
+<h3 id="错误响应识别"><a href="#错误响应识别" class="headerlink" title="错误响应识别"></a>错误响应识别</h3><p>合并空探针的方案可以解决减少常见协议识别的探针数量，然而，对于非HTTP协议，我们仍然需要做多次的指纹遍历。幸运的是，尽管部分协议和HTTP协议不兼容，但是它们会解析HTTP请求并返回错误响应。</p>
+<p>例如，对于一个常见的HTTP探针，mongodb会返回一个特定的错误信息，我们可以通过这个错误信息来识别mongodb服务。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.0 200 OK</span><br><span class="line">Connection: close</span><br><span class="line">Content-Type: text/plain</span><br><span class="line">Content-Length: 85</span><br><span class="line"></span><br><span class="line">It looks like you are trying to access MongoDB over HTTP on the native driver port.</span><br></pre></td></tr></table></figure>
+
+<p>同样，部分不会解析HTTP请求的服务，也会返回特定的错误信息。例如 redis 在收到HTTP请求后，会返回：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">^-ERR wrong number of arguments for &#x27;get&#x27; command\r\n$</span><br></pre></td></tr></table></figure>
+
+<p>因此，我们可以通过错误响应来识别服务，再次省略掉很大一部分探针。此外，我们还可以在HTTP探针后附加一些特定的字符，来复用这个探针，实现更好的效果。</p>
+<h3 id="异常响应识别"><a href="#异常响应识别" class="headerlink" title="异常响应识别"></a>异常响应识别</h3><p>遗憾的是，对于一个常见的HTTP探针，还有许多常见的数据库并不返回任何响应。例如postgres和mssql，由于HTTP报文并不符合它们的格式，它们会直接关闭连接。</p>
+<p>那么，我们是否就无法用HTTP的探针来区分postgres和mssql这两种协议呢？其实并非如此。实际上，这两种协议的响应有微妙的区别，即它们断开连接时的字节数不同。</p>
+<p>以postgres为例，如下图所示。消息的第一个字节标识消息类型，随后四个字节标识消息内容的长度（该长度包括这四个字节本身）。也就是说，正常的postgres实现都是先读取5个字节，如果我们发送五个字节的HTTP报文，对面服务是postgres时，将断开连接。</p>
+<p><img src="/images/2023-11/postgres.png" alt="postgres报文"></p>
+<p>同样，对于mssql，其TDS协议有8字节的TDS包头，后续接收数据。当发送9个字节的探针时，mssql会断开连接。注意这里和postgres的情况有所不同，这主要与服务端的实现有关，但是对于同一种服务器，触发断开连接的报文数量是一致的。</p>
+<p><img src="/images/2023-11/mssql.png" alt="mssql报文"></p>
+<p>当然，这种方式并不完美，部分协议断连的字节数可能是一致的，还有一些协议并不会主动断开连接。</p>
+<p>对于断连字节相同的情况，本文的方式可以实现初步分类，起到减少其它探针的效果。例如，如果服务端只读取了5个字节的报文就断开连接，那么对端只需要探测postgres等少数协议。</p>
+<p>算法如下图所示</p>
+<p><img src="/images/2023-11/rst-based-algo.png" alt="基于异常响应识别的算法"></p>
+<h2 id="实现Sample"><a href="#实现Sample" class="headerlink" title="实现Sample"></a>实现Sample</h2><p>在实现该算法时，我们需要注意的是，单纯的逐次调用send会无法达到预期的效果，因为send系统调用并不立刻发送，而是等待操作系统缓冲区，所以在具体扫描时需要设置特定的标志位。在发送单个字节后也需要一定时间等待对端的RST到达。</p>
+<p>下面是基于异常探测的一份简单验证代码的实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">content = <span class="string">b&quot;&quot;&quot;GET / HTTP/1.0\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n&quot;&quot;&quot;</span></span><br><span class="line">sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, <span class="number">1</span>)</span><br><span class="line">sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">sock.connect(addr, <span class="built_in">int</span>(port))</span><br><span class="line"><span class="keyword">for</span> idx <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(content)):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        sock.send(<span class="built_in">chr</span>(content[i]).encode())</span><br><span class="line">    <span class="keyword">except</span> ConnectionResetError <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;stop at &quot;</span>, idx)</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    <span class="comment"># 等待缓冲区</span></span><br><span class="line">    time.sleep(<span class="number">0.01</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h2><p>需要注意的是，基于异常的方案是存在适用范围的，如果目标服务存在非标准实现，例如读取字节的行为不一致，方案只能退化为遍历探针的方式。不过，反过来看，这种方式也能识别一些基于配置的弱交互蜜罐。</p>
+<p>此外，虽然这种方式只进行了一次TCP连接，但由于探测异常只能碎片化的发送报文，额外的TCP包头也会占用一些流量，所以这种方法在扫描速度的提升上相对有限。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总的来说，本文发现了一种新的基于单次TCP连接进行服务识别的方案，为端口服务探测供了一种新的思路和可能性，可以在很大程度上减少探测报文的发送。</p>
+
       
 
       
@@ -183,16 +225,75 @@
       
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/11/25/single-tcp-service-probe/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2023/11/25/single-tcp-service-probe/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2023/10/08/rdap/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">聊聊RDAP协议</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -212,701 +313,14 @@
 
 
 
-
-  
-    <article id="post-rdap" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/10/08/rdap/">聊聊RDAP协议</a>
-    </h1>
-  
-
-        
-        <a href="/2023/10/08/rdap/" class="archive-article-date">
-  	<time datetime="2023-10-08T13:17:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-10-08</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>最近在工作中接触到了RDAP协议，然而关于这个协议的中文资料并不多。因此，简单研究了相关内容完成了一个简单的分享，希望能对读者有所帮助。</p>
-        
-          <a class="article-more-a" href="/2023/10/08/rdap/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">protocol</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/10/08/rdap/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-wildcard-dns" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/07/26/wildcard-dns/">基于时序的泛解析域名判断</a>
-    </h1>
-  
-
-        
-        <a href="/2023/07/26/wildcard-dns/" class="archive-article-date">
-  	<time datetime="2023-07-26T13:35:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-26</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在实践中，泛解析域名会在网络测绘过程中产生大量的脏数据，给信息收集带来困扰。本文提出了一种基于时序的泛解析域名判断方法，从泛解析域名列表中分离出有意义的域名。</p>
-        
-          <a class="article-more-a" href="/2023/07/26/wildcard-dns/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/07/26/wildcard-dns/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-ja3proxy" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/07/08/ja3proxy/">Ja3：计算原理、应用场景与指纹伪造</a>
-    </h1>
-  
-
-        
-        <a href="/2023/07/08/ja3proxy/" class="archive-article-date">
-  	<time datetime="2023-07-08T08:35:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-07-08</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>随着Ja3指纹应用范围越来越广，修改请求指纹以绕开防护逐渐成为需求。而由于大部分库和框架抽象化了TLS交互，使得修改不易。为此，笔者实现了一种基于HTTP代理的快速方案来解决这个问题。</p>
-        
-          <a class="article-more-a" href="/2023/07/08/ja3proxy/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">tls</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/07/08/ja3proxy/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-scan-cost" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/06/17/scan-cost/">全网测绘的成本探究</a>
-    </h1>
-  
-
-        
-        <a href="/2023/06/17/scan-cost/" class="archive-article-date">
-  	<time datetime="2023-06-17T05:44:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-06-17</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>有时候会好奇一个问题，如果不考虑人员、合规等成本，想测绘一次全网的成本是什么样的？尝试做了一些理论计算，形成这篇文章，供各位感兴趣的同学参考。</p>
-        
-          <a class="article-more-a" href="/2023/06/17/scan-cost/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/06/17/scan-cost/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-why-nmap-not-work" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/05/17/why-nmap-not-work/">攻击面测绘：浅谈自研端扫的必要性</a>
-    </h1>
-  
-
-        
-        <a href="/2023/05/17/why-nmap-not-work/" class="archive-article-date">
-  	<time datetime="2023-05-17T13:41:10.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-05-17</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在进行端扫过程中，常常会使用masscan和nmap等工具，它们在发现和扫描目标系统的开放端口方面非常实用。</p>
-<p>然而，随着反测绘技术的不断进步，这些工具的局限性也逐渐显现。接下来，我们将详细探讨这些工具面对反测绘时的缺点，并说明为什么需要自研端扫工具。</p>
-        
-          <a class="article-more-a" href="/2023/05/17/why-nmap-not-work/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/05/17/why-nmap-not-work/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-ip-geolocation" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/02/12/ip-geolocation/">浅谈IP-地理位置映射关系构建</a>
-    </h1>
-  
-
-        
-        <a href="/2023/02/12/ip-geolocation/" class="archive-article-date">
-  	<time datetime="2023-02-12T01:53:59.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-02-12</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>通过 IP 定位似乎并不是一个困难的问题，大量的三方平台如 Geolite、IPIP 等都提供了完善、更新及时的 IP 地理位置数据。但是如果没有这些数据，能否以常见的公开信息为基础，构建IP-地理位置信息映射呢？</p>
-        
-          <a class="article-more-a" href="/2023/02/12/ip-geolocation/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2023/02/12/ip-geolocation/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-python-ssl-debug" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/12/03/python-ssl-debug/">一次Python TLS适配出错的调试过程</a>
-    </h1>
-  
-
-        
-        <a href="/2022/12/03/python-ssl-debug/" class="archive-article-date">
-  	<time datetime="2022-12-03T00:12:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-12-03</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>事情起源于支持低版本TLS Web站点的扫描需求，开始觉得是比较简单的配置问题。而后随着调试发现涉及到Python的历史遗留问题、操作系统等多个坑点，于是做了记录以供保存。</p>
-        
-          <a class="article-more-a" href="/2022/12/03/python-ssl-debug/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/12/03/python-ssl-debug/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-cyberscan" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/10/25/cyberscan/">网络空间测绘从1到2：从单机到规模化测绘</a>
-    </h1>
-  
-
-        
-        <a href="/2022/10/25/cyberscan/" class="archive-article-date">
-  	<time datetime="2022-10-25T12:20:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-10-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>基础的网络空间测绘是存在成熟实践的工程问题，从域名枚举到端口爆破到应用扫描都有着大量可选用的优质工具。但是当测绘目标的数量提高几个数量级时，问题开始变得有些许不同。过量的域名解析请求被域名服务器禁止，大量的端口扫描之后是大量的超时、漏报、误报。如果不解决随着测绘规模扩大而来的问题，当扫描目标量级的不断提升，测绘得到的数据质量将会不断下降。</p>
-        
-          <a class="article-more-a" href="/2022/10/25/cyberscan/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/测绘//" class="article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/10/25/cyberscan/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-unreliable-dns" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2021/08/21/unreliable-dns/">性能优先的隐忧：浅谈DNS的不可用性</a>
-    </h1>
-  
-
-        
-        <a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
-  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。</p>
-        
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
   
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
+  
+
   
 
 
@@ -930,8 +344,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,

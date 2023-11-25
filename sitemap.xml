@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://blog.lyle.ac.cn/2023/11/25/single-tcp-service-probe/</loc>
+    
+    <lastmod>2023-11-25</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.lyle.ac.cn/2023/10/08/rdap/</loc>
     
     <lastmod>2023-10-08</lastmod>
@@ -274,7 +283,7 @@
 
   <url>
     <loc>https://blog.lyle.ac.cn/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -282,147 +291,147 @@
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/PHP/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/Browser/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/CVE/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/Tricks/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/AFL/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/python/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/DNS/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/web/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/Command-Injection/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E6%B5%8B%E7%BB%98/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/XSS/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/Unicode/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/Python/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/QEMU/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/%E5%B7%A5%E5%85%B7/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/tls/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/tags/protocol/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
@@ -431,56 +440,56 @@
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Web/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Fuzz/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Misc/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/IoT/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Network/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/%E6%B5%8B%E7%BB%98/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Programing/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://blog.lyle.ac.cn/categories/Bin/</loc>
-    <lastmod>2023-10-08</lastmod>
+    <lastmod>2023-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
