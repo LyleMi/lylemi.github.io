@@ -138,6 +138,82 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-arg-hide" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2024/01/21/arg-hide/">聊聊Linux进程参数变形与隐藏</a>
+    </h1>
+  
+
+        
+        <a href="/2024/01/21/arg-hide/" class="archive-article-date">
+  	<time datetime="2024-01-21T07:38:35.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-01-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>渗透测试场景下，基于命令行检测恶意行为是一个常见的防御方案，例如 <code>xxx -h 10.0.0.1/24</code> 就容易被认为是一个恶意的扫描命令。对于这种检测方式，容易想到的是通过修改程序对读取参数的逻辑做修改。但是在渗透测试场景下，通常需要使用各种不同的工具，如代理、网络转发等，逐一修改并跟踪上游软件的更新是一件繁琐的工作。因而本文尝试讨论一种相对通用的参数变形与隐藏方案。</p>
+        
+          <a class="article-more-a" href="/2024/01/21/arg-hide/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">渗透测试</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2024/01/21/arg-hide/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-single-tcp-service-probe" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -816,93 +892,6 @@
 
 
   
-    <article id="post-unreliable-dns" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2021/08/21/unreliable-dns/">性能优先的隐忧：浅谈DNS的不可用性</a>
-    </h1>
-  
-
-        
-        <a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
-  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。</p>
-        
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
@@ -917,7 +906,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2023 Lyle
+    		&copy; 2024 Lyle
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
