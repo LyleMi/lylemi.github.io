@@ -6,15 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Archives | Lyle&#39;s Blog</title>
+  <title>大范围IP端口扫描优化：内核篇 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/archives/page/2/index.html">
+  <meta name="description" content="当扫描任务的数量膨胀到一定程度时，单机扫描模式下微小的性能下降将会在庞大的基数作用下变得愈发明显，进而导致时间成本飙升至无法接受的程度。本文将从操作系统的内核层面深入研究性能损耗问题，并探讨可行的优化策略。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大范围IP端口扫描优化：内核篇">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="当扫描任务的数量膨胀到一定程度时，单机扫描模式下微小的性能下降将会在庞大的基数作用下变得愈发明显，进而导致时间成本飙升至无法接受的程度。本文将从操作系统的内核层面深入研究性能损耗问题，并探讨可行的优化策略。">
 <meta property="og:locale">
+<meta property="og:image" content="https://blog.lyle.ac.cn/images/2024-01/kernel-packet.png">
+<meta property="article:published_time" content="2024-01-30T13:15:15.000Z">
+<meta property="article:modified_time" content="2024-01-30T13:30:28.182Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="测绘">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.lyle.ac.cn/images/2024-01/kernel-packet.png">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
   
@@ -136,506 +143,179 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-large-scale-port-scan-optimize-kernel-perspective" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      大范围IP端口扫描优化：内核篇
+    </h1>
+  
+
+        
+        <a href="/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/" class="archive-article-date">
+  	<time datetime="2024-01-30T13:15:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-01-30</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>当扫描任务的数量膨胀到一定程度时，单机扫描模式下微小的性能下降将会在庞大的基数作用下变得愈发明显，进而导致时间成本飙升至无法接受的程度。本文将从操作系统的内核层面深入研究性能损耗问题，并探讨可行的优化策略。</p>
+<span id="more"></span>
+
+<h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>端口扫描是网络安全领域中的一种重要技术，主要用于发现目标系统中开放的端口。这项技术的主要目的是识别网络中可访问的服务，从而为安全评估和弱点挖掘提供基础。端口扫描的结果可以帮助安全专家更好地了解目标系统的潜在弱点，以便采取相应的安全措施。</p>
+<p>端口扫描方法主要包括SYN扫描和ACK扫描。SYN扫描通过发送SYN数据包检测开放端口，目标系统回应SYN-ACK数据包表示端口开放，无回应表示端口关闭。ACK扫描通过发送ACK数据包检测开放端口，目标系统回应RST数据包表示端口开放，无回应表示端口关闭。SYN扫描速度快，但可能被检测到，ACK扫描隐蔽性高，但速度较慢。安全专家需根据实际情况选择合适的端口扫描方法。</p>
+<p>基础的扫描过程相对简单，但是当我们需要进行大范围扫描时，情况就会变得复杂许多。例如，假设我们正在组织一场规模庞大的红蓝对抗，涉及200个组织，每个组织拥有100个域名，每个域名对应100个IP地址，而每个IP地址又有65535个端口。总计是 200 x 100 x 100 x 65536 &#x3D; 131072000000，千亿级别的放大倍数。在这种情况下，即使我们只进行TCP SYN扫描，也会产生大约6.4TB的数据流量（假设每个TCP SYN包的大小约为54字节）。而如果我们发送HTTP报文，那么数据量更是天文数字。面对如此庞大的数据量，扫描性能的优化就变得至关重要。</p>
+<h2 id="性能瓶颈分析"><a href="#性能瓶颈分析" class="headerlink" title="性能瓶颈分析"></a>性能瓶颈分析</h2><p>要评估扫描性能的限制因素，我们不妨重新考虑数据报文的接收和发送过程。当网络上的数据包到达网卡时，会经过以下步骤，最终到达socket的接收缓冲区（Recieve buffer）：</p>
+<ul>
+<li>网络驱动的加载和初始化</li>
+<li>数据包抵达网络接口卡（NIC）</li>
+<li>通过直接内存访问（DMA）将数据包拷贝到内存中的环形缓冲区（Ring Buffer）</li>
+<li>产生硬中断，通知CPU数据包已存入内存</li>
+<li>驱动程序调用新API轮询（NAPI poll）处理数据包</li>
+<li>每个CPU核心运行的ksoftirqd进程通过NAPI poll函数处理Ring Buffer中的数据包</li>
+<li>释放环形缓冲区中已处理的数据区域</li>
+<li>将Ring Buffer中的数据传输到网络层，并封装成套接字缓冲区（skb）</li>
+<li>如果启用了接收包处理软件（RPS）或NIC支持多队列，则数据包会被分配到多个CPU处理<br>网络层处理积压队列中的数据包</li>
+<li>协议层处理数据</li>
+<li>数据被追加到关联socket的接收缓存</li>
+</ul>
+<p><img src="/images/2024-01/kernel-packet.png" alt="内核报文处理"></p>
+<p>在小规模扫描过程中，这些环节通常不会对系统性能产生明显影响。但是，当我们回顾千亿级别的放大倍数时，问题变得不太一样：数据报文一旦达到这个数量级，过多的中断可能会引发中断风暴；大量的上下文切换会导致数据竞争，最终可能导致处理时间呈指数级增长。</p>
+<h2 id="优化策略"><a href="#优化策略" class="headerlink" title="优化策略"></a>优化策略</h2><p>该问题的产生原因显而易见。Linux作为一款广泛应用的操作系统，其内核设计的核心理念是灵活性和可配置性，而非单纯的性能优化。基于这个原因，为了实现最高的端口扫描性能，我们需要实施的优化策略也是trivial的，即将通用操作系统转换为专用系统，通过定制处理逻辑来达成限定条件下的性能优化。</p>
+<p>针对上述问题，我们可以逐项进行优化。大量的数据包导致内存碎片化，那么通过采用大页内存（HugePages）技术来减少页表项，从而提高内存访问速度。大页内存的应用可以减少页表项的数量，从而提升内存访问效率。这种方法可以有效地减少内存碎片，提高内存利用率，进而提升端口扫描性能。</p>
+<p>对于海量的中断处理，可采用用户态轮询（User-space polling）技术以减少内核态与用户态之间的切换，从而降低中断处理开销。用户态轮询是一种允许用户态程序直接处理中断的技术，从而减少了内核态与用户态之间的切换次数，降低了中断处理开销，并提升了端口扫描性能。</p>
+<p>此外，对于驱动到内核、内核到用户态空间的多级数据通路，可以通过内存映射（Memory mapping）技术来减少不必要的内存拷贝，提高数据处理效率。内存映射是一种将用户态程序的虚拟内存地址直接映射到物理内存地址的技术，从而减少了不必要的内存拷贝，提高了数据处理效率，进而提升了端口扫描性能。</p>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>在确定优化方向之后，容易找到对应的网络优化方案，如DPDK、PF_RING、libpcap和eBPF等。以下是这些方案的简单说明和对应的实现方法。</p>
+<h3 id="DPDK"><a href="#DPDK" class="headerlink" title="DPDK"></a>DPDK</h3><p>DPDK（Data Plane Development Kit）是一个用于快速数据包处理的开发工具包。它提供了一系列库和驱动程序，可以使应用程序直接在数据平面上运行，从而避免了操作系统的协议栈，提高了网络性能。使用DPDK进行优化，需要将应用程序与DPDK库集成，并使用DPDK提供的API来编写高性能的网络应用程序。</p>
+<h3 id="PF-RING"><a href="#PF-RING" class="headerlink" title="PF_RING"></a>PF_RING</h3><p>PF_RING是一个高性能的网络框架，它提供了一种方法来加速数据包捕获和传输。PF_RING通过绕过操作系统的协议栈，直接在网络接口卡（NIC）上处理数据包，从而实现了高性能的数据包处理。要在PF_RING上实现优化，我们需要将我们的应用程序与PF_RING库集成，并使用PF_RING提供的API来编写高性能的网络应用程序。</p>
+<h3 id="libpcap"><a href="#libpcap" class="headerlink" title="libpcap"></a>libpcap</h3><p>libpcap是一个用于捕获网络数据包的库。它可以用于网络监控、安全和网络分析等应用。要在libpcap上实现优化，我们需要将我们的应用程序与libpcap库集成，并使用libpcap提供的API来捕获和分析网络数据包。</p>
+<h3 id="eBPF"><a href="#eBPF" class="headerlink" title="eBPF"></a>eBPF</h3><p>eBPF（Extended Berkeley Packet Filter）是一个允许用户在操作系统内核中运行程序的技术。它可以用于网络优化、安全监控和跟踪等应用。要在eBPF上实现优化，我们需要使用eBPF提供的API来编写内核模块，并在内核中运行我们的程序。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在端口扫描过程中，随着数据量的增加，可能会引发中断风暴和巨大的放大系数，从而导致质变。在这种情况下，传统的工具如nmap可能不再适用。为了应对这种情况，可以考虑使用DPDK、PF_RING等技术对内核网络处理进行定向优化。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-receiving-data/">https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-receiving-data/</a></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/10/25/cyberscan/" class="archive-article-date">
-  	<time datetime="2022-10-25T12:20:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-10-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/10/25/cyberscan/">网络空间测绘从1到2：从单机到规模化测绘</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">web</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/测绘//" class="article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2021" class="archive-year">2021</a>
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
-  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/08/21/unreliable-dns/">性能优先的隐忧：浅谈DNS的不可用性</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
   </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2021/07/09/uemu/" class="archive-article-date">
-  	<time datetime="2021-07-09T14:13:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-09</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2021/07/09/uemu/">基于用户态虚拟化的物联网设备仿真方法</a>
-    </h1>
-  
+</div>
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">虚拟化</a>
-        		</li>
-      		
-		</ul>
-	</div>
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/" alt="微信分享二维码">
+    </div>
+</div>
 
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/IoT//" class="article-tag-list-link color4">IoT</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
+<div class="mask js-mask"></div>
       
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/12/18/aflnw/" class="archive-article-date">
-  	<time datetime="2020-12-18T09:03:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-12-18</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/12/18/aflnw/">一种基于AFL测试网络服务程序的小技巧</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">AFL</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/07/04/2020-7-4-p2im-reading-notes/" class="archive-article-date">
-  	<time datetime="2020-07-04T02:52:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-04</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2024/01/21/arg-hide/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">聊聊Linux进程参数变形与隐藏</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/07/04/2020-7-4-p2im-reading-notes/">Usenix 2020 P²IM 论文阅读笔记</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">论文阅读</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/07/01/2020-7-1-cve-2020-8617/" class="archive-article-date">
-  	<time datetime="2020-07-01T11:03:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/07/01/2020-7-1-cve-2020-8617/">CVE-2020-8617 Bind9 DOS 漏洞</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/06/30/cve-2019-5096/" class="archive-article-date">
-  	<time datetime="2020-06-30T11:34:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-30</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/06/30/cve-2019-5096/">CVE-2019-5096 GoAhead Double Free 漏洞分析</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/06/15/python-coroutine-thread-and-process/" class="archive-article-date">
-  	<time datetime="2020-06-15T11:48:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-15</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/06/15/python-coroutine-thread-and-process/">Python 进程、线程与协程</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Python</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Programing//" class="article-tag-list-link color1">Programing</a>
-        		</li>
-      		
-		</ul>
-	</div>
+        
+        
+    </div>
+</aside>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/" class="archive-article-date">
-  	<time datetime="2020-04-14T03:23:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">基于QEMU和binfmt-misc透明运行不同架构程序</a>
-    </h1>
-  
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">QEMU</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">工具</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Bin//" class="article-tag-list-link color4">Bin</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/13/tricks-1/" class="archive-article-date">
-  	<time datetime="2020-04-13T13:08:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-13</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/13/tricks-1/">语言Tricks系列之一</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Tricks</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
   
-    </div></section>
   
 
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/">&amp;laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/3/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
   
 
 
@@ -660,8 +340,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
