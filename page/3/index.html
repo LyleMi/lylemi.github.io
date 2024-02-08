@@ -138,6 +138,93 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-tricks-1" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/13/tricks-1/">语言Tricks系列之一</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/13/tricks-1/" class="archive-article-date">
+  	<time datetime="2020-04-13T13:08:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-13</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="0x0-序"><a href="#0x0-序" class="headerlink" title="0x0 序"></a>0x0 序</h1><p>最近遇到了不少各种语言的trick，于是想尝试作为一个系列记录下来。一般来说，并不提倡在生产环境中使用任何一种trick，好的代码应该是清晰的、无二义性的。部分trick更属于Undefined Behavior，这些trick在不同环境、不同版本的引擎中甚至会有截然不同的表现，在生产环境中应该避免这种情况。但是安全研究、渗透的过程中，利用这样的特性完成攻击的案例并不少见，所以仅作为研究还是有一定的意义。</p>
+        
+          <a class="article-more-a" href="/2020/04/13/tricks-1/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Tricks</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/13/tricks-1/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-cmdi" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -906,93 +993,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2017-8-14-cve-2017-8496" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/14/2017-8-14-cve-2017-8496/">CVE-2017-8496 Edge Type confusion</a>
-    </h1>
-  
-
-        
-        <a href="/2017/08/14/2017-8-14-cve-2017-8496/" class="archive-article-date">
-  	<time datetime="2017-08-14T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-08-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="1-Vulnerability-Description"><a href="#1-Vulnerability-Description" class="headerlink" title="1. Vulnerability Description"></a>1. Vulnerability Description</h3><h4 id="1-1-The-Issue"><a href="#1-1-The-Issue" class="headerlink" title="1.1 The Issue"></a>1.1 The Issue</h4><p>崩溃发生在CAttrArray::PrivateFindInl函数中。 在函数中rcx（this）指针应该指向一个CAttrArray，但它实际上指向一个CAttribute。<br>CAttrArray::PrivateFindInl只会执行读取操作，其返回值将被调用函数（CAttrArray::SetParsed）抛弃。 </p>
-        
-          <a class="article-more-a" href="/2017/08/14/2017-8-14-cve-2017-8496/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Misc//" class="article-tag-list-link color5">Misc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/08/14/2017-8-14-cve-2017-8496/">展开全文 >></a>
         </p>
       
 

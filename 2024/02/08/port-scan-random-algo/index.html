@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://blog.lyle.ac.cn">
-  <title>Lyle&#39;s Blog</title>
+  <title>端扫算法优化：随机化篇 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://blog.lyle.ac.cn/page/2/index.html">
+  <meta name="description" content="在进行端口扫描时，引入随机化技术可以增加隐蔽性，降低被目标系统检测到的风险，从而提高扫描的成功率。本文将讨论常用端扫工具在目的端口和IP的随机化算法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="端扫算法优化：随机化篇">
+<meta property="og:url" content="https://blog.lyle.ac.cn/2024/02/08/port-scan-random-algo/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="在进行端口扫描时，引入随机化技术可以增加隐蔽性，降低被目标系统检测到的风险，从而提高扫描的成功率。本文将讨论常用端扫工具在目的端口和IP的随机化算法。">
 <meta property="og:locale">
+<meta property="article:published_time" content="2024-02-08T05:14:01.000Z">
+<meta property="article:modified_time" content="2024-02-08T05:15:49.903Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="测绘">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
@@ -136,32 +141,80 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-python-ssl-debug" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-port-scan-random-algo" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/12/03/python-ssl-debug/">一次Python TLS适配出错的调试过程</a>
+    <h1 class="article-title" itemprop="name">
+      端扫算法优化：随机化篇
     </h1>
   
 
         
-        <a href="/2022/12/03/python-ssl-debug/" class="archive-article-date">
-  	<time datetime="2022-12-03T00:12:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-12-03</time>
+        <a href="/2024/02/08/port-scan-random-algo/" class="archive-article-date">
+  	<time datetime="2024-02-08T05:14:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-02-08</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>事情起源于支持低版本TLS Web站点的扫描需求，开始觉得是比较简单的配置问题。而后随着调试发现涉及到Python的历史遗留问题、操作系统等多个坑点，于是做了记录以供保存。</p>
-        
-          <a class="article-more-a" href="/2022/12/03/python-ssl-debug/#more">more >></a>
-        
+        <p>在进行端口扫描时，引入随机化技术可以增加隐蔽性，降低被目标系统检测到的风险，从而提高扫描的成功率。本文将讨论常用端扫工具在目的端口和IP的随机化算法。</p>
+<span id="more"></span>
+
+<h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>在进行端口扫描随机化时，我们可以将IP地址和端口号组合视为一个数组。为了实现随机化，我们可以对这个数组进行打散处理。以 python 为例，默认的 random.shuffle 的实现通常基于 Fisher-Yates（或称为 Knuth）洗牌算法。基本步骤如下：</p>
+<ul>
+<li>从序列的最后一个元素开始，向前遍历到第一个元素。</li>
+<li>对于当前位置 i，从 0 到 i（包括 i）之间选择一个随机索引 j。</li>
+<li>交换位置 i 和位置 j 上的元素。</li>
+<li>重复步骤 2 和 3，直到到达序列的开始。</li>
+<li>以下是 Fisher-Yates 洗牌算法的一个简单实现示例：</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">shuffle</span>(<span class="params">lst</span>):</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(lst) - <span class="number">1</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">        j = random.randint(<span class="number">0</span>, i)</span><br><span class="line">        lst[i], lst[j] = lst[j], lst[i]</span><br><span class="line">    <span class="keyword">return</span> lst</span><br></pre></td></tr></table></figure>
+
+<p>尽管该算法的空间复杂度和时间复杂度均为O(n)，相对较低，但在面对IPv4地址空间的十亿级规模时，这一方案就显得不太可行了。</p>
+<p>即使不扫描整个IPv4地址空间，一个内网B段包含256*256&#x3D;65536个IP地址，每个IP地址有65536个端口，总共有2^32个元素。在最小的情况下，一个IP地址加端口需要6字节，那么所需的存储空间将达到6(2^32) &#x2F; 2^10 &#x2F; 2^10 &#x2F; 2^10 &#x3D; 24GB。</p>
+<p>具体的运行时间可以用以下代码估计</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> timeit</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">measure_shuffle_time</span>(<span class="params">list_size</span>):</span><br><span class="line">    random_list = [os.urandom(<span class="number">6</span>) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(list_size)]</span><br><span class="line">    shuffle_time = timeit.timeit(<span class="keyword">lambda</span>: random.shuffle(random_list), number=<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">return</span> shuffle_time</span><br><span class="line"></span><br><span class="line">sizes = [<span class="number">2</span>**<span class="number">10</span>, <span class="number">2</span>**<span class="number">16</span>, <span class="number">2</span>**<span class="number">24</span>]</span><br><span class="line"><span class="keyword">for</span> size <span class="keyword">in</span> sizes:</span><br><span class="line">    elapsed = measure_shuffle_time(size)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Size: <span class="subst">&#123;size&#125;</span>, Time: <span class="subst">&#123;elapsed&#125;</span> seconds&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Size: 1024, Time: 0.00024179997853934765 seconds</span><br><span class="line">Size: 65536, Time: 0.017682800069451332 seconds</span><br><span class="line">Size: 16777216, Time: 7.696443499997258 seconds</span><br></pre></td></tr></table></figure>
+
+<p>2的8次方乘以6等于1536秒，即25分钟。一个B段的随机化过程需要大量时间。那么，已有的算法是如何解决这个问题的呢？</p>
+<h2 id="nmap"><a href="#nmap" class="headerlink" title="nmap"></a>nmap</h2><p>nmap 中，随机化通过 <code>-r</code> 选项开启，在代码中处理逻辑如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (o.randomize_ports) &#123;</span><br><span class="line">  <span class="keyword">if</span> (ports.tcp_count) &#123;</span><br><span class="line">    shortfry(ports.tcp_ports, ports.tcp_count);</span><br><span class="line">    <span class="comment">// move a few more common ports closer to the beginning to speed scan</span></span><br><span class="line">    random_port_cheat(ports.tcp_ports, ports.tcp_count);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (ports.udp_count)</span><br><span class="line">    shortfry(ports.udp_ports, ports.udp_count);</span><br><span class="line">  <span class="keyword">if</span> (ports.sctp_count)</span><br><span class="line">    shortfry(ports.sctp_ports, ports.sctp_count);</span><br><span class="line">  <span class="keyword">if</span> (ports.prot_count)</span><br><span class="line">    shortfry(ports.prots, ports.prot_count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而随机化算法如下，是简单的洗牌算法</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">shortfry</span><span class="params">(<span class="type">unsigned</span> <span class="type">short</span> *arr, <span class="type">int</span> num_elem)</span> &#123;</span><br><span class="line">  <span class="type">int</span> num;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">short</span> tmp;</span><br><span class="line">  <span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (num_elem &lt; <span class="number">2</span>)</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (i = num_elem - <span class="number">1</span>; i &gt; <span class="number">0</span> ; i--) &#123;</span><br><span class="line">    num = get_random_ushort() % (i + <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (i == num)</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    tmp = arr[i];</span><br><span class="line">    arr[i] = arr[num];</span><br><span class="line">    arr[num] = tmp;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后会对常用端口做一个优化</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Move some popular TCP ports to the beginning of the portlist, because</span></span><br><span class="line"><span class="comment">// that can speed up certain scans.  You should have already done any port</span></span><br><span class="line"><span class="comment">// randomization, this should prevent the ports from always coming out in the</span></span><br><span class="line"><span class="comment">// same order.</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">random_port_cheat</span><span class="params">(u16 *ports, <span class="type">int</span> portcount)</span> &#123;</span><br><span class="line">  <span class="type">int</span> allportidx = <span class="number">0</span>;</span><br><span class="line">  <span class="type">int</span> popportidx = <span class="number">0</span>;</span><br><span class="line">  <span class="type">int</span> earlyreplidx = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">/* Updated 2008-12-19 from nmap-services-all.</span></span><br><span class="line"><span class="comment">     Top 25 open TCP ports plus 113, 554, and 256 */</span></span><br><span class="line">  u16 pop_ports[] = &#123;</span><br><span class="line">    <span class="number">80</span>, <span class="number">23</span>, <span class="number">443</span>, <span class="number">21</span>, <span class="number">22</span>, <span class="number">25</span>, <span class="number">3389</span>, <span class="number">110</span>, <span class="number">445</span>, <span class="number">139</span>,</span><br><span class="line">    <span class="number">143</span>, <span class="number">53</span>, <span class="number">135</span>, <span class="number">3306</span>, <span class="number">8080</span>, <span class="number">1723</span>, <span class="number">111</span>, <span class="number">995</span>, <span class="number">993</span>, <span class="number">5900</span>,</span><br><span class="line">    <span class="number">1025</span>, <span class="number">587</span>, <span class="number">8888</span>, <span class="number">199</span>, <span class="number">1720</span>,</span><br><span class="line">    <span class="number">113</span>, <span class="number">554</span>, <span class="number">256</span></span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="type">int</span> num_pop_ports = <span class="keyword">sizeof</span>(pop_ports) / <span class="keyword">sizeof</span>(u16);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span>(allportidx = <span class="number">0</span>; allportidx &lt; portcount; allportidx++) &#123;</span><br><span class="line">    <span class="comment">// see if the currentport is a popular port</span></span><br><span class="line">    <span class="keyword">for</span>(popportidx = <span class="number">0</span>; popportidx &lt; num_pop_ports; popportidx++) &#123;</span><br><span class="line">      <span class="keyword">if</span> (ports[allportidx] == pop_ports[popportidx]) &#123;</span><br><span class="line">        <span class="comment">// This one is popular!  Swap it near to the beginning.</span></span><br><span class="line">        <span class="keyword">if</span> (allportidx != earlyreplidx) &#123;</span><br><span class="line">          ports[allportidx] = ports[earlyreplidx];</span><br><span class="line">          ports[earlyreplidx] = pop_ports[popportidx];</span><br><span class="line">        &#125;</span><br><span class="line">        earlyreplidx++;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过分析代码，我们可以清楚地看到nmap并未对IP地址进行随机化处理。此外，我们还可以利用strace工具，在不需要检查代码的情况下，验证这一结论。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -e sendmsg nmap 10.5.0.0/24 -p 2233,4455</span><br></pre></td></tr></table></figure>
+
+<p>显而易见，nmap的随机方法采用了较为简化的策略，通过牺牲随机性来对端口进行随机化处理。</p>
+<h2 id="masscan"><a href="#masscan" class="headerlink" title="masscan"></a>masscan</h2><p>转而关注 masscan，从其源代码中我们发现，masscan 的随机化算法源自论文 <a target="_blank" rel="noopener" href="http://www.cs.ucdavis.edu/~rogaway/papers/subset.pdf">Ciphers with Arbitrary Finite Domains</a>。该算法通过类似块密码的方法实现了一种变换。即类似</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">0 -&gt; 6</span><br><span class="line">1 -&gt; 4</span><br><span class="line">2 -&gt; 8</span><br><span class="line">3 -&gt; 1</span><br><span class="line">4 -&gt; 9</span><br><span class="line">5 -&gt; 3</span><br><span class="line">6 -&gt; 0</span><br><span class="line">7 -&gt; 5</span><br><span class="line">8 -&gt; 2</span><br><span class="line">9 -&gt; 7</span><br></pre></td></tr></table></figure>
+
+<p>显然，我们可以按照此算法对0到n进行依次变换，并获取相应的IP端口对。此方法还可用于恢复进度。此外，masscan也提供了该算法的基准测试方案，可以通过以下命令执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">masscan --benchmark --blackrock-rounds 10</span><br></pre></td></tr></table></figure>
+
+<p>输出如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">=== benchmarking (64-bits) ===</span><br><span class="line"></span><br><span class="line">-- blackrock-1 --</span><br><span class="line">rounds = 10</span><br><span class="line">iterations/second = 9.829-million</span><br><span class="line"></span><br><span class="line">-- blackrock-2 --</span><br><span class="line">rounds = 10</span><br><span class="line">iterations/second = 11.433-million</span><br><span class="line"></span><br><span class="line">-- smack-1 --</span><br><span class="line">bits/second = 3569.068-million</span><br><span class="line">clocks/byte = 0.000</span><br><span class="line">clockrate = 0.000-GHz</span><br></pre></td></tr></table></figure>
+
+<p>从 <a target="_blank" rel="noopener" href="https://github.com/robertdavidgraham/masscan/blob/master/src/crypto-blackrock.c">benchmarking 的源代码</a> 可以看出，预先配置的数组范围和迭代次数都较高，这表明该算法的整体时间成本相对较低。此外，该算法也不需要额外的空间资源。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">blackrock_benchmark(<span class="type">unsigned</span> rounds)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">BlackRock</span> <span class="title">br</span>;</span></span><br><span class="line">    <span class="type">uint64_t</span> range = <span class="number">0x012356789123</span>ULL;</span><br><span class="line">    <span class="type">uint64_t</span> i;</span><br><span class="line">    <span class="type">uint64_t</span> result = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint64_t</span> start, stop;</span><br><span class="line">    <span class="type">static</span> <span class="type">const</span> <span class="type">uint64_t</span> ITERATIONS = <span class="number">5000000ULL</span>;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="zmap"><a href="#zmap" class="headerlink" title="zmap"></a>zmap</h2><p>与nmap和masscan不同，zmap在设计时旨在覆盖整个互联网空间。基于这一目标，zmap在设计过程中采用了循环群技术对IPv4地址空间进行随机化处理。</p>
+<p>循环群是一种独特的群结构，其特性在于可通过单一元素生成，即群内所有元素均可表示为此元素的幂。此元素被称为循环群的生成元或原根。具体来说，假设G是一个群，a是G中的某个元素，若存在正整数n，使得a的n次幂能够遍历G中的所有元素，且a的幂次模n不会重复，则称G是由a生成的循环群，且a是G的一个生成元或原根。例如，整数集合Z构成一个循环群，由1生成，因为任何整数都可以表示为1的幂次。另一个例子是模p的剩余系构成的乘法群，由原根生成，因为原根的幂可以取遍所有非零剩余类。循环群在数学和密码学领域都有着广泛的应用。在密码学中，循环群可用来构建公钥密码系统，例如Diffie-Hellman密钥交换算法和ElGamal加密算法。</p>
+<p>具体来说，Zmap使用<a target="_blank" rel="noopener" href="https://github.com/zmap/zmap/blob/main/src/cyclic.c#L196">循环群算法</a>找到一个大于2的32次方的原根，通过每次遍历这个循环群来实现其遍历IPv4地址空间的能力。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">cyclic_group_t</span> groups[] = &#123;</span><br><span class="line">    &#123;<span class="comment">// 2^8 + 1</span></span><br><span class="line">     .prime = <span class="number">257</span>,</span><br><span class="line">     .known_primroot = <span class="number">3</span>,</span><br><span class="line">     .prime_factors = &#123;<span class="number">2</span>&#125;,</span><br><span class="line">     .num_prime_factors = <span class="number">1</span>&#125;,</span><br><span class="line">     ...</span><br><span class="line">    &#123;<span class="comment">// 2^32 + 15</span></span><br><span class="line">     .prime = <span class="number">4294967311</span>,</span><br><span class="line">     .known_primroot = <span class="number">3</span>,</span><br><span class="line">     .prime_factors = &#123;<span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">131</span>, <span class="number">364289</span>&#125;,</span><br><span class="line">     .num_prime_factors = <span class="number">5</span>&#125;,</span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">uint32_t</span> <span class="title function_">find_primroot</span><span class="params">(<span class="type">const</span> <span class="type">cyclic_group_t</span> *group, <span class="type">aesrand_t</span> *aes)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">uint32_t</span> candidate =</span><br><span class="line">      (<span class="type">uint32_t</span>)((aesrand_getword(aes) &amp; <span class="number">0xFFFFFFFF</span>) % group-&gt;prime);</span><br><span class="line">  <span class="type">uint64_t</span> retv = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">const</span> <span class="type">uint64_t</span> max_root = (UINT64_C(<span class="number">1</span>) &lt;&lt; <span class="number">22</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">do</span> &#123;</span><br><span class="line">    candidate += <span class="number">1</span>;</span><br><span class="line">    candidate %= group-&gt;prime;</span><br><span class="line">    candidate %= max_root;</span><br><span class="line"></span><br><span class="line">    <span class="type">mpz_t</span> prime;</span><br><span class="line">    mpz_init_set_ui(prime, group-&gt;prime);</span><br><span class="line">    <span class="type">int</span> ok = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; group-&gt;num_prime_factors &amp;&amp; ok; ++i) &#123;</span><br><span class="line">      <span class="type">const</span> <span class="type">uint64_t</span> q = group-&gt;prime_factors[i];</span><br><span class="line">      <span class="type">const</span> <span class="type">uint64_t</span> k = (group-&gt;prime - <span class="number">1</span>) / q;</span><br><span class="line">      <span class="type">mpz_t</span> base, power, res;</span><br><span class="line">      mpz_init_set_ui(base, candidate);</span><br><span class="line">      mpz_init_set_ui(power, k);</span><br><span class="line">      mpz_init(res);</span><br><span class="line">      mpz_powm(res, base, power, prime);</span><br><span class="line">      <span class="type">uint64_t</span> res_ui = mpz_get_ui(res);</span><br><span class="line">      <span class="keyword">if</span> (res_ui == <span class="number">1</span>) &#123;</span><br><span class="line">        ok = <span class="number">0</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      mpz_clear(base);</span><br><span class="line">      mpz_clear(power);</span><br><span class="line">      mpz_clear(res);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (ok) &#123;</span><br><span class="line">      retv = candidate;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">while</span> (<span class="number">1</span>);</span><br><span class="line">  log_debug(<span class="string">&quot;zmap&quot;</span>, <span class="string">&quot;Isomorphism: %llu&quot;</span>, retv);</span><br><span class="line">  <span class="keyword">return</span> retv;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://github.com/robertdavidgraham/masscan/blob/master/src/crypto-blackrock.c">https://github.com/robertdavidgraham/masscan/blob/master/src/crypto-blackrock.c</a><br><a target="_blank" rel="noopener" href="https://github.com/zmap/zmap/blob/main/src/cyclic.c#L196">https://github.com/zmap/zmap/blob/main/src/cyclic.c#L196</a><br><a target="_blank" rel="noopener" href="http://www.cs.ucdavis.edu/~rogaway/papers/subset.pdf">http://www.cs.ucdavis.edu/~rogaway/papers/subset.pdf</a></p>
+
       
 
       
@@ -174,7 +227,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
         		</li>
       		
 		</ul>
@@ -183,16 +236,75 @@
       
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/12/03/python-ssl-debug/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://blog.lyle.ac.cn/2024/02/08/port-scan-random-algo/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">大范围IP端口扫描优化：内核篇</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -212,766 +324,14 @@
 
 
 
-
-  
-    <article id="post-cyberscan" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2022/10/25/cyberscan/">网络空间测绘从1到2：从单机到规模化测绘</a>
-    </h1>
-  
-
-        
-        <a href="/2022/10/25/cyberscan/" class="archive-article-date">
-  	<time datetime="2022-10-25T12:20:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-10-25</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>基础的网络空间测绘是存在成熟实践的工程问题，从域名枚举到端口爆破到应用扫描都有着大量可选用的优质工具。但是当测绘目标的数量提高几个数量级时，问题开始变得有些许不同。过量的域名解析请求被域名服务器禁止，大量的端口扫描之后是大量的超时、漏报、误报。如果不解决随着测绘规模扩大而来的问题，当扫描目标量级的不断提升，测绘得到的数据质量将会不断下降。</p>
-        
-          <a class="article-more-a" href="/2022/10/25/cyberscan/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">web</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/测绘//" class="article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2022/10/25/cyberscan/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-unreliable-dns" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2021/08/21/unreliable-dns/">性能优先的隐忧：浅谈DNS的不可用性</a>
-    </h1>
-  
-
-        
-        <a href="/2021/08/21/unreliable-dns/" class="archive-article-date">
-  	<time datetime="2021-08-21T01:34:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-08-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>域名解析服务是计算机网络的重要组成部分，在许多场景下默认域名解析服务是稳定可用的，然而在一些特定的场景下，DNS服务的可用性可能是难以保证的。本文以网络空间测绘中的子域名枚举场景为例，对域名解析服务在特定场景下的可用性做一个简单的测试和分析。</p>
-        
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">DNS</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Network//" class="article-tag-list-link color3">Network</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/08/21/unreliable-dns/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-uemu" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2021/07/09/uemu/">基于用户态虚拟化的物联网设备仿真方法</a>
-    </h1>
-  
-
-        
-        <a href="/2021/07/09/uemu/" class="archive-article-date">
-  	<time datetime="2021-07-09T14:13:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-07-09</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="0-引言"><a href="#0-引言" class="headerlink" title="0. 引言"></a>0. 引言</h2><p>对物联网设备中的应用程序进行模糊测试时，直接使用实体设备进行测试是一种比较直接的方法，但是实体测试会带来较高的测试成本，也无法自动化地对待测目标进行测试。考虑到实体设备测试面临的限制，使用虚拟化技术对设备进行测试是一种方案，但是直接使用QEMU仿真并不能保证成功测试目标程序，本文尝试对其中的原因进行分析，并提出一种相对通用的解决方案模型。</p>
-        
-          <a class="article-more-a" href="/2021/07/09/uemu/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">虚拟化</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/IoT//" class="article-tag-list-link color4">IoT</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2021/07/09/uemu/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-aflnw" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/12/18/aflnw/">一种基于AFL测试网络服务程序的小技巧</a>
-    </h1>
-  
-
-        
-        <a href="/2020/12/18/aflnw/" class="archive-article-date">
-  	<time datetime="2020-12-18T09:03:28.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-12-18</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="方案背景"><a href="#方案背景" class="headerlink" title="方案背景"></a>方案背景</h2><p>对于网络服务程序的模糊测试，当前的解决方案主要有：hook libc socket调用、修改afl、修改网络程序等，其中无论哪种方式，几乎都需要修改网络服务程序。</p>
-        
-          <a class="article-more-a" href="/2020/12/18/aflnw/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">AFL</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/12/18/aflnw/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2020-7-4-p2im-reading-notes" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/04/2020-7-4-p2im-reading-notes/">Usenix 2020 P²IM 论文阅读笔记</a>
-    </h1>
-  
-
-        
-        <a href="/2020/07/04/2020-7-4-p2im-reading-notes/" class="archive-article-date">
-  	<time datetime="2020-07-04T02:52:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-04</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>对固件设备的测试通常受限于硬件支持，难以规模化，这在一定程度上导致了IoT漏洞的泛滥。因此文章提出了一种名为P²IM的方法，可以执行自动化的仿真测试。文章中对70个样例固件和10个真实设备的固件进行了测试，真实固件包括无人机、机器人、PLC等。在没有人工辅助的情况下，可以执行79%的固件。经过测试，文章找到了7个不同的bug。</p>
-        
-          <a class="article-more-a" href="/2020/07/04/2020-7-4-p2im-reading-notes/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">论文阅读</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/07/04/2020-7-4-p2im-reading-notes/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2020-7-1-cve-2020-8617" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/07/01/2020-7-1-cve-2020-8617/">CVE-2020-8617 Bind9 DOS 漏洞</a>
-    </h1>
-  
-
-        
-        <a href="/2020/07/01/2020-7-1-cve-2020-8617/" class="archive-article-date">
-  	<time datetime="2020-07-01T11:03:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>CVE-2020-8617是由检查 TSIG 合理性的验证代码中的逻辑错误引发的，攻击者可以通过精心构造的payload触发 <code>tsig.c</code> 的失败断言，导致拒绝服务攻击。</p>
-        
-          <a class="article-more-a" href="/2020/07/01/2020-7-1-cve-2020-8617/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/07/01/2020-7-1-cve-2020-8617/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-cve-2019-5096" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/06/30/cve-2019-5096/">CVE-2019-5096 GoAhead Double Free 漏洞分析</a>
-    </h1>
-  
-
-        
-        <a href="/2020/06/30/cve-2019-5096/" class="archive-article-date">
-  	<time datetime="2020-06-30T11:34:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>GoAhead是美国Embedthis Software公司的一款嵌入式Web服务器，提供开源和企业版本，用于全球数亿台设备中。CVE-2019-5096由思科 Talos 团队的研究员发现，可以在Pre-Auth的条件下触发漏洞。</p>
-        
-          <a class="article-more-a" href="/2020/06/30/cve-2019-5096/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CVE</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/06/30/cve-2019-5096/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-python-coroutine-thread-and-process" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/06/15/python-coroutine-thread-and-process/">Python 进程、线程与协程</a>
-    </h1>
-  
-
-        
-        <a href="/2020/06/15/python-coroutine-thread-and-process/" class="archive-article-date">
-  	<time datetime="2020-06-15T11:48:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-06-15</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="0x00-序"><a href="#0x00-序" class="headerlink" title="0x00 序"></a>0x00 序</h1><p>在程序开发的过程中，会遇到协程、线程与进程之间的选择问题，对这些概念有清晰了解才能写出效率更高的代码。</p>
-        
-          <a class="article-more-a" href="/2020/06/15/python-coroutine-thread-and-process/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Python</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Programing//" class="article-tag-list-link color1">Programing</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/06/15/python-coroutine-thread-and-process/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">基于QEMU和binfmt-misc透明运行不同架构程序</a>
-    </h1>
-  
-
-        
-        <a href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/" class="archive-article-date">
-  	<time datetime="2020-04-14T03:23:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="0x0-序"><a href="#0x0-序" class="headerlink" title="0x0 序"></a>0x0 序</h1><p>基于qemu-user在x86架构上执行mips程序时，如果调用程序调用了 <code>execve</code> ，默认会使用x86的ld来载入程序，并抛出 <code>exec format error</code> 的错误信息。查询资料后发现Linux的binfmt-misc机制可以用户透明的实现调用不同架构程序的功能，于是进行了相关的尝试，于是将尝试的过程形成这篇文章，供之后查询。</p>
-        
-          <a class="article-more-a" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">QEMU</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">工具</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Bin//" class="article-tag-list-link color4">Bin</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
   
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
-    </nav>
+  
+
+  
+
+  
+
   
 
 
@@ -995,8 +355,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
