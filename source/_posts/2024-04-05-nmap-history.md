@@ -52,7 +52,7 @@ Gordon Lyon（常用nickname为fyodor）自1997年起便开始编写并维护 Nm
 
 操作系统中各种复杂的机制，以及标准库的不断变化，也都是让人头疼的问题。在跨越二十多年的时间长廊中，许多看似稳定的 ABI 也难以保证其长久的可靠性。更糟糕的是，众多依赖库和编程语言的频繁更新，给维护工作带来了无尽的困扰。以 nmap 的重要 GUI 工具 Zenmap 为例，它最早诞生于2007年，那还是 Python 的早期阶段。然而，Python的更新换代如同疾风骤雨，给更新带来了不少困难，直到2023年，Zenmap 才终于迈入了 Python3 的时代。
 
-然而，正是因为一群开源贡献者们的孜孜不倦的努力，我们才得以享受到如今功能丰富且稳定的 nmap 。在同一个时代，并非没有工具能够实现 nmap 的扫描能力。Fyodor曾提到了许多出色的扫描器，如strobe by Julian Assange、netcat by Hobbit、stcp by Uriel Maimon、pscan by Pluvius、ident-scan by Dave Goldsmith以及SATAN tcp/udp scanners by Wietse Venema等等。然而，如今这些工具中的大部分已经难觅踪影，其中长期维护的困难无疑是一个重要的原因。
+然而，正是因为一群开源贡献者们的孜孜不倦地努力，我们才得以享受到如今功能丰富且稳定的 nmap 。在同一个时代，并非没有工具能够实现 nmap 的扫描能力。Fyodor曾提到了许多出色的扫描器，如strobe by Julian Assange、netcat by Hobbit、stcp by Uriel Maimon、pscan by Pluvius、ident-scan by Dave Goldsmith以及SATAN tcp/udp scanners by Wietse Venema等等。然而，如今这些工具中的大部分已经难觅踪影，其中长期维护的困难无疑是一个重要的原因。
 
 ## fun facts
 
@@ -82,7 +82,7 @@ nmap，作为一个扫描的软件，自然是被一些系统管理员厌恶的�
 
 ### Uncertainty Tricks
 
-需要注意的是 nmap 的许多高级技巧和选项并不是天然正确的，有些是需要一些限制或条件的影响。以[-sM](https://nmap.org/book/scan-methods-maimon-scan.html) 参数为例，这里应用了的是很多 BSD 系统对于RFC 793不正确的实现，他们在处理特殊报文时简单地丢弃数据包而不是根据 RFC 的规定生成一个 RST 数据包作为响应。这就导致该参数在大部分情况下的结果反而时错误的。
+需要注意的是 nmap 的许多高级技巧和选项并不是天然正确的，有些是需要一些限制或条件的影响。以[-sM](https://nmap.org/book/scan-methods-maimon-scan.html) 参数为例，这里应用了的是很多 BSD 系统对于RFC 793不正确的实现，他们在处理特殊报文时简单地丢弃数据包而不是根据 RFC 的规定生成一个 RST 数据包作为响应。这就导致该参数在大部分情况下的结果反而是错误的。
 
 ## 相关链接
 
