@@ -138,6 +138,97 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">基于QEMU和binfmt-misc透明运行不同架构程序</a>
+    </h1>
+  
+
+        
+        <a href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/" class="archive-article-date">
+  	<time datetime="2020-04-14T03:23:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="0x0-序"><a href="#0x0-序" class="headerlink" title="0x0 序"></a>0x0 序</h1><p>基于qemu-user在x86架构上执行mips程序时，如果调用程序调用了 <code>execve</code> ，默认会使用x86的ld来载入程序，并抛出 <code>exec format error</code> 的错误信息。查询资料后发现Linux的binfmt-misc机制可以用户透明的实现调用不同架构程序的功能，于是进行了相关的尝试，于是将尝试的过程形成这篇文章，供之后查询。</p>
+        
+          <a class="article-more-a" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">QEMU</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">工具</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Bin//" class="article-tag-list-link color4">Bin</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-tricks-1" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -899,100 +990,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2018/10/29/unicode-normalization/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-2017-9-27-domato-dom-fuzzer" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">Domato - A DOM Fuzzer</a>
-    </h1>
-  
-
-        
-        <a href="/2017/09/27/2017-9-27-domato-dom-fuzzer/" class="archive-article-date">
-  	<time datetime="2017-09-27T01:31:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-09-27</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="0x00-概述"><a href="#0x00-概述" class="headerlink" title="0x00 概述"></a>0x00 概述</h3><p>Domato是Google Project Zero的研究员实现的一套DOM Fuzz工具，该Fuzzer挖掘出了30+来自各浏览器的漏洞，是一款比较高效的Fuzzer。</p>
-<p>其基本思路和正常的fuzzer一样，也是利用从各个地方抓取的HTML&#x2F;CSS&#x2F;JS样本中所包含的语法结构和属性来生成样本。</p>
-<p>整个fuzzer大概可以分为以下几个部分：</p>
-<ul>
-<li><code>generator.py</code> 根据输入的语法生成样本的引擎</li>
-<li><code>grammar.py</code> 解析参数然后调用基础引擎来生成样本</li>
-<li><code>*.txt</code> 用于生成HTML，CSS，js代码的语法库</li>
-</ul>
-        
-          <a class="article-more-a" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/#more">more >></a>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Browser</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Fuzz//" class="article-tag-list-link color5">Fuzz</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">展开全文 >></a>
         </p>
       
 
