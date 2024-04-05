@@ -16,7 +16,7 @@
 <meta property="og:description" content="在网络安全领域，Nmap 无疑是一个具有传奇色彩的软件。自1997年问世以来，经过长期的功能优化，现已发展成为一个不可或缺的网络探测工具。这篇文章将不过多探讨技术细节，而是聊聊Nmap如何演变至今，以及这个长达二十多年的项目是如何构建和维持的。">
 <meta property="og:locale">
 <meta property="article:published_time" content="2024-04-05T00:21:06.000Z">
-<meta property="article:modified_time" content="2024-04-05T03:20:55.938Z">
+<meta property="article:modified_time" content="2024-04-05T03:29:07.404Z">
 <meta property="article:author" content="Lyle">
 <meta property="article:tag" content="杂谈">
 <meta name="twitter:card" content="summary">
@@ -180,7 +180,7 @@
 <h2 id="主要能力"><a href="#主要能力" class="headerlink" title="主要能力"></a>主要能力</h2><p>具体而言，nmap 的强大功能涵盖了主机探测、端口扫描、指纹识别以及脚本扫描等多个方面。实际上，在 nmap 的第一个版本中，就已经集成了大部分常用的扫描技术。例如，现在技术文章中经常提到的 TCP SYN扫描、FIN扫描、全连接扫描等。在 nmap 开源十年后，我们可以从<a target="_blank" rel="noopener" href="https://nmap.org/changelog.html">changelog</a>中看到，大部分更新都是关于bug修复和指纹库的更新，而少有扫描技术的更新。</p>
 <p>既然主要功能已经圆满完成，那么维护的工作量是否相对较小呢？开源项目的维护实际上并非易事。Nmap 诞生于早期操作系统百花齐放的年代，包括 OpenBSD、Solaris、Unix、BSDI 等多种操作系统，这些系统存在一些各不兼容的 ABI。而在操作系统发展到Linux、Windows、MacOS三分天下的阶段，Nmap 又遇到了 Windows 操作系统的大版本更新。对于 Nmap 这种涉及各种操作系统底层机制的工具，要完成长期的维护意味着要不断适配这些 ABI ，并不是一件轻松的工作。</p>
 <p>操作系统中各种复杂的机制，以及标准库的不断变化，也都是让人头疼的问题。在跨越二十多年的时间长廊中，许多看似稳定的 ABI 也难以保证其长久的可靠性。更糟糕的是，众多依赖库和编程语言的频繁更新，给维护工作带来了无尽的困扰。以 nmap 的重要 GUI 工具 Zenmap 为例，它最早诞生于2007年，那还是 Python 的早期阶段。然而，Python的更新换代如同疾风骤雨，给更新带来了不少困难，直到2023年，Zenmap 才终于迈入了 Python3 的时代。</p>
-<p>然而，正是因为一群开源贡献者们的孜孜不倦的努力，我们才得以享受到如今功能丰富且稳定的 nmap 。在同一个时代，并非没有工具能够实现 nmap 的扫描能力。Fyodor曾提到了许多出色的扫描器，如strobe by Julian Assange、netcat by Hobbit、stcp by Uriel Maimon、pscan by Pluvius、ident-scan by Dave Goldsmith以及SATAN tcp&#x2F;udp scanners by Wietse Venema等等。然而，如今这些工具中的大部分已经难觅踪影，其中长期维护的困难无疑是一个重要的原因。</p>
+<p>然而，正是因为一群开源贡献者们的孜孜不倦地努力，我们才得以享受到如今功能丰富且稳定的 nmap 。在同一个时代，并非没有工具能够实现 nmap 的扫描能力。Fyodor曾提到了许多出色的扫描器，如strobe by Julian Assange、netcat by Hobbit、stcp by Uriel Maimon、pscan by Pluvius、ident-scan by Dave Goldsmith以及SATAN tcp&#x2F;udp scanners by Wietse Venema等等。然而，如今这些工具中的大部分已经难觅踪影，其中长期维护的困难无疑是一个重要的原因。</p>
 <h2 id="fun-facts"><a href="#fun-facts" class="headerlink" title="fun facts"></a>fun facts</h2><p>在翻阅这nmap文档和代码的过程中，也发现了许多有趣的细节。</p>
 <h3 id="静默安装"><a href="#静默安装" class="headerlink" title="静默安装"></a>静默安装</h3><p>熟悉Windows渗透的同学，或许了解这样一个 trick：通常情况下， nmap 是无法在不引起用户注意的情况下悄悄安装的，它需要用户亲自点击才能完成安装。然而，一个特殊的版本——<a target="_blank" rel="noopener" href="https://nmap.org/oem/">OEM版本</a> 却可以实现这一目标。这个特殊版本实际上是为了满足商业用户的需求而开发的，它可以在不被察觉的情况下完成安装。</p>
 <h3 id="吐槽vc"><a href="#吐槽vc" class="headerlink" title="吐槽vc++"></a>吐槽vc++</h3><p>与众多开发者一样，nmap在开发过程中也遭遇了vc++的困境，甚至在文档中忍不住吐槽了一长段：</p>
@@ -189,7 +189,7 @@
 <h3 id="论如何防止骚扰邮件"><a href="#论如何防止骚扰邮件" class="headerlink" title="论如何防止骚扰邮件"></a>论如何防止骚扰邮件</h3><p>由于开源项目很多联络都是通过邮件，不少开发者们在 changlog 中留下了邮箱。这也使得垃圾邮件找上门来，看得出来开发者们是不厌其烦。在后续的发布中，邮箱格式都是非标准的邮箱格式。</p>
 <p>到了某一次提交，开发者们故意扔了很多gov邮件地址，如 <code>ce@ftc.gov, rhundt@fcc.gov, jquello@fcc.gov, sness@fcc.gov, president@whitehouse.gov, haesslich@loyalty.org</code>。</p>
 <h3 id="waf-引发的血案"><a href="#waf-引发的血案" class="headerlink" title="waf 引发的血案"></a>waf 引发的血案</h3><p>nmap，作为一个扫描的软件，自然是被一些系统管理员厌恶的，于是通过一些方案来防御nmap也是可以想见的。然而，有些方法反而导致了更多的问题。例如 fyodor 就提到了一个<a target="_blank" rel="noopener" href="https://nmap.org/book/nmap-defenses-trickery.html">例子</a>。他的一个朋友安装了蜜罐来误导脚本小子的扫描，然而蜜罐的漏洞却使得机器被安装了后面。</p>
-<h3 id="Uncertainty-Tricks"><a href="#Uncertainty-Tricks" class="headerlink" title="Uncertainty Tricks"></a>Uncertainty Tricks</h3><p>需要注意的是 nmap 的许多高级技巧和选项并不是天然正确的，有些是需要一些限制或条件的影响。以<a target="_blank" rel="noopener" href="https://nmap.org/book/scan-methods-maimon-scan.html">-sM</a> 参数为例，这里应用了的是很多 BSD 系统对于RFC 793不正确的实现，他们在处理特殊报文时简单地丢弃数据包而不是根据 RFC 的规定生成一个 RST 数据包作为响应。这就导致该参数在大部分情况下的结果反而时错误的。</p>
+<h3 id="Uncertainty-Tricks"><a href="#Uncertainty-Tricks" class="headerlink" title="Uncertainty Tricks"></a>Uncertainty Tricks</h3><p>需要注意的是 nmap 的许多高级技巧和选项并不是天然正确的，有些是需要一些限制或条件的影响。以<a target="_blank" rel="noopener" href="https://nmap.org/book/scan-methods-maimon-scan.html">-sM</a> 参数为例，这里应用了的是很多 BSD 系统对于RFC 793不正确的实现，他们在处理特殊报文时简单地丢弃数据包而不是根据 RFC 的规定生成一个 RST 数据包作为响应。这就导致该参数在大部分情况下的结果反而是错误的。</p>
 <h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
 <li>INTERVIEW WITH GORDON LYON: <a target="_blank" rel="noopener" href="https://www.usenix.org/publications/login/winter2016/interview-gordon-lyon">https://www.usenix.org/publications/login/winter2016/interview-gordon-lyon</a></li>
 <li>Gordon Lyon的领英个人主页: <a target="_blank" rel="noopener" href="https://www.linkedin.com/in/gordon-lyon">https://www.linkedin.com/in/gordon-lyon</a></li>
