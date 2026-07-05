@@ -6,14 +6,21 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://lylemi.github.io">
-  <title>Archives | Lyle&#39;s Blog</title>
+  <title>Agent 的人月神话：执行便宜，交付很贵 | Lyle&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyle&#39;s Blog">
-<meta property="og:url" content="https://lylemi.github.io/archives/index.html">
+  <meta name="description" content="最近重读了一遍《人月神话》，越读越觉得这本书没有过时，只是里面的变量变了。 Brooks 当年反复打的那个假设是：人和月不能互换。一个延期的软件项目，不会因为多塞几个人就自然变快。新人要学习上下文，老成员要解释上下文，模块要重新切分，接口要重新协调，测试还会变长。最后经常不是加速，而是更晚。 Agent 时代也有一个很相似的幻觉：  既然执行便宜了，交付也应该便宜。  我觉得这是新的 mythic">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Agent 的人月神话：执行便宜，交付很贵">
+<meta property="og:url" content="https://lylemi.github.io/2026/07/05/agent-mythical-man-month/index.html">
 <meta property="og:site_name" content="Lyle&#39;s Blog">
+<meta property="og:description" content="最近重读了一遍《人月神话》，越读越觉得这本书没有过时，只是里面的变量变了。 Brooks 当年反复打的那个假设是：人和月不能互换。一个延期的软件项目，不会因为多塞几个人就自然变快。新人要学习上下文，老成员要解释上下文，模块要重新切分，接口要重新协调，测试还会变长。最后经常不是加速，而是更晚。 Agent 时代也有一个很相似的幻觉：  既然执行便宜了，交付也应该便宜。  我觉得这是新的 mythic">
 <meta property="og:locale">
+<meta property="article:published_time" content="2026-07-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-05T12:53:53.894Z">
 <meta property="article:author" content="Lyle">
+<meta property="article:tag" content="Coding Agent">
+<meta property="article:tag" content="Software Engineering">
+<meta property="article:tag" content="Mythical Man-Month">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Lyle&#39;s Blog" type="application/atom+xml">
@@ -136,36 +143,192 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-agent-mythical-man-month" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2026" class="archive-year">2026</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2026/07/05/agent-mythical-man-month/" class="archive-article-date">
-  	<time datetime="2026-07-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2026-07-05</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2026/07/05/agent-mythical-man-month/">Agent 的人月神话：执行便宜，交付很贵</a>
+    <h1 class="article-title" itemprop="name">
+      Agent 的人月神话：执行便宜，交付很贵
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2026/07/05/agent-mythical-man-month/" class="archive-article-date">
+  	<time datetime="2026-07-04T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2026-07-05</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近重读了一遍《人月神话》，越读越觉得这本书没有过时，只是里面的变量变了。</p>
+<p>Brooks 当年反复打的那个假设是：人和月不能互换。一个延期的软件项目，不会因为多塞几个人就自然变快。新人要学习上下文，老成员要解释上下文，模块要重新切分，接口要重新协调，测试还会变长。最后经常不是加速，而是更晚。</p>
+<p>Agent 时代也有一个很相似的幻觉：</p>
+<blockquote>
+<p>既然执行便宜了，交付也应该便宜。</p>
+</blockquote>
+<p>我觉得这是新的 mythical man-month。</p>
+<span id="more"></span>
+
+<h2 id="先区分执行和交付"><a href="#先区分执行和交付" class="headerlink" title="先区分执行和交付"></a>先区分执行和交付</h2><p>现在让 agent 做事确实便宜了很多。</p>
+<p>改一个脚本，补一段测试，写一个 parser，扫一遍代码库，找某个 bug 的可能位置，甚至并行开几个 worker 去探索不同方向，这些事情的成本都在下降。</p>
+<p>以前我们会问：谁有时间做？</p>
+<p>现在更常见的问题是：让哪个 agent 去试？</p>
+<p>这是真的变化。没必要假装没有。</p>
+<p>但这只覆盖了软件工作里的一部分。我更愿意把它叫执行成本，而不是交付成本。</p>
+<p>交付包含的东西更麻烦：</p>
+<ul>
+<li>需求到底是什么。</li>
+<li>哪些边界不能碰。</li>
+<li>这个改动和现有系统怎么合在一起。</li>
+<li>代码风格、抽象层次、错误处理、权限模型是否一致。</li>
+<li>测试怎么证明它是对的。</li>
+<li>出问题时谁能理解、回滚、继续维护。</li>
+</ul>
+<p>agent 可以很快产出代码，但代码不是交付。</p>
+<p>Brooks 在书里有个区分很有用：一个可以在作者机器上跑的 program，和一个别人能使用、测试、维护、扩展的 programming systems product，不是一回事。后者要多出接口、文档、测试、集成和维护成本。</p>
+<p>放到今天也是一样。agent 生成一个功能是 program。能进主干、能过测试、能被团队长期维护，才接近 product。</p>
+<h2 id="加更多-agent，不等于更快"><a href="#加更多-agent，不等于更快" class="headerlink" title="加更多 agent，不等于更快"></a>加更多 agent，不等于更快</h2><p>人月神话里最出名的一句是：</p>
+<blockquote>
+<p>Adding manpower to a late software project makes it later.</p>
+</blockquote>
+<p>Agent 时代可以改写一下：</p>
+<blockquote>
+<p>Adding agents to a confused software project makes it more confused.</p>
+</blockquote>
+<p>这里的重点不是 agent 没用。相反，agent 很有用。问题在于它会放大项目已有的状态。</p>
+<p>如果项目有清晰的接口、稳定的测试、明确的 owner、可以执行的验收标准，并行 agent 会很好用。你可以让一个 agent 写迁移，一个 agent 补测试，一个 agent 做 review，一个 agent 查历史 bug。它们的输出能被 CI 和人类 reviewer 接住。</p>
+<p>如果项目本来就没有这些东西，agent 会很快制造出更多局部合理的东西。</p>
+<p>局部合理最麻烦。它不是一眼就错。每一小块代码都说得过去，每个函数名都像那么回事，每个解释也都有点道理。但放在一起以后，抽象开始重复，边界开始漂，错误处理出现三套，配置读取出现两套，测试覆盖的是 happy path，真正难的状态没人碰。</p>
+<p>人类写代码也会这样。agent 只是把这个过程加速了。</p>
+<h2 id="真正贵的是上下文"><a href="#真正贵的是上下文" class="headerlink" title="真正贵的是上下文"></a>真正贵的是上下文</h2><p>Brooks 讲沟通成本时，核心不是开会多讨厌，而是系统编程本身就有大量相互依赖。任务能不能拆开，拆开以后要不要沟通，沟通要花多少成本，这些决定了加人有没有用。</p>
+<p>agent 也一样。</p>
+<p>我们经常低估了 agent 工作里的上下文成本。问题不在 prompt 长短，而在这些东西有没有被明确表达出来：</p>
+<ul>
+<li>当前系统的设计哲学是什么。</li>
+<li>哪些历史方案试过，为什么放弃。</li>
+<li>哪些接口看起来别扭，但不能随便改。</li>
+<li>哪些测试是真正的兜底，哪些测试只是样子。</li>
+<li>哪些错误信息对用户有意义，哪些只是内部日志。</li>
+<li>哪些代码属于临时债务，哪些代码是稳定边界。</li>
+</ul>
+<p>这些上下文如果只存在于几个人脑子里，agent 不会自动知道。你可以把一堆文件塞进上下文窗口，但窗口大不等于理解稳定。</p>
+<p>更现实的问题是，agent 很会补空白。上下文缺一块，它不一定停下来问，很多时候会生成一个看起来合理的假设。这个假设一旦进了代码库，就变成下一轮 agent 的上下文。几轮之后，项目里会多出一些没人真正设计过的事实。</p>
+<p>这就是 agent 时代的沟通成本。</p>
+<h2 id="概念完整性更难了"><a href="#概念完整性更难了" class="headerlink" title="概念完整性更难了"></a>概念完整性更难了</h2><p>《人月神话》里我最喜欢的概念不是人月，而是 conceptual integrity。</p>
+<p>Brooks 说，一个系统最好从一个头脑，或者少数几个能相互共振的头脑里长出来。不是因为其他人不聪明，而是因为系统对用户是否容易理解，很大程度取决于它有没有统一的概念。</p>
+<p>agent 会冲击这件事。</p>
+<p>多个 agent 并行做任务时，很容易出现这种情况：</p>
+<table>
+<thead>
+<tr>
+<th>局部任务</th>
+<th>agent 可能做出的选择</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新增 API</td>
+<td>按自己看到的文件模仿一套 response shape</td>
+</tr>
+<tr>
+<td>新增配置</td>
+<td>在另一个目录加一套 env 读取逻辑</td>
+</tr>
+<tr>
+<td>新增错误处理</td>
+<td>写一个局部 helper，名字很合理</td>
+</tr>
+<tr>
+<td>新增 UI 状态</td>
+<td>新增一组 loading&#x2F;error&#x2F;empty 文案</td>
+</tr>
+<tr>
+<td>新增测试</td>
+<td>mock 掉真正复杂的边界</td>
+</tr>
+</tbody></table>
+<p>每一个选择都不一定错。但如果没人管整体，系统会变成一组局部最优的拼贴。</p>
+<p>这也是为什么我越来越觉得，agent 时代的工程负责人不是更轻松了，而是职责变了。以前很多时间花在催进度、分任务、补代码。现在更需要做的是守住概念边界：</p>
+<ul>
+<li>这段逻辑应该放在哪一层。</li>
+<li>这个 helper 是否已经存在。</li>
+<li>这个异常应该向上抛，还是在这里转成用户错误。</li>
+<li>这个状态是否属于领域模型，而不是 UI 临时状态。</li>
+<li>这个实现是否在绕过系统已有的抽象。</li>
+</ul>
+<p>这些判断很难完全外包。可以让 agent 帮你找证据、列方案、做对比，但最后要有人拍板。</p>
+<h2 id="交付能力会变成组织能力"><a href="#交付能力会变成组织能力" class="headerlink" title="交付能力会变成组织能力"></a>交付能力会变成组织能力</h2><p>如果执行变便宜，团队真正的差距会在哪里？</p>
+<p>我觉得会落到交付系统上。</p>
+<p>不是谁更会写 prompt，而是谁有更好的工程接收面。</p>
+<p>比如：</p>
+<ul>
+<li>spec 是否能写清楚成功条件。</li>
+<li>issue 是否能切到合适粒度。</li>
+<li>测试是否能快速告诉你改对了没有。</li>
+<li>review 是否能发现概念漂移，而不只是语法问题。</li>
+<li>CI 是否足够快，失败信息是否足够可读。</li>
+<li>文档是否记录了设计决策，而不是只记录安装步骤。</li>
+<li>repo 结构是否让新贡献者和 agent 都不容易走偏。</li>
+</ul>
+<p>这些东西以前也重要，只是以前人的执行速度没那么快，很多问题暴露得慢。现在 agent 把执行吞吐提上来，薄弱处会更快被打穿。</p>
+<p>一个没有测试的项目，以前是人类慢慢猜。现在是 agent 快速猜。</p>
+<p>一个没有架构边界的项目，以前是几个人慢慢写散。现在是十几个 agent worker 一起写散。</p>
+<p>一个没有好 issue 的团队，以前是工程师反复问需求。现在是 agent 直接把误解实现出来。</p>
+<h2 id="新的外科手术团队"><a href="#新的外科手术团队" class="headerlink" title="新的外科手术团队"></a>新的外科手术团队</h2><p>Brooks 提过 surgical team：不是十个人平等地切同一个问题，而是一个主程序员保持完整设计，其他角色围绕他提供支持。</p>
+<p>这个模型放到 agent 时代反而更像了。</p>
+<p>一个比较健康的 agent 工作流可能是：</p>
+<ul>
+<li>人类或主 agent 负责问题定义和设计边界。</li>
+<li>实现 agent 负责具体代码修改。</li>
+<li>测试 agent 负责补测试和跑回归。</li>
+<li>review agent 负责找重复抽象、边界破坏和潜在 bug。</li>
+<li>CI 负责给出硬反馈。</li>
+<li>文档和 ADR 负责留下决策。</li>
+</ul>
+<p>这里最要紧的是，必须有一个地方维护”什么是对的”。</p>
+<p>如果没有这个中心，multi-agent 很容易变成多线程写代码。速度很快，锁很少，数据竞争很多。</p>
+<h2 id="以后贵的东西"><a href="#以后贵的东西" class="headerlink" title="以后贵的东西"></a>以后贵的东西</h2><p>我不觉得 agent 会让软件工程变简单。它会让一部分动作变简单，然后把剩下的问题暴露得更清楚。</p>
+<p>便宜的是：</p>
+<ul>
+<li>生成代码。</li>
+<li>改重复代码。</li>
+<li>写样板测试。</li>
+<li>查文档。</li>
+<li>搜索代码。</li>
+<li>跑命令。</li>
+<li>做第一版方案。</li>
+</ul>
+<p>仍然贵的是：</p>
+<ul>
+<li>判断需求。</li>
+<li>设计边界。</li>
+<li>保持概念完整性。</li>
+<li>识别错误假设。</li>
+<li>证明正确性。</li>
+<li>做取舍。</li>
+<li>承担后果。</li>
+</ul>
+<p>这些东西不会因为 agent 多而自动出现。</p>
+<p>所以我现在更愿意用一句话概括 Agent 时代的人月神话：</p>
+<blockquote>
+<p>执行是廉价的，交付仍然是昂贵的。</p>
+</blockquote>
+<p>这句话听起来有点冷，但它能挡住一个很常见的误判：看到代码产出变快，就以为工程交付也等比例变快。</p>
+<p>不会的。</p>
+<p>如果团队原来缺的是执行，agent 会很明显地帮上忙。如果团队缺的是清晰需求、稳定接口、测试纪律和架构判断，agent 会先让你感觉更快，然后让你在集成和维护时付账。</p>
+<p>Brooks 当年提醒大家，不要把人月当成可以随便互换的单位。</p>
+<p>今天可能也要提醒自己：不要把 agent-month 当成交付单位。</p>
+<p>它只是执行单位。交付还是要靠系统来接住。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -185,7 +348,7 @@
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
@@ -198,420 +361,103 @@
 	</div>
 
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2026/07/01/mopmonk-agent-blog/" class="archive-article-date">
-  	<time datetime="2026-06-30T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2026-07-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2026/07/01/mopmonk-agent-blog/">MopMonk Agent：漏洞复现里的任务记忆</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Coding Agent</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CyberGym</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">Vulnerability</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/AI//" class="article-tag-list-link color3">AI</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2026/06/29/model-provider-quality-from-usage/" class="archive-article-date">
-  	<time datetime="2026-06-29T13:10:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2026-06-29</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2026/06/29/model-provider-quality-from-usage/">看不见的模型漂移：用 Agent 日志观察质量风险</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">AgentMeter</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">LLM</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Coding Agent</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/AI//" class="article-tag-list-link color3">AI</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
       
-        </div></section>
+
       
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://lylemi.github.io/2026/07/05/agent-mythical-man-month/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2024" class="archive-year">2024</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2024/04/14/learn-hacking/" class="archive-article-date">
-  	<time datetime="2024-04-14T09:00:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-04-14</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2024/04/14/learn-hacking/">网络安全杂谈：从入门到进阶</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂谈</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2024/04/05/nmap-history/" class="archive-article-date">
-  	<time datetime="2024-04-05T00:21:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-04-05</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2026/07/01/mopmonk-agent-blog/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">MopMonk Agent：漏洞复现里的任务记忆</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2024/04/05/nmap-history/">nmap 小传：开源端扫三十年</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">杂谈</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2024/02/08/port-scan-random-algo/" class="archive-article-date">
-  	<time datetime="2024-02-08T05:14:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-02-08</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2024/02/08/port-scan-random-algo/">端扫算法优化：随机化篇</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/" class="archive-article-date">
-  	<time datetime="2024-01-30T13:15:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-01-30</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/">大范围IP端口扫描优化：内核篇</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2024/01/21/arg-hide/" class="archive-article-date">
-  	<time datetime="2024-01-21T07:38:35.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2024-01-21</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2024/01/21/arg-hide/">聊聊Linux进程参数变形与隐藏</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">渗透测试</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-      
-        </div></section>
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2023" class="archive-year">2023</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/11/25/single-tcp-service-probe/" class="archive-article-date">
-  	<time datetime="2023-11-25T07:29:24.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-11-25</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/11/25/single-tcp-service-probe/">服务识别方案探索：单TCP流识别</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测绘</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2023/10/08/rdap/" class="archive-article-date">
-  	<time datetime="2023-10-08T13:17:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-10-08</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/10/08/rdap/">聊聊RDAP协议</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">protocol</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/2/">Next &amp;raquo;</a>
-    </nav>
   
 
 
@@ -636,8 +482,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

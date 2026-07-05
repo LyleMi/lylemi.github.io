@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://lylemi.github.io/2026/07/05/agent-mythical-man-month/</loc>
+    
+    <lastmod>2026-07-05</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://lylemi.github.io/2026/07/01/mopmonk-agent-blog/</loc>
     
     <lastmod>2026-06-30</lastmod>
@@ -137,7 +146,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2024/04/05/nmap-history/</loc>
+    <loc>https://lylemi.github.io/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -146,7 +155,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/</loc>
+    <loc>https://lylemi.github.io/2024/04/05/nmap-history/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -191,7 +200,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
+    <loc>https://lylemi.github.io/2023/07/08/ja3proxy/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -200,7 +209,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2023/07/08/ja3proxy/</loc>
+    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -254,15 +263,6 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2020/12/18/aflnw/</loc>
-    
-    <lastmod>2026-06-29</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://lylemi.github.io/2020/07/01/2020-7-1-cve-2020-8617/</loc>
     
     <lastmod>2026-06-29</lastmod>
@@ -281,7 +281,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2020/06/30/cve-2019-5096/</loc>
+    <loc>https://lylemi.github.io/2020/12/18/aflnw/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -290,7 +290,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2017/09/27/2017-9-27-domato-dom-fuzzer/</loc>
+    <loc>https://lylemi.github.io/2020/06/30/cve-2019-5096/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -308,7 +308,7 @@
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/2016/06/06/2016-6-6-sqlmap-tamper/</loc>
+    <loc>https://lylemi.github.io/2017/09/27/2017-9-27-domato-dom-fuzzer/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -318,6 +318,15 @@
   
   <url>
     <loc>https://lylemi.github.io/2017/08/11/2017-8-11-cve-2016-0003/</loc>
+    
+    <lastmod>2026-06-29</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/2016/06/06/2016-6-6-sqlmap-tamper/</loc>
     
     <lastmod>2026-06-29</lastmod>
     
@@ -346,7 +355,7 @@
 
   <url>
     <loc>https://lylemi.github.io/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -354,196 +363,210 @@
   
   <url>
     <loc>https://lylemi.github.io/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/PHP/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/CVE/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/AFL/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/Browser/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/Tricks/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/DNS/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/Browser/</loc>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://lylemi.github.io/tags/python/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <loc>https://lylemi.github.io/tags/AFL/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/DNS/</loc>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/web/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/%E6%B5%8B%E7%BB%98/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/tls/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/python/</loc>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/protocol/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/Coding-Agent/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/CyberGym/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/Vulnerability/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/AgentMeter/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/LLM/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/Coding-Agent/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/Software-Engineering/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/Mythical-Man-Month/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/CyberGym/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/Vulnerability/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/</loc>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/XSS/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/Command-Injection/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/Unicode/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/Python/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/QEMU/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/tags/%E5%B7%A5%E5%85%B7/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
@@ -552,63 +575,63 @@
   
   <url>
     <loc>https://lylemi.github.io/categories/Web/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/Misc/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/categories/Fuzz/</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://lylemi.github.io/categories/Network/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/IoT/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/categories/Fuzz/</loc>
+    <lastmod>2026-07-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://lylemi.github.io/categories/Network/</loc>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/%E6%B5%8B%E7%BB%98/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/AI/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/Programing/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://lylemi.github.io/categories/Bin/</loc>
-    <lastmod>2026-06-30</lastmod>
+    <lastmod>2026-07-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
