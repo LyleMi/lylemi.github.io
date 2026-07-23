@@ -8,9 +8,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8fafb" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0e161b" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0b0f13" id="meta-theme-color">
+  <meta name="color-scheme" content="dark light">
   <title><%= documentTitle %></title>
   <meta name="description" content="<%= metaDescription %>">
   <meta name="author" content="<%= config.author %>">
@@ -21,6 +20,16 @@
   <meta property="og:description" content="<%= metaDescription %>">
   <meta property="og:url" content="<%= canonicalUrl %>">
   <meta property="og:site_name" content="<%= config.title %>">
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    (function () {
+      var doc = document.documentElement;
+      doc.classList.add('js');
+      try {
+        var theme = localStorage.getItem('trace-theme');
+        if (theme === 'light' || theme === 'dark') doc.dataset.theme = theme;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="<%- url_for('/fonts/jetbrains-mono-latin-400-normal.woff2') %>" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="<%- url_for(theme.styles) %>">
 </head>

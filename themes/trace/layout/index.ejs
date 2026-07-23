@@ -1,40 +1,65 @@
 <%
   const orderedPosts = site.posts.sort('date', -1).toArray();
-  const recentPosts = orderedPosts.slice(0, 12);
+  const featuredPost = orderedPosts.find(function(post) { return post.featured; }) || orderedPosts[0];
+  const recentPosts = orderedPosts.filter(function(post) { return post !== featuredPost; }).slice(0, 10);
   const featuredProjects = (theme.projects || []).slice(0, 2);
+
+  let featuredExcerpt = '';
+  let featuredMinutes = 1;
+  let featuredTags = [];
+  if (featuredPost) {
+    featuredExcerpt = strip_html(featuredPost.excerpt || featuredPost.content || '').replace(/\s+/g, ' ').trim();
+    featuredMinutes = Math.max(1, Math.ceil(strip_html(featuredPost.content || '').replace(/\s+/g, '').length / 500));
+    featuredTags = featuredPost.tags && featuredPost.tags.toArray ? featuredPost.tags.toArray().slice(0, 3) : [];
+  }
 %>
 
-<section class="home-intro">
-  <div class="container home-intro__inner">
-    <div class="home-intro__copy">
-      <h1>安全研究、网络测量和一些工具</h1>
-      <% if (config.aboutme) { %>
-        <p><%= config.aboutme %></p>
-      <% } %>
+<section class="hero">
+  <div class="container hero__inner">
+    <p class="hero__prompt">$ whoami</p>
+    <h1>安全研究、网络测量，<br>和一些工具。</h1>
+    <% if (config.aboutme) { %>
+      <p class="hero__desc"><%= config.aboutme %></p>
+    <% } %>
+    <div class="hero__status">
+      <p>
+        <span>now</span>
+        <% featuredProjects.forEach(function(project, index) { %>
+          <%= index ? ' · ' : '' %><a href="<%= project.href %>" target="_blank" rel="noopener"><%= project.name %></a>
+        <% }); %>
+      </p>
+      <p><span>writing</span>Coding Agent · 软件工程</p>
     </div>
-
-    <aside class="focus-poster" aria-label="关注领域">
-      <div class="focus-poster__topics">
-        <strong>Web Security</strong>
-        <strong>Network Measurement</strong>
-      </div>
-      <div class="focus-poster__notes">
-        <p>
-          <span>正在做</span>
-          <% featuredProjects.forEach(function(project, index) { %>
-            <%= index ? ' · ' : '' %><a href="<%= project.href %>" target="_blank" rel="noopener"><%= project.name %></a>
-          <% }); %>
-        </p>
-        <p><span>持续写</span>Coding Agent · 软件工程</p>
-      </div>
-    </aside>
   </div>
 </section>
 
+<% if (featuredPost) { %>
+<section class="home-section container" aria-labelledby="latest-title">
+  <div class="section-title">
+    <h2 id="latest-title">~/latest</h2>
+    <a href="<%- url_for('/archives/') %>">全部文章 →</a>
+  </div>
+  <article class="featured">
+    <p class="featured__label">featured</p>
+    <h3><a href="<%- url_for(featuredPost.path) %>"><%= featuredPost.title %></a></h3>
+    <% if (featuredExcerpt) { %>
+      <p class="featured__excerpt"><%= featuredExcerpt.slice(0, 220) %><%= featuredExcerpt.length > 220 ? '…' : '' %></p>
+    <% } %>
+    <p class="featured__meta">
+      <time datetime="<%= date_xml(featuredPost.date) %>"><%= date(featuredPost.date, 'YYYY-MM-DD') %></time>
+      <span><%= featuredMinutes %> min</span>
+      <% featuredTags.forEach(function(tag) { %>
+        <a href="<%- url_for(tag.path) %>">#<%= tag.name %></a>
+      <% }); %>
+      <a class="featured__read" href="<%- url_for(featuredPost.path) %>" aria-label="阅读 <%= featuredPost.title %>">read →</a>
+    </p>
+  </article>
+</section>
+<% } %>
+
 <section class="home-section container" aria-labelledby="recent-posts-title">
   <div class="section-title">
-    <h2 id="recent-posts-title">最近文章</h2>
-    <a href="<%- url_for('/archives/') %>">全部文章</a>
+    <h2 id="recent-posts-title">~/posts</h2>
   </div>
   <div class="post-list">
     <% recentPosts.forEach(function(post) { %>
@@ -45,15 +70,14 @@
 
 <section class="home-section container" id="projects" aria-labelledby="projects-title">
   <div class="section-title">
-    <h2 id="projects-title">项目</h2>
-    <a href="<%= theme.social.github %>" target="_blank" rel="noopener">更多项目</a>
+    <h2 id="projects-title">~/projects</h2>
+    <a href="<%= theme.social.github %>" target="_blank" rel="noopener">更多 →</a>
   </div>
-  <div class="project-list">
+  <div class="project-grid">
     <% (theme.projects || []).forEach(function(project) { %>
-      <a class="project-row" href="<%= project.href %>" target="_blank" rel="noopener">
-        <strong><%= project.name %></strong>
-        <span><%= project.description %></span>
-        <span aria-hidden="true">↗</span>
+      <a class="project-card" href="<%= project.href %>" target="_blank" rel="noopener">
+        <strong class="project-card__name"><%= project.name %></strong>
+        <p><%= project.description %></p>
       </a>
     <% }); %>
   </div>

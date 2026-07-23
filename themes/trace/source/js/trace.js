@@ -1,4 +1,32 @@
 (() => {
+  const setupTheme = () => {
+    const button = document.querySelector("[data-theme-toggle]");
+    const metaColor = document.querySelector("#meta-theme-color");
+    if (!button) return;
+
+    const colors = { dark: "#0b0f13", light: "#f6f5ef" };
+
+    const current = () =>
+      document.documentElement.dataset.theme === "light" ? "light" : "dark";
+
+    const apply = (theme, persist) => {
+      if (theme === "light") document.documentElement.dataset.theme = "light";
+      else delete document.documentElement.dataset.theme;
+      button.textContent = theme === "light" ? "[dark]" : "[light]";
+      if (metaColor) metaColor.setAttribute("content", colors[theme]);
+      if (persist) {
+        try {
+          localStorage.setItem("trace-theme", theme);
+        } catch {}
+      }
+    };
+
+    apply(current(), false);
+    button.addEventListener("click", () =>
+      apply(current() === "light" ? "dark" : "light", true)
+    );
+  };
+
   const setupReadingProgress = () => {
     const progress = document.querySelector("#read-progress");
     if (!progress || !document.querySelector(".post-page")) return;
@@ -184,6 +212,7 @@
     });
   };
 
+  setupTheme();
   setupReadingProgress();
   setupToc();
   setupSearch();
