@@ -1,8 +1,14 @@
 <%
   const rowTags = post.tags && post.tags.toArray ? post.tags.toArray().slice(0, 1) : [];
+  const rowExcerpt = post.excerpt ? strip_html(post.excerpt).replace(/\s+/g, ' ').trim() : '';
 %>
 <article class="post-row">
   <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'YYYY-MM-DD') %></time>
-  <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+  <div class="post-row__main">
+    <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+    <% if (rowExcerpt) { %>
+      <p class="post-row__excerpt"><%= rowExcerpt.slice(0, 110) %></p>
+    <% } %>
+  </div>
   <span class="post-row__tag"><%= rowTags.length ? rowTags[0].name : '' %></span>
 </article>

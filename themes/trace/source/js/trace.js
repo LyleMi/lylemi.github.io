@@ -155,7 +155,37 @@
     });
   };
 
+  const setupCodeCopy = () => {
+    const blocks = document.querySelectorAll(
+      ".article-content pre, .article-content .highlight"
+    );
+    if (!blocks.length || !navigator.clipboard) return;
+
+    blocks.forEach((block) => {
+      const code = block.querySelector("code");
+      const source = code ? code.innerText : block.innerText;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "code-copy";
+      button.setAttribute("aria-label", "复制代码");
+      button.textContent = "复制";
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(source);
+          button.textContent = "已复制";
+        } catch {
+          button.textContent = "失败";
+        }
+        setTimeout(() => (button.textContent = "复制"), 1500);
+      });
+
+      block.appendChild(button);
+    });
+  };
+
   setupReadingProgress();
   setupToc();
   setupSearch();
+  setupCodeCopy();
 })();

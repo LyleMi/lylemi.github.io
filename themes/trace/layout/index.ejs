@@ -1,11 +1,34 @@
 <%
   const orderedPosts = site.posts.sort('date', -1).toArray();
   const recentPosts = orderedPosts.slice(0, 12);
+  const featuredProjects = (theme.projects || []).slice(0, 2);
 %>
 
-<section class="home-intro container">
-  <h1>关于系统、安全与软件的记录。</h1>
-  <p>我主要关注网络安全、网络测绘和 Coding Agent。这里收录相关的研究、实践和开源项目。</p>
+<section class="home-intro">
+  <div class="container home-intro__inner">
+    <div class="home-intro__copy">
+      <h1>安全研究、网络测量和一些工具</h1>
+      <% if (config.aboutme) { %>
+        <p><%= config.aboutme %></p>
+      <% } %>
+    </div>
+
+    <aside class="focus-poster" aria-label="关注领域">
+      <div class="focus-poster__topics">
+        <strong>Web Security</strong>
+        <strong>Network Measurement</strong>
+      </div>
+      <div class="focus-poster__notes">
+        <p>
+          <span>正在做</span>
+          <% featuredProjects.forEach(function(project, index) { %>
+            <%= index ? ' · ' : '' %><a href="<%= project.href %>" target="_blank" rel="noopener"><%= project.name %></a>
+          <% }); %>
+        </p>
+        <p><span>持续写</span>Coding Agent · 软件工程</p>
+      </div>
+    </aside>
+  </div>
 </section>
 
 <section class="home-section container" aria-labelledby="recent-posts-title">
