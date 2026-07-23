@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="<%= config.language || 'zh-CN' %>">
+  <%- partial('_partial/head') %>
+  <body class="page-layout-<%= is_home() ? 'home' : (page.layout || 'page') %>">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+    <div class="read-progress" id="read-progress" aria-hidden="true"></div>
+    <%- partial('_partial/header') %>
+    <main id="main-content">
+      <%- body %>
+    </main>
+    <%- partial('_partial/footer') %>
+    <%- partial('_partial/search') %>
+    <script src="<%- url_for(theme.scripts) %>" defer></script>
+  </body>
+</html>

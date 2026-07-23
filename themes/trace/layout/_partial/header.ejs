@@ -1,0 +1,12 @@
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-name" href="<%- url_for('/') %>"><%= theme.brand.name %></a>
+    <nav class="site-nav" aria-label="主导航">
+      <% Object.keys(theme.menu || {}).forEach(function(label) { %>
+        <a href="<%- url_for(theme.menu[label]) %>"><%= label %></a>
+      <% }); %>
+      <a href="<%= theme.social.github %>" target="_blank" rel="me noopener">GitHub</a>
+      <button type="button" data-search-open>搜索</button>
+    </nav>
+  </div>
+</header>

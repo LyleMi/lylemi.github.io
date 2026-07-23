@@ -1,0 +1,8 @@
+<%
+  const rowTags = post.tags && post.tags.toArray ? post.tags.toArray().slice(0, 1) : [];
+%>
+<article class="post-row">
+  <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'YYYY-MM-DD') %></time>
+  <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+  <span class="post-row__tag"><%= rowTags.length ? rowTags[0].name : '' %></span>
+</article>

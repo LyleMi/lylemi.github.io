@@ -1,0 +1,25 @@
+<%
+  const plainExcerpt = page.excerpt ? strip_html(page.excerpt).replace(/\s+/g, ' ').trim() : '';
+  const metaDescription = (page.description || plainExcerpt || config.description || '').slice(0, 180);
+  const documentTitle = page.title ? `${page.title} — ${config.author}` : config.title;
+  const cleanPath = (page.path || '').replace(/index\.html$/, '');
+  const canonicalUrl = `${config.url}${url_for(cleanPath)}`;
+%>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <title><%= documentTitle %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <meta name="author" content="<%= config.author %>">
+  <link rel="canonical" href="<%= canonicalUrl %>">
+  <link rel="icon" href="<%- url_for(theme.favicon) %>" type="image/svg+xml">
+  <meta property="og:type" content="<%= page.layout === 'post' ? 'article' : 'website' %>">
+  <meta property="og:title" content="<%= documentTitle %>">
+  <meta property="og:description" content="<%= metaDescription %>">
+  <meta property="og:url" content="<%= canonicalUrl %>">
+  <meta property="og:site_name" content="<%= config.title %>">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="<%- url_for(theme.styles) %>">
+</head>

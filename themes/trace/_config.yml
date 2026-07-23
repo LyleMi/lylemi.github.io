@@ -1,0 +1,30 @@
+brand:
+  name: Lyle
+  introduction: 关于网络安全、网络测绘、Agent 与软件工程的文章和项目。
+
+menu:
+  文章: /
+  项目: /#projects
+  归档: /archives/
+
+social:
+  github: https://github.com/LyleMi
+  twitter: https://twitter.com/LyleCrash
+
+projects:
+  - name: Reforge
+    href: https://github.com/LyleMi/Reforge
+    description: 用结构化证据发现代码库中的维护性压力与漂移。
+  - name: AgentMeter
+    href: https://github.com/LyleMi/AgentMeter
+    description: 本地优先的 Coding Agent 用量、成本与质量分析。
+  - name: JA3Proxy
+    href: https://github.com/LyleMi/ja3proxy
+    description: 可定制出站 TLS ClientHello 指纹的代理。
+  - name: AFLNW
+    href: https://github.com/LyleMi/aflnw
+    description: 面向网络服务的 AFL Fuzz 包装器。
+
+favicon: /favicon.svg
+styles: /css/trace.css
+scripts: /js/trace.js

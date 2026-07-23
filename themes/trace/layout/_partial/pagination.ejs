@@ -1,0 +1,9 @@
+<% if (page.total > 1) { %>
+  <nav class="pagination" aria-label="分页">
+    <%- paginator({
+      prev_text: '← 较新',
+      next_text: '较早 →',
+      escape: false
+    }) %>
+  </nav>
+<% } %>

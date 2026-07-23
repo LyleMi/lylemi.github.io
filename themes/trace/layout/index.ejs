@@ -1,0 +1,37 @@
+<%
+  const orderedPosts = site.posts.sort('date', -1).toArray();
+  const recentPosts = orderedPosts.slice(0, 12);
+%>
+
+<section class="home-intro container">
+  <h1>关于系统、安全与软件的记录。</h1>
+  <p>我主要关注网络安全、网络测绘和 Coding Agent。这里收录相关的研究、实践和开源项目。</p>
+</section>
+
+<section class="home-section container" aria-labelledby="recent-posts-title">
+  <div class="section-title">
+    <h2 id="recent-posts-title">最近文章</h2>
+    <a href="<%- url_for('/archives/') %>">全部文章</a>
+  </div>
+  <div class="post-list">
+    <% recentPosts.forEach(function(post) { %>
+      <%- partial('_partial/post-row', { post: post }) %>
+    <% }); %>
+  </div>
+</section>
+
+<section class="home-section container" id="projects" aria-labelledby="projects-title">
+  <div class="section-title">
+    <h2 id="projects-title">项目</h2>
+    <a href="<%= theme.social.github %>" target="_blank" rel="noopener">更多项目</a>
+  </div>
+  <div class="project-list">
+    <% (theme.projects || []).forEach(function(project) { %>
+      <a class="project-row" href="<%= project.href %>" target="_blank" rel="noopener">
+        <strong><%= project.name %></strong>
+        <span><%= project.description %></span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    <% }); %>
+  </div>
+</section>

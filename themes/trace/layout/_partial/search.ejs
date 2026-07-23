@@ -1,0 +1,26 @@
+<%
+  function collectionNames(collection) {
+    return collection && collection.toArray
+      ? collection.toArray().map(function(item) { return item.name; })
+      : [];
+  }
+
+  const searchData = site.posts.sort('date', -1).toArray().map(function(post) {
+    return {
+      title: strip_html(post.title || ''),
+      url: url_for(post.path),
+      date: date(post.date, 'YYYY-MM-DD'),
+      tags: collectionNames(post.tags).concat(collectionNames(post.categories))
+    };
+  });
+%>
+<dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title">
+  <div class="search-dialog__header">
+    <h2 id="search-title">搜索文章</h2>
+    <button type="button" data-search-close aria-label="关闭搜索">关闭</button>
+  </div>
+  <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
+  <p id="search-status">输入关键词开始搜索。</p>
+  <ol id="search-results"></ol>
+  <script type="application/json" id="search-data"><%- JSON.stringify(searchData).replace(/</g, '\\u003c') %></script>
+</dialog>

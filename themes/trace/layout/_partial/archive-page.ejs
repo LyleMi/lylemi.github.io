@@ -1,0 +1,37 @@
+<%
+  const archivePosts = page.posts && page.posts.toArray ? page.posts.toArray() : [];
+  const archiveTitle = page.title || '归档';
+  let currentYear = null;
+%>
+<section class="collection-page container">
+  <header class="collection-header">
+    <h1><%= archiveTitle %></h1>
+  </header>
+
+  <div class="archive-list">
+    <% archivePosts.forEach(function(post) {
+      const year = date(post.date, 'YYYY');
+      if (year !== currentYear) {
+        if (currentYear !== null) { %>
+          </div>
+        </section>
+        <% }
+        currentYear = year;
+    %>
+      <section class="archive-year">
+        <h2><%= year %></h2>
+        <div>
+    <% } %>
+          <article class="archive-row">
+            <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'MM-DD') %></time>
+            <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+          </article>
+    <% }); %>
+    <% if (currentYear !== null) { %>
+        </div>
+      </section>
+    <% } %>
+  </div>
+</section>
+
+<%- partial('_partial/pagination') %>
