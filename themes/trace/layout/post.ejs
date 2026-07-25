@@ -2,7 +2,6 @@
   const postText = strip_html(page.content || '').replace(/\s+/g, '').trim();
   const postMinutes = Math.max(1, Math.ceil(postText.length / 500));
   const postTags = page.tags && page.tags.toArray ? page.tags.toArray() : [];
-  const postSummary = strip_html(page.excerpt || '').replace(/\s+/g, ' ').trim();
   const postToc = toc(page.content || '', {
     list_number: false,
     min_depth: 2,
@@ -11,21 +10,18 @@
 %>
 
 <article class="post-page container">
-  <header class="post-header">
-    <h1><%= page.title %></h1>
-    <% if (postSummary) { %>
-      <p class="post-summary"><%= postSummary.slice(0, 160) %><%= postSummary.length > 160 ? '…' : '' %></p>
-    <% } %>
-    <div class="post-meta">
-      <time datetime="<%= date_xml(page.date) %>"><%= date(page.date, 'YYYY-MM-DD') %></time>
-      <span><%= postMinutes %> 分钟阅读</span>
-      <% postTags.forEach(function(tag) { %>
-        <a href="<%- url_for(tag.path) %>"><%= tag.name %></a>
-      <% }); %>
-    </div>
-  </header>
-
   <div class="post-layout">
+    <header class="post-header">
+      <h1><%= page.title %></h1>
+      <div class="post-meta">
+        <time datetime="<%= date_xml(page.date) %>"><%= date(page.date, 'YYYY-MM-DD') %></time>
+        <span><%= postMinutes %> 分钟阅读</span>
+        <% postTags.forEach(function(tag) { %>
+          <a href="<%- url_for(tag.path) %>"><%= tag.name %></a>
+        <% }); %>
+      </div>
+    </header>
+
     <% if (postToc) { %>
       <aside class="post-toc">
         <strong>目录</strong>
@@ -35,22 +31,22 @@
     <div class="article-content">
       <%- page.content %>
     </div>
-  </div>
 
-  <nav class="post-nav" aria-label="相邻文章">
-    <% if (page.prev) { %>
-      <a href="<%- url_for(page.prev.path) %>">
-        <span>上一篇</span>
-        <strong><%= page.prev.title %></strong>
-      </a>
-    <% } else { %>
-      <span></span>
-    <% } %>
-    <% if (page.next) { %>
-      <a href="<%- url_for(page.next.path) %>">
-        <span>下一篇</span>
-        <strong><%= page.next.title %></strong>
-      </a>
-    <% } %>
-  </nav>
+    <nav class="post-nav" aria-label="相邻文章">
+      <% if (page.prev) { %>
+        <a href="<%- url_for(page.prev.path) %>">
+          <span>上一篇</span>
+          <strong><%= page.prev.title %></strong>
+        </a>
+      <% } else { %>
+        <span></span>
+      <% } %>
+      <% if (page.next) { %>
+        <a href="<%- url_for(page.next.path) %>">
+          <span>下一篇</span>
+          <strong><%= page.next.title %></strong>
+        </a>
+      <% } %>
+    </nav>
+  </div>
 </article>
