@@ -41,11 +41,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/</loc>
+    <loc>https://lylemi.github.io/2018/10/29/unicode-normalization/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2018/10/29/unicode-normalization/</loc>
+    <loc>https://lylemi.github.io/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -61,19 +61,19 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2019/02/27/bypass-xss-mitigation-via-gadgets/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
     <loc>https://lylemi.github.io/2019/04/06/Web-Application-Auto-Audit/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/</loc>
+    <loc>https://lylemi.github.io/2019/02/27/bypass-xss-mitigation-via-gadgets/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
     <loc>https://lylemi.github.io/2024/02/08/port-scan-random-algo/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://lylemi.github.io/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -85,19 +85,19 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2024/01/21/arg-hide/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
     <loc>https://lylemi.github.io/2023/11/25/single-tcp-service-probe/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
+    <loc>https://lylemi.github.io/2024/01/21/arg-hide/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
     <loc>https://lylemi.github.io/2023/07/08/ja3proxy/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -121,15 +121,15 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2020/07/01/2020-7-1-cve-2020-8617/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
     <loc>https://lylemi.github.io/2020/12/18/aflnw/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
     <loc>https://lylemi.github.io/2020/07/04/2020-7-4-p2im-reading-notes/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://lylemi.github.io/2020/07/01/2020-7-1-cve-2020-8617/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -149,11 +149,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2017/08/11/2017-8-11-cve-2016-0003/</loc>
+    <loc>https://lylemi.github.io/2017/08/14/2017-8-14-cve-2017-8496/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2017/08/14/2017-8-14-cve-2017-8496/</loc>
+    <loc>https://lylemi.github.io/2017/08/11/2017-8-11-cve-2016-0003/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>

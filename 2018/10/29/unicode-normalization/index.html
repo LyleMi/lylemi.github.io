@@ -55,21 +55,18 @@
       
 
 <article class="post-page container">
-  <header class="post-header">
-    <h1>Unicode等价性浅谈</h1>
-    
-      <p class="post-summary">做SSRF测试的时候，常提到用类似 ａ 字符来bypass过滤器，之前没有做深究，偶然的一次机会，发现bａidu.com(\uff41)能跳转到百度，但是bаidu.com(\u0430)会被认为是一个新的IDN域名，并不指向baidu.com。</p>
-    
-    <div class="post-meta">
-      <time datetime="2018-10-29T08:56:53.000Z">2018-10-29</time>
-      <span>4 分钟阅读</span>
-      
-        <a href="/tags/Unicode/">Unicode</a>
-      
-    </div>
-  </header>
-
   <div class="post-layout">
+    <header class="post-header">
+      <h1>Unicode等价性浅谈</h1>
+      <div class="post-meta">
+        <time datetime="2018-10-29T08:56:53.000Z">2018-10-29</time>
+        <span>4 分钟阅读</span>
+        
+          <a href="/tags/Unicode/">Unicode</a>
+        
+      </div>
+    </header>
+
     
     <div class="article-content">
       <p>做SSRF测试的时候，常提到用类似 <code>ａ</code> 字符来bypass过滤器，之前没有做深究，偶然的一次机会，发现bａidu.com(\uff41)能跳转到百度，但是bаidu.com(\u0430)会被认为是一个新的IDN域名，并不指向baidu.com。</p>
@@ -89,22 +86,22 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> unicodedata <span class="keyword">import</span> normalize</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    debug = <span class="literal">False</span></span><br><span class="line">    tables = &#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">0x10000</span>):</span><br><span class="line">        src = unichr(i)</span><br><span class="line">        dst = normalize(<span class="string">&#x27;NFKC&#x27;</span>, src)[<span class="number">0</span>]</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">ord</span>(dst) &lt; <span class="number">128</span> <span class="keyword">and</span> dst != src:</span><br><span class="line">                <span class="keyword">if</span> debug:</span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&quot;%s (\\u%s) -- normalize --&gt; %s (\\x%s)&quot;</span> % (</span><br><span class="line">                        src, <span class="built_in">hex</span>(i)[<span class="number">2</span>:].rjust(<span class="number">4</span>, <span class="string">&#x27;0&#x27;</span>),</span><br><span class="line">                        dst, <span class="built_in">hex</span>(dst.charAt(<span class="number">0</span>))[<span class="number">2</span>:]</span><br><span class="line">                    ))</span><br><span class="line">                <span class="keyword">if</span> dst <span class="keyword">in</span> tables:</span><br><span class="line">                    tables[dst].append(src)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    tables[dst] = [src]</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="built_in">print</span>(<span class="built_in">repr</span>(e))</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;nfctable.txt&quot;</span>, <span class="string">&quot;wb&quot;</span>) <span class="keyword">as</span> fh:</span><br><span class="line">        json.dump(tables, fh)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
 
     </div>
-  </div>
 
-  <nav class="post-nav" aria-label="相邻文章">
-    
-      <a href="/2018/12/08/idnfuzz/">
-        <span>上一篇</span>
-        <strong>IDN Spoof漏洞自动化挖掘</strong>
-      </a>
-    
-    
-      <a href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">
-        <span>下一篇</span>
-        <strong>Domato - A DOM Fuzzer</strong>
-      </a>
-    
-  </nav>
+    <nav class="post-nav" aria-label="相邻文章">
+      
+        <a href="/2018/12/08/idnfuzz/">
+          <span>上一篇</span>
+          <strong>IDN Spoof漏洞自动化挖掘</strong>
+        </a>
+      
+      
+        <a href="/2017/09/27/2017-9-27-domato-dom-fuzzer/">
+          <span>下一篇</span>
+          <strong>Domato - A DOM Fuzzer</strong>
+        </a>
+      
+    </nav>
+  </div>
 </article>
 
     </main>

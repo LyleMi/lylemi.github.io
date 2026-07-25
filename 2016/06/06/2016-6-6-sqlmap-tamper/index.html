@@ -55,19 +55,16 @@
       
 
 <article class="post-page container">
-  <header class="post-header">
-    <h1>sqlmap-tamper编写指南</h1>
-    
-      <p class="post-summary">注：最近遇到了一些奇奇怪怪的waf，想自己写一些tamper但是发现没有参考材料可以使用，因此写了这篇文章，以方便进行自定义的tamper编写。笔者笔力有限，如有错误，敬请读者们指正。 0x00 sqlmap tamper简介sqlmap是一个自动化的SQL注入工具，而tamper则是对其进行扩展的一系列脚本，主要功能…</p>
-    
-    <div class="post-meta">
-      <time datetime="2016-06-06T01:31:40.000Z">2016-06-06</time>
-      <span>5 分钟阅读</span>
-      
-    </div>
-  </header>
-
   <div class="post-layout">
+    <header class="post-header">
+      <h1>sqlmap-tamper编写指南</h1>
+      <div class="post-meta">
+        <time datetime="2016-06-06T01:31:40.000Z">2016-06-06</time>
+        <span>5 分钟阅读</span>
+        
+      </div>
+    </header>
+
     
       <aside class="post-toc">
         <strong>目录</strong>
@@ -110,17 +107,17 @@
 <h2 id="0x04-附录：部分常数值"><a href="#0x04-附录：部分常数值" class="headerlink" title="0x04 附录：部分常数值"></a>0x04 附录：部分常数值</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># sqlmap/lib/enums.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PRIORITY</span>:</span><br><span class="line">    LOWEST = -<span class="number">100</span></span><br><span class="line">    LOWER = -<span class="number">50</span></span><br><span class="line">    LOW = -<span class="number">10</span></span><br><span class="line">    NORMAL = <span class="number">0</span></span><br><span class="line">    HIGH = <span class="number">10</span></span><br><span class="line">    HIGHER = <span class="number">50</span></span><br><span class="line">    HIGHEST = <span class="number">100</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">DBMS</span>:</span><br><span class="line">    ACCESS = <span class="string">&quot;Microsoft Access&quot;</span></span><br><span class="line">    DB2 = <span class="string">&quot;IBM DB2&quot;</span></span><br><span class="line">    FIREBIRD = <span class="string">&quot;Firebird&quot;</span></span><br><span class="line">    MAXDB = <span class="string">&quot;SAP MaxDB&quot;</span></span><br><span class="line">    MSSQL = <span class="string">&quot;Microsoft SQL Server&quot;</span></span><br><span class="line">    MYSQL = <span class="string">&quot;MySQL&quot;</span></span><br><span class="line">    ORACLE = <span class="string">&quot;Oracle&quot;</span></span><br><span class="line">    PGSQL = <span class="string">&quot;PostgreSQL&quot;</span></span><br><span class="line">    SQLITE = <span class="string">&quot;SQLite&quot;</span></span><br><span class="line">    SYBASE = <span class="string">&quot;Sybase&quot;</span></span><br><span class="line">    HSQLDB = <span class="string">&quot;HSQLDB&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
     </div>
-  </div>
 
-  <nav class="post-nav" aria-label="相邻文章">
-    
-      <a href="/2016/10/29/php-unserialize/">
-        <span>上一篇</span>
-        <strong>php unserialize()/wakeup()漏洞</strong>
-      </a>
-    
-    
-  </nav>
+    <nav class="post-nav" aria-label="相邻文章">
+      
+        <a href="/2016/10/29/php-unserialize/">
+          <span>上一篇</span>
+          <strong>php unserialize()/wakeup()漏洞</strong>
+        </a>
+      
+      
+    </nav>
+  </div>
 </article>
 
     </main>
