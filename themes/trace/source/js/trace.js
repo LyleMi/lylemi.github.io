@@ -212,9 +212,51 @@
     });
   };
 
+  // 猫猫糕：阮·梅造物，开拓者款（崩坏：星穹铁道）
+  const setupTrailblazerCatCake = () => {
+    const root = document.querySelector("#trailblazer-cat-cake");
+    const button = root?.querySelector(".trailblazer-cat-cake__btn");
+    const bubble = root?.querySelector("#trailblazer-cat-cake-bubble");
+    if (!root || !button || !bubble) return;
+
+    const quotes = [
+      "规则——就是用来打破的",
+      "生命因何而沉睡？因为被窝很温暖",
+      "不要的漏洞可以塞给我喵",
+      "垃圾桶……永远的家",
+      "“我什么都做不到",
+      "愿此行，终抵群星"
+    ];
+
+    let lastIndex = -1;
+    let hideTimer = 0;
+
+    const show = (text) => {
+      bubble.textContent = text;
+      bubble.classList.add("is-show");
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => bubble.classList.remove("is-show"), 4000);
+    };
+
+    button.addEventListener("click", () => {
+      let index = Math.floor(Math.random() * quotes.length);
+      if (index === lastIndex) index = (index + 1) % quotes.length;
+      lastIndex = index;
+      show(quotes[index]);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") bubble.classList.remove("is-show");
+    });
+
+    // 初次见面打个招呼
+    setTimeout(() => show(quotes[0]), 1400);
+  };
+
   setupTheme();
   setupReadingProgress();
   setupToc();
   setupSearch();
   setupCodeCopy();
+  setupTrailblazerCatCake();
 })();
