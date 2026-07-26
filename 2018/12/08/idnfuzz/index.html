@@ -10,6 +10,7 @@
   <meta name="description" content="0x00 背景国际化域名国际化域名（Internationalized Domain Name，IDN）又称特殊字符域名，是指部分或完全使用特殊的文字或字母组成的互联网域名，包括中文、法语、阿拉伯语、希伯来语或拉丁字母等非英文字母，这些文字经多字节万国码编码而成。在域名系统中，国际化域名使用Punycode转写并以ASCII字符串储存。 同形异义攻击同形异义">
   <meta name="author" content="Lyle">
   <link rel="canonical" href="https://lylemi.github.io/2018/12/08/idnfuzz/">
+  <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="article">
   <meta property="og:title" content="IDN Spoof漏洞自动化挖掘 — Lyle">
@@ -27,7 +28,11 @@
     })();
   </script>
   <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/trace.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-26">
 <meta name="generator" content="Hexo 6.3.0"></head>
 
   <body class="page-layout-post">
@@ -78,7 +83,7 @@
 <h2 id="同形异义攻击"><a href="#同形异义攻击" class="headerlink" title="同形异义攻击"></a>同形异义攻击</h2><p>同形异义字是利用IDN中一些非拉丁字符语种的字母与拉丁字符非常相似，字面看很难区分的特性，找到对应的字符来实现钓鱼攻击。例如16ვ.com(U+10D5)、16ဒ.com (U+1012)、16ҙ.com (U+0499) 都在一定程度上和163.com有相似性，基于一些开放的https证书服务这些域名还能取得相应的证书，进一步增加钓鱼成功的可能性。</p>
 <span id="more"></span>
 
-<h2 id="Punycode"><a href="#Punycode" class="headerlink" title="Punycode"></a>Punycode</h2><p>Punycode是RFC 3492标准设计的编码系统，用于把Unicode转换为可用的DNS系统的编码，比如16ҙ.com就会被转成xn–16-8tc.com，这在一定程度上可以防止IDN欺骗。</p>
+<h2 id="Punycode"><a href="#Punycode" class="headerlink" title="Punycode"></a>Punycode</h2><p>Punycode是RFC 3492标准设计的编码系统，用于把Unicode转换为可用的DNS系统的编码，比如16ҙ.com就会被转成xn--16-8tc.com，这在一定程度上可以防止IDN欺骗。</p>
 <h1 id="0x01-漏洞介绍"><a href="#0x01-漏洞介绍" class="headerlink" title="0x01 漏洞介绍"></a>0x01 漏洞介绍</h1><p>在主流浏览器中，Chromium Project对这类漏洞关注度较多，甚至特别在安全类型中设置了对应的<a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/chromium/issues/list?can=1&q=label:idn-spoof">idn-spoof</a>标签。</p>
 <p>在chromium中维护了一个domain <a target="_blank" rel="noopener" href="https://github.com/chromium/chromium/blob/998ff8fbb32cb0fdf1b6bdd9e885d2b1d7c48bbe/components/url_formatter/top_domains/alexa_domains.list">list</a>，内置了一些较有知名度的域名，当有域名被认为和这些相似域名相似时，就会转成punycode显示。</p>
 <p>其完整的检测算法可以在<a target="_blank" rel="noopener" href="https://github.com/chromium/chromium/blob/69d65bc31ec06259c4aec054fa2439ab8b2b922a/components/url_formatter/idn_spoof_checker.cc">这里</a>看到，对其详细的解释可以参考这篇<a target="_blank" rel="noopener" href="https://tw.saowen.com/a/72b7816b29ef30533882a07a4e1040f696b01e7888d60255ab89d37cf2f18f3e">文章</a>。</p>
@@ -109,6 +114,25 @@
 </ul>
 
     </div>
+
+    
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          
+            <a class="related-posts__item" href="/2019/06/18/unicode-sec-1/">
+              <strong>浅谈Unicode设计的安全性</strong>
+              <span>2019-06-18</span>
+            </a>
+          
+            <a class="related-posts__item" href="/2018/10/29/unicode-normalization/">
+              <strong>Unicode等价性浅谈</strong>
+              <span>2018-10-29</span>
+            </a>
+          
+        </div>
+      </section>
+    
 
     <nav class="post-nav" aria-label="相邻文章">
       
@@ -147,9 +171,22 @@
   <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
   <p id="search-status">输入关键词开始搜索。</p>
   <ol id="search-results"></ol>
-  <script type="application/json" id="search-data">[{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["自动化","XSS","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Sematic Gap","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
 </dialog>
 
+    <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
+<div class="trailblazer-cat-cake" id="trailblazer-cat-cake">
+  <div class="trailblazer-cat-cake__bubble" id="trailblazer-cat-cake-bubble" role="status" aria-live="polite"></div>
+  <button class="trailblazer-cat-cake__btn" type="button" aria-label="猫猫糕：阮·梅造物，开拓者款" aria-controls="trailblazer-cat-cake-bubble">
+    <img class="trailblazer-cat-cake__img" src="/img/trailblazer-cat-cake.png" alt="" aria-hidden="true" draggable="false">
+  </button>
+</div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
     <script src="/js/trace.js" defer></script>
   </body>
 </html>

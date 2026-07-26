@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://lylemi.github.io/2026/07/26/fastjson-1.2.83-rce-part1/</loc>
+    <lastmod>2026-07-26</lastmod>
+  </url>
+  <url>
     <loc>https://lylemi.github.io/2026/07/22/llm-decomposition-jailbreak/</loc>
     <lastmod>2026-07-22</lastmod>
   </url>
@@ -33,11 +37,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2020/06/15/python-coroutine-thread-and-process/</loc>
+    <loc>https://lylemi.github.io/2018/12/08/idnfuzz/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2018/12/08/idnfuzz/</loc>
+    <loc>https://lylemi.github.io/2020/06/15/python-coroutine-thread-and-process/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -61,15 +65,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2019/04/06/Web-Application-Auto-Audit/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
     <loc>https://lylemi.github.io/2019/02/27/bypass-xss-mitigation-via-gadgets/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2024/02/08/port-scan-random-algo/</loc>
+    <loc>https://lylemi.github.io/2019/04/06/Web-Application-Auto-Audit/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -78,6 +78,10 @@
   </url>
   <url>
     <loc>https://lylemi.github.io/2024/04/05/nmap-history/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://lylemi.github.io/2024/02/08/port-scan-random-algo/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -93,11 +97,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2023/07/08/ja3proxy/</loc>
+    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2023/06/17/scan-cost/</loc>
+    <loc>https://lylemi.github.io/2023/07/08/ja3proxy/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -121,6 +125,10 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
+    <loc>https://lylemi.github.io/2020/07/01/2020-7-1-cve-2020-8617/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
     <loc>https://lylemi.github.io/2020/12/18/aflnw/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
@@ -129,15 +137,7 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2020/07/01/2020-7-1-cve-2020-8617/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
     <loc>https://lylemi.github.io/2020/06/30/cve-2019-5096/</loc>
-    <lastmod>2026-06-29</lastmod>
-  </url>
-  <url>
-    <loc>https://lylemi.github.io/2020/04/13/tricks-1/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -145,7 +145,11 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2016/06/06/2016-6-6-sqlmap-tamper/</loc>
+    <loc>https://lylemi.github.io/2020/04/13/tricks-1/</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://lylemi.github.io/2017/08/11/2017-8-11-cve-2016-0003/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
@@ -153,7 +157,7 @@
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>
-    <loc>https://lylemi.github.io/2017/08/11/2017-8-11-cve-2016-0003/</loc>
+    <loc>https://lylemi.github.io/2016/06/06/2016-6-6-sqlmap-tamper/</loc>
     <lastmod>2026-06-29</lastmod>
   </url>
   <url>

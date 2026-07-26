@@ -183,32 +183,271 @@
     });
   };
 
-  const setupCodeCopy = () => {
-    const blocks = document.querySelectorAll(
-      ".article-content pre, .article-content .highlight"
-    );
+  const setupCodeToolbar = () => {
+    const selector = ".article-content > pre, .article-content > .highlight";
+    const blocks = document.querySelectorAll(selector);
     if (!blocks.length || !navigator.clipboard) return;
 
+    const langMap = {
+      javascript: "js", typescript: "ts", python: "py", ruby: "rb",
+      shell: "sh", bash: "sh", console: "console", diff: "diff",
+      json: "json", yaml: "yaml", xml: "xml", html: "html", css: "css",
+      "c++": "cpp", "c#": "csharp", objectivec: "objc",
+    };
+
+    const langLabel = (block) => {
+      if (block.classList.contains("highlight")) {
+        for (const cls of block.classList) {
+          if (cls !== "highlight" && !cls.startsWith("is-")) {
+            const mapped = langMap[cls] || cls;
+            if (mapped === "plain" || mapped === "plaintext" || mapped === "none" || mapped === "text") return "";
+            return mapped;
+          }
+        }
+      }
+      const code = block.querySelector("code");
+      if (code && code.className) {
+        const m = code.className.match(/lang(uage)?-(\w+)/);
+        if (m) {
+          const mapped = langMap[m[2]] || m[2];
+          if (mapped === "plain" || mapped === "plaintext" || mapped === "none" || mapped === "text") return "";
+          return mapped;
+        }
+      }
+      return "";
+    };
+
+    const foldThreshold = 25;
+
     blocks.forEach((block) => {
+      // extract code text
       const code = block.querySelector("code");
       const source = code ? code.innerText : block.innerText;
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "code-copy";
-      button.setAttribute("aria-label", "复制代码");
-      button.textContent = "复制";
-      button.addEventListener("click", async () => {
+      // --- toolbar ---
+      const toolbar = document.createElement("div");
+      toolbar.className = "code-toolbar";
+
+      const lang = document.createElement("span");
+      lang.className = "code-toolbar__lang";
+      lang.textContent = langLabel(block);
+      toolbar.appendChild(lang);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "code-toolbar__copy";
+      copyBtn.textContent = "复制";
+      copyBtn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(source);
-          button.textContent = "已复制";
+          copyBtn.textContent = "✓ 已复制";
+          copyBtn.classList.add("is-copied");
         } catch {
-          button.textContent = "失败";
+          copyBtn.textContent = "✗ 失败";
         }
-        setTimeout(() => (button.textContent = "复制"), 1500);
+        setTimeout(() => {
+          copyBtn.textContent = "复制";
+          copyBtn.classList.remove("is-copied");
+        }, 1500);
       });
+      toolbar.appendChild(copyBtn);
 
-      block.appendChild(button);
+      block.parentNode.insertBefore(toolbar, block.nextSibling);
+      // toolbar goes BEFORE the code block for stacking order
+      block.parentNode.insertBefore(toolbar, block);
+
+      // --- diff highlighting ---
+      if (lang.textContent === "diff" || lang.textContent === "console") {
+        const lines = block.querySelectorAll(".highlight .line");
+        lines.forEach((line) => {
+          const text = line.textContent;
+          if (text.startsWith("+")) line.classList.add("add");
+          else if (text.startsWith("-")) line.classList.add("remove");
+          else if (text.startsWith("$")) {
+            line.style.opacity = "0.65";
+            const dollar = document.createElement("span");
+            dollar.style.color = "var(--amber)";
+            dollar.textContent = "$";
+            line.insertBefore(dollar, line.firstChild);
+            line.textContent = line.textContent.slice(1);
+          }
+        });
+      }
+
+      // --- code folding ---
+      const lineCount = source.split("\n").length;
+      if (lineCount > foldThreshold) {
+        block.classList.add("is-foldable");
+
+        const overlay = document.createElement("div");
+        overlay.className = "code-fold-overlay";
+        block.appendChild(overlay);
+
+        const foldBtn = document.createElement("button");
+        foldBtn.type = "button";
+        foldBtn.className = "code-fold-btn";
+        foldBtn.addEventListener("click", () => {
+          const expanded = block.classList.toggle("is-expanded");
+          foldBtn.classList.toggle("is-expanded", expanded);
+          overlay.classList.toggle("is-hidden", expanded);
+        });
+        block.appendChild(foldBtn);
+      }
+    });
+  };
+
+  const setupPathIndicator = () => {
+    const indicator = document.querySelector("#path-indicator");
+    const pathEl = document.querySelector("#path-indicator-path");
+    if (!indicator || !pathEl) return;
+
+    const update = () => {
+      const path = window.location.pathname;
+      pathEl.textContent = path === "/" ? "~" : `~${path}`;
+    };
+
+    update();
+    window.addEventListener("popstate", update);
+  };
+
+  // 猫猫糕：阮·梅造物，开拓者款（崩坏：星穹铁道）
+  const setupTrailblazerCatCake = () => {
+    const root = document.querySelector("#trailblazer-cat-cake");
+    const button = root?.querySelector(".trailblazer-cat-cake__btn");
+    const bubble = root?.querySelector("#trailblazer-cat-cake-bubble");
+    if (!root || !button || !bubble) return;
+
+    const quotes = [
+      "规则——就是用来打破的",
+      "生命因何而沉睡？因为被窝很温暖",
+      "不要的漏洞可以塞给我喵",
+      "垃圾桶……永远的家",
+      "“我什么都做不到",
+      "愿此行，终抵群星"
+    ];
+
+    let lastIndex = -1;
+    let hideTimer = 0;
+
+    const show = (text) => {
+      bubble.textContent = text;
+      bubble.classList.add("is-show");
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => bubble.classList.remove("is-show"), 4000);
+    };
+
+    button.addEventListener("click", () => {
+      let index = Math.floor(Math.random() * quotes.length);
+      if (index === lastIndex) index = (index + 1) % quotes.length;
+      lastIndex = index;
+      show(quotes[index]);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") bubble.classList.remove("is-show");
+    });
+
+    // 初次见面打个招呼
+    setTimeout(() => show(quotes[0]), 1400);
+  };
+
+  // 返回顶部
+  const setupBackToTop = () => {
+    const btn = document.querySelector("#back-to-top");
+    if (!btn) return;
+
+    let ticking = false;
+    const update = () => {
+      btn.classList.toggle("is-visible", window.scrollY > 600);
+      ticking = false;
+    };
+
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }, { passive: true });
+
+    update();
+
+    btn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
+
+  // 锚点平滑滚动（仅对 # 链接生效）
+  const setupSmoothScrollAnchors = () => {
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[href^='#']");
+      // 跳转链接交给浏览器原生行为（skip-link 需要原生焦点移动）
+      if (!link || link.hash.length <= 1 || link.classList.contains("skip-link")) return;
+      // hash 是 percent-encoded（如 #1-%E8%83%8C%E6%99%AF），不能直接喂给 querySelector
+      let id;
+      try {
+        id = decodeURIComponent(link.hash.slice(1));
+      } catch {
+        return;
+      }
+      const target = document.getElementById(id);
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.pushState(null, "", link.hash);
+    });
+  };
+
+  // 图片全屏预览
+  const setupImageLightbox = () => {
+    const lightbox = document.querySelector("#img-lightbox");
+    const lightboxImg = lightbox?.querySelector("img");
+    const closeBtn = lightbox?.querySelector(".img-lightbox__close");
+    if (!lightbox || !lightboxImg || !closeBtn) return;
+
+    const isImageHref = (href) => /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(href);
+
+    document.addEventListener("click", (event) => {
+      const img = event.target.closest(".article-content img");
+      if (!img) return;
+      // 图片包在链接里时：指向图片则预览原图，指向页面则不拦截
+      const link = img.closest("a[href]");
+      if (link) {
+        const href = link.getAttribute("href") || "";
+        if (!isImageHref(href)) return;
+        event.preventDefault();
+        lightboxImg.src = link.href;
+      } else {
+        lightboxImg.src = img.src;
+      }
+      lightboxImg.alt = img.alt || "";
+      lightbox.classList.add("is-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+    });
+
+    const close = () => {
+      if (!lightbox.classList.contains("is-open")) return;
+      lightbox.classList.remove("is-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    closeBtn.addEventListener("click", close);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) close();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  };
+
+  // 宽表格包一层横向滚动容器
+  const setupTableScroll = () => {
+    document.querySelectorAll(".article-content table").forEach((table) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-scroll";
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
     });
   };
 
@@ -216,5 +455,11 @@
   setupReadingProgress();
   setupToc();
   setupSearch();
-  setupCodeCopy();
+  setupCodeToolbar();
+  setupPathIndicator();
+  setupBackToTop();
+  setupSmoothScrollAnchors();
+  setupImageLightbox();
+  setupTableScroll();
+  setupTrailblazerCatCake();
 })();

@@ -10,6 +10,7 @@
   <meta name="description" content="我现在越来越依赖 coding agent。写代码、查日志、改脚本、重构小工具，很多事情都会先让模型试一下。 用得越多，那个疑问就越明显：我怎么知道今天拿到的还是昨天那个模型？ 这里面有两层担心。第一层是中转商掺水，名字还是那个名字，背后可能已经换了路由、限了能力，或者在高峰期给了一个没那么好的版本。第二层更麻烦：就算我直接用正牌 provider，也不知道">
   <meta name="author" content="Lyle">
   <link rel="canonical" href="https://lylemi.github.io/2026/06/29/model-provider-quality-from-usage/">
+  <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="article">
   <meta property="og:title" content="看不见的模型漂移：用 Agent 日志观察质量风险 — Lyle">
@@ -27,7 +28,11 @@
     })();
   </script>
   <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/trace.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-26">
 <meta name="generator" content="Hexo 6.3.0"></head>
 
   <body class="page-layout-post">
@@ -122,7 +127,7 @@
 <li>项目和 source 身份，用来区分不同 agent、不同本地 source root、不同项目；</li>
 <li>原始记录，异常行可以回到具体 session、tool call 和 raw source path 检查。</li>
 </ul>
-<p>这些信号不能单独证明”模型变笨了”，更不能证明”provider 偷换了模型”。它们能做的是提醒我：这里不太对，值得点进去看。</p>
+<p>这些信号不能单独证明&quot;模型变笨了&quot;，更不能证明&quot;provider 偷换了模型&quot;。它们能做的是提醒我：这里不太对，值得点进去看。</p>
 <h2 id="当前的风险分怎么算"><a href="#当前的风险分怎么算" class="headerlink" title="当前的风险分怎么算"></a>当前的风险分怎么算</h2><p>AgentMeter 现在的 model quality risk score 是 0 到 1 的复合风险分。它不是排行榜，只是把几个常见症状放在一起，先把最可疑的 source&#x2F;model 挑出来。</p>
 <p>当前权重大概是这样：</p>
 <table>
@@ -174,9 +179,9 @@
 <td align="right">4%</td>
 </tr>
 </tbody></table>
-<p>这里的”失败压力”和”工具失败率”不是同一个分母。失败压力看的是失败是否集中压到 session 上；工具失败率看的是失败 tool call 在全部 tool call 中的占比。前者偏会话层，后者偏工具层。</p>
+<p>这里的&quot;失败压力&quot;和&quot;工具失败率&quot;不是同一个分母。失败压力看的是失败是否集中压到 session 上；工具失败率看的是失败 tool call 在全部 tool call 中的占比。前者偏会话层，后者偏工具层。</p>
 <p>这组权重和阈值只是经验规则，不是真理。后面如果能接入测试结果、人工反馈、patch 接受率，分数应该继续校准。</p>
-<p>现在它的用法很简单。看到”风险 0.62”不要急着下结论，先看驱动原因。如果主要来自 P90 延迟翻倍、P10 吞吐下降和失败压力升高，这个解释比单独一个数字有用得多。</p>
+<p>现在它的用法很简单。看到&quot;风险 0.62&quot;不要急着下结论，先看驱动原因。如果主要来自 P90 延迟翻倍、P10 吞吐下降和失败压力升高，这个解释比单独一个数字有用得多。</p>
 <h2 id="我更关心漂移"><a href="#我更关心漂移" class="headerlink" title="我更关心漂移"></a>我更关心漂移</h2><p>真实使用记录最大的问题是任务不可控。今天做大重构，明天只让 agent 改一个 typo，指标有波动很正常。</p>
 <p>所以这个分数不能只看静态值，还得看同类历史。目前更稳的做法是：</p>
 <ul>
@@ -188,12 +193,12 @@
 <p>这样至少能少踩几个坑：一次慢请求不会直接变成 provider 质量结论；新模型刚开始用时，不会因为没有历史就被判退化；缺失字段也不会被偷偷当成 0，制造出虚假的好成绩或坏成绩。</p>
 <h2 id="它不是-benchmark-的替代品"><a href="#它不是-benchmark-的替代品" class="headerlink" title="它不是 benchmark 的替代品"></a>它不是 benchmark 的替代品</h2><p>我不想把使用记录说成 benchmark 的替代品。它们回答的问题不一样。</p>
 <p>SWE-bench 这类 benchmark 的好处是可复现、可横向比较，适合看模型在标准任务上的能力。使用记录的好处是贴近自己的工作流，能看到 prompt、工具调用、本地项目、上下文长度、缓存和 provider 状态混在一起之后的结果。</p>
-<p>它也能补上 benchmark 的几个弱点。公开题库可能受训练数据、提示工程或针对性优化影响；私有项目、真实 prompt 和本地工具链不太可能被完整”背题”。单次 benchmark 容易受抽样和随机性影响；使用记录可以按天、项目、source、模型聚合，再看趋势和分位数。benchmark 的任务分布也未必等于自己的项目，而使用记录天然就是自己的项目。</p>
-<p>换句话说，benchmark 告诉我”它理论上能不能做”，使用记录告诉我”它今天在我这里有没有掉状态”。</p>
+<p>它也能补上 benchmark 的几个弱点。公开题库可能受训练数据、提示工程或针对性优化影响；私有项目、真实 prompt 和本地工具链不太可能被完整&quot;背题&quot;。单次 benchmark 容易受抽样和随机性影响；使用记录可以按天、项目、source、模型聚合，再看趋势和分位数。benchmark 的任务分布也未必等于自己的项目，而使用记录天然就是自己的项目。</p>
+<p>换句话说，benchmark 告诉我&quot;它理论上能不能做&quot;，使用记录告诉我&quot;它今天在我这里有没有掉状态&quot;。</p>
 <h2 id="不能越界解释"><a href="#不能越界解释" class="headerlink" title="不能越界解释"></a>不能越界解释</h2><p>使用记录的边界也要说清楚。</p>
 <p>它不能自动判断最终补丁是否语义正确，除非接入测试结果、代码审查结果或人工反馈。工具失败可能来自环境、权限、命令写错、文件不存在，不一定是模型质量问题。输出变长可能是解释更完整，也可能只是啰嗦，或者 agent 进入了修复循环。reasoning 开销上升可能是任务变难，也可能是 provider 计费或报告方式变了。</p>
 <p>所以我更倾向于叫 quality risk。它主要用来排序和 triage：先告诉我该检查哪些模型、哪些 source、哪些项目、哪些 session。</p>
-<h2 id="后面还缺结果信号"><a href="#后面还缺结果信号" class="headerlink" title="后面还缺结果信号"></a>后面还缺结果信号</h2><p>如果要让”质量分”更接近语义正确率，还需要把结果信号接进来，例如：</p>
+<h2 id="后面还缺结果信号"><a href="#后面还缺结果信号" class="headerlink" title="后面还缺结果信号"></a>后面还缺结果信号</h2><p>如果要让&quot;质量分&quot;更接近语义正确率，还需要把结果信号接进来，例如：</p>
 <ul>
 <li>测试是否通过；</li>
 <li>patch 是否被接受；</li>
@@ -202,7 +207,7 @@
 <li>agent 是否在同一问题上进入长时间修复循环；</li>
 <li>会话结束后用户是否马上切换模型或 provider 重试。</li>
 </ul>
-<p>有了这些标签之后，当前这些操作指标才更适合作为特征，用来校准一个接近”任务成功率”的模型。在那之前，它更像 provider&#x2F;model 的健康监控。</p>
+<p>有了这些标签之后，当前这些操作指标才更适合作为特征，用来校准一个接近&quot;任务成功率&quot;的模型。在那之前，它更像 provider&#x2F;model 的健康监控。</p>
 <h2 id="实际怎么用"><a href="#实际怎么用" class="headerlink" title="实际怎么用"></a>实际怎么用</h2><p>日常用起来大概是这样：</p>
 <ol>
 <li>增量索引本地 agent session。</li>
@@ -214,7 +219,7 @@
 <li>根据结果调整默认模型、provider 路由、预算、缓存策略，或者决定哪些任务需要人工复核。</li>
 </ol>
 <p>这套流程不会给出一个永远正确的排行榜。我更希望它回答一个小一点的问题：今天我还要不要继续信任这个 provider&#x2F;model 处理这类工作？</p>
-<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>我做 AgentMeter 的起点不是”模型评测”这个大词，而是一个很具体的焦虑：我每天都在用模型做事，但我不知道模型供应链什么时候变了。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>我做 AgentMeter 的起点不是&quot;模型评测&quot;这个大词，而是一个很具体的焦虑：我每天都在用模型做事，但我不知道模型供应链什么时候变了。</p>
 <p>公开 benchmark 适合看能力上限和横向基准。真实使用记录适合看本地工作流里的稳定性、成本和退化风险。</p>
 <p>AgentMeter 想做的事情，就是把 coding agent 已经留下来的本地 session 变成可检查的信号。它不负责证明谁最好，只负责把问题问得更具体：</p>
 <blockquote>
@@ -225,6 +230,30 @@
 </ul>
 
     </div>
+
+    
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          
+            <a class="related-posts__item" href="/2026/07/22/llm-decomposition-jailbreak/">
+              <strong>越过护栏：LLM分解攻击</strong>
+              <span>2026-07-22</span>
+            </a>
+          
+            <a class="related-posts__item" href="/2026/07/05/agent-mythical-man-month/">
+              <strong>Agent 的人月神话：执行便宜，交付很贵</strong>
+              <span>2026-07-05</span>
+            </a>
+          
+            <a class="related-posts__item" href="/2026/07/01/mopmonk-agent-blog/">
+              <strong>MopMonk Agent：漏洞复现里的任务记忆</strong>
+              <span>2026-07-01</span>
+            </a>
+          
+        </div>
+      </section>
+    
 
     <nav class="post-nav" aria-label="相邻文章">
       
@@ -263,9 +292,22 @@
   <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
   <p id="search-status">输入关键词开始搜索。</p>
   <ol id="search-results"></ol>
-  <script type="application/json" id="search-data">[{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["自动化","XSS","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Sematic Gap","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
 </dialog>
 
+    <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
+<div class="trailblazer-cat-cake" id="trailblazer-cat-cake">
+  <div class="trailblazer-cat-cake__bubble" id="trailblazer-cat-cake-bubble" role="status" aria-live="polite"></div>
+  <button class="trailblazer-cat-cake__btn" type="button" aria-label="猫猫糕：阮·梅造物，开拓者款" aria-controls="trailblazer-cat-cake-bubble">
+    <img class="trailblazer-cat-cake__img" src="/img/trailblazer-cat-cake.png" alt="" aria-hidden="true" draggable="false">
+  </button>
+</div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
     <script src="/js/trace.js" defer></script>
   </body>
 </html>

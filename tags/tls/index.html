@@ -10,6 +10,7 @@
   <meta name="description" content="关于网络安全、网络测绘、Agent 与软件工程的文章和项目。">
   <meta name="author" content="Lyle">
   <link rel="canonical" href="https://lylemi.github.io/tags/tls/">
+  <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Lyle&#39;s Blog">
@@ -27,7 +28,11 @@
     })();
   </script>
   <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/trace.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-26">
 <meta name="generator" content="Hexo 6.3.0"></head>
 
   <body class="page-layout-page">
@@ -53,30 +58,36 @@
 
     <main id="main-content">
       
-<section class="collection-page container">
-  <header class="collection-header">
-    <h1>归档</h1>
-  </header>
-
-  <div class="archive-list">
-    
-      <section class="archive-year">
-        <h2>2023</h2>
-        <div>
-    
-          <article class="archive-row">
-            <time datetime="2023-07-08T08:35:15.000Z">07-08</time>
-            <h3><a href="/2023/07/08/ja3proxy/">Ja3：计算原理、应用场景与指纹伪造</a></h3>
-          </article>
-    
-    
-        </div>
-      </section>
-    
-  </div>
-</section>
 
 
+  
+  
+  <section class="collection-page container">
+    <header class="collection-header">
+      <h1>#tls</h1>
+    </header>
+
+    
+
+    <div class="archive-list">
+      
+        <section class="archive-year" id="tag-year-2023">
+          <h2>2023</h2>
+          <div>
+      
+            <article class="archive-row">
+              <time datetime="2023-07-08T08:35:15.000Z">07-08</time>
+              <h3><a href="/2023/07/08/ja3proxy/">Ja3：计算原理、应用场景与指纹伪造</a></h3>
+            </article>
+      
+      
+          </div>
+        </section>
+      
+    </div>
+  </section>
+
+  
 
 
 
@@ -100,9 +111,22 @@
   <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
   <p id="search-status">输入关键词开始搜索。</p>
   <ol id="search-results"></ol>
-  <script type="application/json" id="search-data">[{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["自动化","XSS","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Sematic Gap","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
 </dialog>
 
+    <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
+<div class="trailblazer-cat-cake" id="trailblazer-cat-cake">
+  <div class="trailblazer-cat-cake__bubble" id="trailblazer-cat-cake-bubble" role="status" aria-live="polite"></div>
+  <button class="trailblazer-cat-cake__btn" type="button" aria-label="猫猫糕：阮·梅造物，开拓者款" aria-controls="trailblazer-cat-cake-bubble">
+    <img class="trailblazer-cat-cake__img" src="/img/trailblazer-cat-cake.png" alt="" aria-hidden="true" draggable="false">
+  </button>
+</div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
     <script src="/js/trace.js" defer></script>
   </body>
 </html>

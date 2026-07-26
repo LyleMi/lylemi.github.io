@@ -10,6 +10,7 @@
   <meta name="description" content="MopMonk Agent 是一个面向自动化漏洞复现的 agent 系统。它使用 MiniMax M3 作为 base model，核心设计是 memory-centric multi-agent，在 CyberGym Level 1、4 小时 timeout 的设置下得到 73.1% 的成功率。 这里需要先区分两个层面：MiniMax M3 提供长上下文和">
   <meta name="author" content="Lyle">
   <link rel="canonical" href="https://lylemi.github.io/2026/07/01/mopmonk-agent-blog/">
+  <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="article">
   <meta property="og:title" content="MopMonk Agent：漏洞复现里的任务记忆 — Lyle">
@@ -27,7 +28,11 @@
     })();
   </script>
   <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/trace.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-26">
 <meta name="generator" content="Hexo 6.3.0"></head>
 
   <body class="page-layout-post">
@@ -88,7 +93,7 @@
 <li>在 vulnerable 版本触发目标漏洞。</li>
 <li>在 fixed 版本不再触发这个漏洞。</li>
 </ul>
-<p>这条差分验证很重要。它把”撞出一个 crash”和”复现漏洞”分开了。真实漏洞复现也差不多：读描述，读代码，找入口，构造输入，看运行反馈，然后继续改。</p>
+<p>这条差分验证很重要。它把&quot;撞出一个 crash&quot;和&quot;复现漏洞&quot;分开了。真实漏洞复现也差不多：读描述，读代码，找入口，构造输入，看运行反馈，然后继续改。</p>
 <p>所以 CyberGym Level 1 测的是一个闭环：漏洞线索理解、代码理解、输入构造、执行反馈吸收、验证收敛。</p>
 <p>它也有边界。这个任务更接近 OSS-Fuzz 风格的软件漏洞复现，主要覆盖 parser、内存安全、sanitizer crash 这类问题。完整的 0-day 挖掘能力、Web、云、权限链路等安全问题，需要用别的口径来评估。</p>
 <h2 id="MopMonk-的重点是任务状态"><a href="#MopMonk-的重点是任务状态" class="headerlink" title="MopMonk 的重点是任务状态"></a>MopMonk 的重点是任务状态</h2><p>MopMonk README 里花了不少篇幅讲结构化漏洞记忆。我的理解是，除上下文长度外，它还关注哪些状态需要留下来。</p>
@@ -139,7 +144,7 @@
 </tr>
 </tbody></table>
 <p>这套分类把漏洞复现拆成了几个相对稳定的对象：目标、路径、格式、候选 PoC、失败证据、验证状态和下一步约束。</p>
-<p>这里有两项比较关键：negative-evidence memory 和 next-constraint memory。前者保存”为什么没触发”，后者把失败转成下一轮必须避开的条件。失败因此不只留在日志里，也会进入后续搜索边界。</p>
+<p>这里有两项比较关键：negative-evidence memory 和 next-constraint memory。前者保存&quot;为什么没触发&quot;，后者把失败转成下一轮必须避开的条件。失败因此不只留在日志里，也会进入后续搜索边界。</p>
 <h2 id="它的循环大概长什么样"><a href="#它的循环大概长什么样" class="headerlink" title="它的循环大概长什么样"></a>它的循环大概长什么样</h2><p>按 README 的描述，MopMonk 的工作流可以理解成这样：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">漏洞描述 + 代码库</span><br><span class="line">  -&gt; 初始化漏洞目标和候选代码路径</span><br><span class="line">  -&gt; 生成或变异一个候选 PoC</span><br><span class="line">  -&gt; 执行验证</span><br><span class="line">  -&gt; 记录 crash / no crash / timeout / 格式错误 / 不可达路径</span><br><span class="line">  -&gt; 提炼下一轮必须满足的约束</span><br><span class="line">  -&gt; 再生成下一个更接近目标路径的 PoC</span><br></pre></td></tr></table></figure>
 
@@ -222,7 +227,7 @@
 </tbody></table>
 <p>这个表只用于给 MopMonk 找参照位置：MopMonk 位于 Crystalline、MDASH、GPT-5.5-Cyber 之后，也位于若干通用 agent 和通用模型组合之前。</p>
 <p>MopMonk 给出的解释主要落在任务记忆上。README 反复讲的是任务内证据如何沉淀成可更新的漏洞记忆。如果这个说法和实际实现一致，73.1% 更像一个工程结果：在真实代码库漏洞复现任务里，长上下文模型配合任务记忆，可以让 agent 少绕一些已经绕过的路。</p>
-<h2 id="可以借鉴什么"><a href="#可以借鉴什么" class="headerlink" title="可以借鉴什么"></a>可以借鉴什么</h2><p>如果从这个仓库里抽一个可复用的点，我会先看它对漏洞复现任务的抽象方式。分数和”多 agent”这个标签都可以先放到后面。</p>
+<h2 id="可以借鉴什么"><a href="#可以借鉴什么" class="headerlink" title="可以借鉴什么"></a>可以借鉴什么</h2><p>如果从这个仓库里抽一个可复用的点，我会先看它对漏洞复现任务的抽象方式。分数和&quot;多 agent&quot;这个标签都可以先放到后面。</p>
 <p>MopMonk 的核心在于保存漏洞复现过程中的状态：</p>
 <ul>
 <li>目标漏洞是什么。</li>
@@ -237,7 +242,7 @@
 <p>这种方式更偏工程化，也更容易和执行反馈结合。</p>
 <h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>公开信息能支撑的判断并不多，但有一条很明确：MopMonk 没有只把模型直接接到仓库上。它在维护任务状态，尤其是失败状态。</p>
 <p>CyberGym Level 1 的 73.1% 说明这套做法已经跑出了一部分结果。后续如果能公开更多实现细节，外部才能看清这套 memory-centric design 怎么落地，以及它在更广泛的安全任务上还能不能保持效果。</p>
-<p>通用 coding agent 常问的是”能不能读懂代码并修改代码”。MopMonk 这类系统的问题范围更明确：agent 能不能把一次次失败也变成资产，最后推到一个真的会崩、也经得起 fixed 版本验证的输入文件上。</p>
+<p>通用 coding agent 常问的是&quot;能不能读懂代码并修改代码&quot;。MopMonk 这类系统的问题范围更明确：agent 能不能把一次次失败也变成资产，最后推到一个真的会崩、也经得起 fixed 版本验证的输入文件上。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li>MopMonkAgent README：<a target="_blank" rel="noopener" href="https://github.com/MopMonkAI/MopMonkAgent/README.md">https://github.com/MopMonkAI/MopMonkAgent/README.md</a></li>
 <li>CyberGym 官方页面：<a target="_blank" rel="noopener" href="https://www.cybergym.io/cybergym/">https://www.cybergym.io/cybergym/</a></li>
@@ -251,6 +256,25 @@
 </ul>
 
     </div>
+
+    
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          
+            <a class="related-posts__item" href="/2026/07/05/agent-mythical-man-month/">
+              <strong>Agent 的人月神话：执行便宜，交付很贵</strong>
+              <span>2026-07-05</span>
+            </a>
+          
+            <a class="related-posts__item" href="/2026/06/29/model-provider-quality-from-usage/">
+              <strong>看不见的模型漂移：用 Agent 日志观察质量风险</strong>
+              <span>2026-06-29</span>
+            </a>
+          
+        </div>
+      </section>
+    
 
     <nav class="post-nav" aria-label="相邻文章">
       
@@ -289,9 +313,22 @@
   <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
   <p id="search-status">输入关键词开始搜索。</p>
   <ol id="search-results"></ol>
-  <script type="application/json" id="search-data">[{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["自动化","XSS","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Sematic Gap","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
 </dialog>
 
+    <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
+<div class="trailblazer-cat-cake" id="trailblazer-cat-cake">
+  <div class="trailblazer-cat-cake__bubble" id="trailblazer-cat-cake-bubble" role="status" aria-live="polite"></div>
+  <button class="trailblazer-cat-cake__btn" type="button" aria-label="猫猫糕：阮·梅造物，开拓者款" aria-controls="trailblazer-cat-cake-bubble">
+    <img class="trailblazer-cat-cake__img" src="/img/trailblazer-cat-cake.png" alt="" aria-hidden="true" draggable="false">
+  </button>
+</div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
     <script src="/js/trace.js" defer></script>
   </body>
 </html>
