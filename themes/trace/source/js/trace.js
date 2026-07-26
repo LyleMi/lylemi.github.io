@@ -212,6 +212,20 @@
     });
   };
 
+  const setupPathIndicator = () => {
+    const indicator = document.querySelector("#path-indicator");
+    const pathEl = document.querySelector("#path-indicator-path");
+    if (!indicator || !pathEl) return;
+
+    const update = () => {
+      const path = window.location.pathname;
+      pathEl.textContent = path === "/" ? "~" : `~${path}`;
+    };
+
+    update();
+    window.addEventListener("popstate", update);
+  };
+
   // 猫猫糕：阮·梅造物，开拓者款（崩坏：星穹铁道）
   const setupTrailblazerCatCake = () => {
     const root = document.querySelector("#trailblazer-cat-cake");
@@ -258,5 +272,6 @@
   setupToc();
   setupSearch();
   setupCodeCopy();
+  setupPathIndicator();
   setupTrailblazerCatCake();
 })();

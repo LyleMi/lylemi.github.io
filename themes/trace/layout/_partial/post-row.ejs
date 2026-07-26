@@ -1,9 +1,12 @@
 <%
   const rowTags = post.tags && post.tags.toArray ? post.tags.toArray().slice(0, 1) : [];
   const rowExcerpt = post.excerpt ? strip_html(post.excerpt).replace(/\s+/g, ' ').trim() : '';
+  const wordCount = strip_html(post.content || '').replace(/\s+/g, '').length;
+  const fileSize = wordCount > 1024 ? (wordCount / 1024).toFixed(1) + 'K' : wordCount + 'B';
 %>
 <article class="post-row">
   <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'YYYY-MM-DD') %></time>
+  <span class="post-row__size"><%= fileSize %></span>
   <div class="post-row__main">
     <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
     <% if (rowExcerpt) { %>
