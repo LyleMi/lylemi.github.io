@@ -2,11 +2,26 @@
   const archivePosts = page.posts && page.posts.toArray ? page.posts.toArray() : [];
   const archiveTitle = page.title || '归档';
   let currentYear = null;
+
+  // 年份列表（用于顶部锚点导航）
+  const years = [];
+  archivePosts.forEach(function(post) {
+    const y = date(post.date, 'YYYY');
+    if (years[years.length - 1] !== y) years.push(y);
+  });
 %>
 <section class="collection-page container">
   <header class="collection-header">
     <h1><%= archiveTitle %></h1>
   </header>
+
+  <% if (years.length > 1) { %>
+    <nav class="archive-nav" aria-label="按年份跳转">
+      <% years.forEach(function(y) { %>
+        <a href="#year-<%= y %>"># <%= y %></a>
+      <% }); %>
+    </nav>
+  <% } %>
 
   <div class="archive-list">
     <% archivePosts.forEach(function(post) {
@@ -18,7 +33,7 @@
         <% }
         currentYear = year;
     %>
-      <section class="archive-year">
+      <section class="archive-year" id="year-<%= year %>">
         <h2><%= year %></h2>
         <div>
     <% } %>

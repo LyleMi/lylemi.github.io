@@ -1,5 +1,5 @@
 <%
-  const rowTags = post.tags && post.tags.toArray ? post.tags.toArray().slice(0, 1) : [];
+  const rowTags = post.tags && post.tags.toArray ? post.tags.toArray().slice(0, 2) : [];
   const rowExcerpt = post.excerpt ? strip_html(post.excerpt).replace(/\s+/g, ' ').trim() : '';
   const wordCount = strip_html(post.content || '').replace(/\s+/g, '').length;
   const fileSize = wordCount > 1024 ? (wordCount / 1024).toFixed(1) + 'K' : wordCount + 'B';
@@ -10,8 +10,8 @@
   <div class="post-row__main">
     <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
     <% if (rowExcerpt) { %>
-      <p class="post-row__excerpt"><%= rowExcerpt.slice(0, 110) %></p>
+      <p class="post-row__excerpt"><%= rowExcerpt.slice(0, 140) %></p>
     <% } %>
   </div>
-  <span class="post-row__tag"><%= rowTags.length ? rowTags[0].name : '' %></span>
+  <span class="post-row__tag"><%= rowTags.map(function(t) { return t.name; }).join(' ') %></span>
 </article>

@@ -184,7 +184,7 @@
   };
 
   const setupCodeToolbar = () => {
-    const selector = ".article-content pre, .article-content figure.highlight";
+    const selector = ".article-content > pre, .article-content > .highlight";
     const blocks = document.querySelectorAll(selector);
     if (!blocks.length || !navigator.clipboard) return;
 
@@ -198,13 +198,21 @@
     const langLabel = (block) => {
       if (block.classList.contains("highlight")) {
         for (const cls of block.classList) {
-          if (cls !== "highlight" && !cls.startsWith("is-")) return cls;
+          if (cls !== "highlight" && !cls.startsWith("is-")) {
+            const mapped = langMap[cls] || cls;
+            if (mapped === "plain" || mapped === "plaintext" || mapped === "none" || mapped === "text") return "";
+            return mapped;
+          }
         }
       }
       const code = block.querySelector("code");
       if (code && code.className) {
         const m = code.className.match(/lang(uage)?-(\w+)/);
-        if (m) return langMap[m[2]] || m[2];
+        if (m) {
+          const mapped = langMap[m[2]] || m[2];
+          if (mapped === "plain" || mapped === "plaintext" || mapped === "none" || mapped === "text") return "";
+          return mapped;
+        }
       }
       return "";
     };
@@ -343,11 +351,115 @@
     setTimeout(() => show(quotes[0]), 1400);
   };
 
+  // 返回顶部
+  const setupBackToTop = () => {
+    const btn = document.querySelector("#back-to-top");
+    if (!btn) return;
+
+    let ticking = false;
+    const update = () => {
+      btn.classList.toggle("is-visible", window.scrollY > 600);
+      ticking = false;
+    };
+
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }, { passive: true });
+
+    update();
+
+    btn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  };
+
+  // 锚点平滑滚动（仅对 # 链接生效）
+  const setupSmoothScrollAnchors = () => {
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[href^='#']");
+      // 跳转链接交给浏览器原生行为（skip-link 需要原生焦点移动）
+      if (!link || link.hash.length <= 1 || link.classList.contains("skip-link")) return;
+      // hash 是 percent-encoded（如 #1-%E8%83%8C%E6%99%AF），不能直接喂给 querySelector
+      let id;
+      try {
+        id = decodeURIComponent(link.hash.slice(1));
+      } catch {
+        return;
+      }
+      const target = document.getElementById(id);
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.pushState(null, "", link.hash);
+    });
+  };
+
+  // 图片全屏预览
+  const setupImageLightbox = () => {
+    const lightbox = document.querySelector("#img-lightbox");
+    const lightboxImg = lightbox?.querySelector("img");
+    const closeBtn = lightbox?.querySelector(".img-lightbox__close");
+    if (!lightbox || !lightboxImg || !closeBtn) return;
+
+    const isImageHref = (href) => /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i.test(href);
+
+    document.addEventListener("click", (event) => {
+      const img = event.target.closest(".article-content img");
+      if (!img) return;
+      // 图片包在链接里时：指向图片则预览原图，指向页面则不拦截
+      const link = img.closest("a[href]");
+      if (link) {
+        const href = link.getAttribute("href") || "";
+        if (!isImageHref(href)) return;
+        event.preventDefault();
+        lightboxImg.src = link.href;
+      } else {
+        lightboxImg.src = img.src;
+      }
+      lightboxImg.alt = img.alt || "";
+      lightbox.classList.add("is-open");
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+    });
+
+    const close = () => {
+      if (!lightbox.classList.contains("is-open")) return;
+      lightbox.classList.remove("is-open");
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    closeBtn.addEventListener("click", close);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) close();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  };
+
+  // 宽表格包一层横向滚动容器
+  const setupTableScroll = () => {
+    document.querySelectorAll(".article-content table").forEach((table) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "table-scroll";
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  };
+
   setupTheme();
   setupReadingProgress();
   setupToc();
   setupSearch();
   setupCodeToolbar();
   setupPathIndicator();
+  setupBackToTop();
+  setupSmoothScrollAnchors();
+  setupImageLightbox();
+  setupTableScroll();
   setupTrailblazerCatCake();
 })();

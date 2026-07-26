@@ -1,1 +1,77 @@
-<%- partial('_partial/archive-page') %>
+<%
+  // 判断是标签索引（/tags/）还是单个标签（/tags/xxx/）
+  const isIndex = !page.tag;
+%>
+
+<% if (isIndex) { %>
+  <%# 标签云首页 %>
+  <%
+    const allTags = site.tags.sort('name').toArray().map(function(tag) {
+      return { name: tag.name, count: tag.posts.length, path: tag.path };
+    }).sort(function(a, b) { return b.count - a.count; });
+    const maxCount = allTags.length ? allTags[0].count : 1;
+  %>
+  <section class="collection-page container">
+    <header class="collection-header">
+      <h1>标签</h1>
+    </header>
+    <div class="tag-cloud">
+      <% allTags.forEach(function(tag) { %>
+        <a href="<%- url_for(tag.path) %>" class="tag-cloud__item" style="opacity: <%= 0.4 + ((tag.count / maxCount) * 0.6) %>">
+          <span class="tag-cloud__hash">#</span><%= tag.name %><span class="tag-cloud__count">(<%= tag.count %>)</span>
+        </a>
+      <% }); %>
+    </div>
+  </section>
+<% } else { %>
+  <%# 单个标签下的文章列表 %>
+  <%
+    const tagPosts = page.posts && page.posts.toArray ? page.posts.toArray().sort(function(a, b) { return b.date - a.date; }) : [];
+    let currentYear = null;
+    const years = [];
+    tagPosts.forEach(function(post) {
+      const y = date(post.date, 'YYYY');
+      if (years[years.length - 1] !== y) years.push(y);
+    });
+  %>
+  <section class="collection-page container">
+    <header class="collection-header">
+      <h1>#<%= page.tag %></h1>
+    </header>
+
+    <% if (years.length > 1) { %>
+      <nav class="archive-nav" aria-label="按年份跳转">
+        <% years.forEach(function(y) { %>
+          <a href="#tag-year-<%= y %>"># <%= y %></a>
+        <% }); %>
+      </nav>
+    <% } %>
+
+    <div class="archive-list">
+      <% tagPosts.forEach(function(post) {
+        const year = date(post.date, 'YYYY');
+        if (year !== currentYear) {
+          if (currentYear !== null) { %>
+            </div>
+          </section>
+          <% }
+          currentYear = year;
+      %>
+        <section class="archive-year" id="tag-year-<%= year %>">
+          <h2><%= year %></h2>
+          <div>
+      <% } %>
+            <article class="archive-row">
+              <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'MM-DD') %></time>
+              <h3><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+            </article>
+      <% }); %>
+      <% if (currentYear !== null) { %>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </section>
+
+  <%- partial('_partial/pagination') %>
+<% } %>

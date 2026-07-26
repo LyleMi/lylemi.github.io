@@ -11,6 +11,11 @@
     <%- partial('_partial/footer') %>
     <%- partial('_partial/search') %>
     <%- partial('_partial/trailblazer-cat-cake') %>
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
     <script src="<%- url_for(theme.scripts) %>" defer></script>
   </body>
 </html>

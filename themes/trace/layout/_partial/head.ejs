@@ -14,6 +14,7 @@
   <meta name="description" content="<%= metaDescription %>">
   <meta name="author" content="<%= config.author %>">
   <link rel="canonical" href="<%= canonicalUrl %>">
+  <link rel="alternate" type="application/atom+xml" title="<%= config.title %>" href="<%- url_for('/atom.xml') %>">
   <link rel="icon" href="<%- url_for(theme.favicon) %>" type="image/svg+xml">
   <meta property="og:type" content="<%= page.layout === 'post' ? 'article' : 'website' %>">
   <meta property="og:title" content="<%= documentTitle %>">

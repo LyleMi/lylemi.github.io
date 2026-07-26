@@ -94,3 +94,8 @@ aboutme: Web Security · Agent Engineering · Network Measurement
 
 sitemap:
   path: sitemap.xml
+
+feed:
+  type: atom
+  path: atom.xml
+  limit: 20
