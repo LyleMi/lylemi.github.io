@@ -54,6 +54,7 @@
   --gutter: 24px;
   --font: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", "SFMono-Regular", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
 }
 
 :root[data-theme="light"] {
@@ -784,8 +785,9 @@ img {
 
 .article-content {
   min-width: 0;
+  font-family: var(--font-serif);
   font-size: 16.5px;
-  line-height: 1.75;
+  line-height: 1.85;
   overflow-wrap: break-word;
 }
 
@@ -812,7 +814,7 @@ img {
 }
 
 .article-content h1::before { content: "# "; }
-.article-content h2::before { content: "# "; }
+.article-content h2::before { content: ""; }
 .article-content h3::before { content: "## "; }
 .article-content h4::before { content: "### "; }
 
@@ -822,25 +824,32 @@ img {
 }
 
 .article-content h2 {
-  padding-top: 0.9em;
-  margin: 1.8em 0 0.65em;
-  border-top: 1px solid var(--line);
+  padding: 0.5em 0 0.3em 0.85em;
+  margin: 2em 0 0.7em;
+  border-left: 3px solid var(--accent);
+  border-top: 0;
   font-size: 26px;
   letter-spacing: -0.02em;
 }
 
 .article-content h3 {
-  margin: 1.5em 0 0.6em;
+  margin: 1.6em 0 0.6em;
   font-size: 21px;
+  font-weight: 600;
 }
 
 .article-content h4 {
   margin: 1.4em 0 0.5em;
   font-size: 17.5px;
+  font-weight: 500;
 }
 
 .article-content p {
-  margin-block: 0.85em;
+  margin-block: 1.2em;
+}
+
+.article-content > p:first-of-type {
+  margin-block-start: 0.6em;
 }
 
 .article-content a {
@@ -956,37 +965,141 @@ img {
   overflow: auto;
 }
 
-.code-copy {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  padding: 3px 9px;
+/* ---------- code block toolbar ---------- */
+
+.code-toolbar {
+  display: flex;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  background: var(--code-bg);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.code-toolbar + pre,
+.code-toolbar + .highlight {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.code-toolbar__lang {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+}
+
+.code-toolbar__copy {
+  padding: 2px 8px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 3px;
   background: var(--bg);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10.5px;
   letter-spacing: 0.02em;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
 }
 
-.article-content pre:hover .code-copy,
-.article-content .highlight:hover .code-copy,
-.article-content .code-copy:focus-visible {
-  opacity: 1;
-}
-
-.code-copy:hover,
-.code-copy:focus-visible {
+.code-toolbar__copy:hover {
   color: var(--accent);
   border-color: var(--accent);
 }
 
-.article-content > pre,
+.code-toolbar__copy.is-copied {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- diff / log highlighting ---------- */
+
+.article-content .highlight .line.add {
+  display: block;
+  background: rgb(63 214 143 / 0.07);
+}
+
+.article-content .highlight .line.remove {
+  display: block;
+  background: rgb(217 164 74 / 0.08);
+}
+
+:root[data-theme="light"] .article-content .highlight .line.add {
+  background: rgb(21 122 73 / 0.06);
+}
+
+:root[data-theme="light"] .article-content .highlight .line.remove {
+  background: rgb(150 104 13 / 0.08);
+}
+
+/* ---------- code fold ---------- */
+
+.article-content pre.is-foldable,
+.article-content .highlight.is-foldable {
+  max-height: 320px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.article-content pre.is-foldable.is-expanded,
+.article-content .highlight.is-foldable.is-expanded {
+  max-height: none;
+}
+
+.code-fold-overlay {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  height: 64px;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+  background: linear-gradient(transparent, var(--code-bg));
+  pointer-events: none;
+}
+
+.code-fold-overlay.is-hidden {
+  display: none;
+}
+
+.code-fold-btn {
+  position: relative;
+  z-index: 4;
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  transition: color 150ms ease;
+}
+
+.code-fold-btn:hover {
+  color: var(--amber);
+}
+
+.code-fold-btn::before {
+  content: "▾ 展开全部";
+}
+
+.code-fold-btn.is-expanded::before {
+  content: "▴ 收起";
+}
+
+/* ---------- code block toolbar (replaces old .code-copy) ---------- */
 .article-content .highlight {
   padding: 18px 20px;
   margin: 1.8em 0;
@@ -1126,6 +1239,62 @@ img {
 }
 
 /* ---------- post nav ---------- */
+
+.related-posts {
+  grid-column: 2;
+  padding-block: 28px 0;
+  margin-top: 44px;
+  border-top: 1px solid var(--line);
+}
+
+.related-posts__title {
+  margin: 0 0 18px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.related-posts__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.related-posts__item {
+  display: flex;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.related-posts__item:hover {
+  border-color: var(--accent);
+  background: var(--bg-raise);
+}
+
+.related-posts__item strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.related-posts__item span {
+  flex-shrink: 0;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.related-posts__item:hover strong {
+  color: var(--accent);
+}
 
 .post-nav {
   display: grid;
@@ -1400,7 +1569,8 @@ img {
   }
 
   .post-layout > .article-content,
-  .post-nav {
+  .post-nav,
+  .related-posts {
     grid-column: 1;
   }
 
@@ -1535,6 +1705,7 @@ img {
   .site-footer,
   .post-toc,
   .post-nav,
+  .related-posts,
   .read-progress,
   .path-indicator {
     display: none;

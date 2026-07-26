@@ -183,32 +183,108 @@
     });
   };
 
-  const setupCodeCopy = () => {
-    const blocks = document.querySelectorAll(
-      ".article-content pre, .article-content .highlight"
-    );
+  const setupCodeToolbar = () => {
+    const selector = ".article-content pre, .article-content figure.highlight";
+    const blocks = document.querySelectorAll(selector);
     if (!blocks.length || !navigator.clipboard) return;
 
+    const langMap = {
+      javascript: "js", typescript: "ts", python: "py", ruby: "rb",
+      shell: "sh", bash: "sh", console: "console", diff: "diff",
+      json: "json", yaml: "yaml", xml: "xml", html: "html", css: "css",
+      "c++": "cpp", "c#": "csharp", objectivec: "objc",
+    };
+
+    const langLabel = (block) => {
+      if (block.classList.contains("highlight")) {
+        for (const cls of block.classList) {
+          if (cls !== "highlight" && !cls.startsWith("is-")) return cls;
+        }
+      }
+      const code = block.querySelector("code");
+      if (code && code.className) {
+        const m = code.className.match(/lang(uage)?-(\w+)/);
+        if (m) return langMap[m[2]] || m[2];
+      }
+      return "";
+    };
+
+    const foldThreshold = 25;
+
     blocks.forEach((block) => {
+      // extract code text
       const code = block.querySelector("code");
       const source = code ? code.innerText : block.innerText;
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "code-copy";
-      button.setAttribute("aria-label", "复制代码");
-      button.textContent = "复制";
-      button.addEventListener("click", async () => {
+      // --- toolbar ---
+      const toolbar = document.createElement("div");
+      toolbar.className = "code-toolbar";
+
+      const lang = document.createElement("span");
+      lang.className = "code-toolbar__lang";
+      lang.textContent = langLabel(block);
+      toolbar.appendChild(lang);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "code-toolbar__copy";
+      copyBtn.textContent = "复制";
+      copyBtn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(source);
-          button.textContent = "已复制";
+          copyBtn.textContent = "✓ 已复制";
+          copyBtn.classList.add("is-copied");
         } catch {
-          button.textContent = "失败";
+          copyBtn.textContent = "✗ 失败";
         }
-        setTimeout(() => (button.textContent = "复制"), 1500);
+        setTimeout(() => {
+          copyBtn.textContent = "复制";
+          copyBtn.classList.remove("is-copied");
+        }, 1500);
       });
+      toolbar.appendChild(copyBtn);
 
-      block.appendChild(button);
+      block.parentNode.insertBefore(toolbar, block.nextSibling);
+      // toolbar goes BEFORE the code block for stacking order
+      block.parentNode.insertBefore(toolbar, block);
+
+      // --- diff highlighting ---
+      if (lang.textContent === "diff" || lang.textContent === "console") {
+        const lines = block.querySelectorAll(".highlight .line");
+        lines.forEach((line) => {
+          const text = line.textContent;
+          if (text.startsWith("+")) line.classList.add("add");
+          else if (text.startsWith("-")) line.classList.add("remove");
+          else if (text.startsWith("$")) {
+            line.style.opacity = "0.65";
+            const dollar = document.createElement("span");
+            dollar.style.color = "var(--amber)";
+            dollar.textContent = "$";
+            line.insertBefore(dollar, line.firstChild);
+            line.textContent = line.textContent.slice(1);
+          }
+        });
+      }
+
+      // --- code folding ---
+      const lineCount = source.split("\n").length;
+      if (lineCount > foldThreshold) {
+        block.classList.add("is-foldable");
+
+        const overlay = document.createElement("div");
+        overlay.className = "code-fold-overlay";
+        block.appendChild(overlay);
+
+        const foldBtn = document.createElement("button");
+        foldBtn.type = "button";
+        foldBtn.className = "code-fold-btn";
+        foldBtn.addEventListener("click", () => {
+          const expanded = block.classList.toggle("is-expanded");
+          foldBtn.classList.toggle("is-expanded", expanded);
+          overlay.classList.toggle("is-hidden", expanded);
+        });
+        block.appendChild(foldBtn);
+      }
     });
   };
 
@@ -271,7 +347,7 @@
   setupReadingProgress();
   setupToc();
   setupSearch();
-  setupCodeCopy();
+  setupCodeToolbar();
   setupPathIndicator();
   setupTrailblazerCatCake();
 })();

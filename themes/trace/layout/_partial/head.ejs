@@ -31,5 +31,9 @@
     })();
   </script>
   <link rel="preload" href="<%- url_for('/fonts/jetbrains-mono-latin-400-normal.woff2') %>" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="<%- url_for(theme.styles) %>?v=<%- new Date().toISOString().slice(0, 10) %>">
 </head>

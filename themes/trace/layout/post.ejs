@@ -7,6 +7,25 @@
     min_depth: 2,
     max_depth: 3
   });
+
+  // --- related posts by tag overlap ---
+  const relatedPosts = [];
+  if (postTags.length > 0) {
+    const tagNames = new Set(postTags.map(function(t) { return t.name; }));
+    const scored = site.posts.toArray().filter(function(p) {
+      if (p.path === page.path) return false;
+      if (!p.tags || !p.tags.toArray) return false;
+      return true;
+    }).map(function(p) {
+      var overlap = p.tags.toArray().filter(function(t) { return tagNames.has(t.name); }).length;
+      return { post: p, overlap: overlap };
+    }).filter(function(item) { return item.overlap > 0; })
+    .sort(function(a, b) {
+      if (b.overlap !== a.overlap) return b.overlap - a.overlap;
+      return b.post.date - a.post.date;
+    }).slice(0, 3);
+    scored.forEach(function(item) { relatedPosts.push(item.post); });
+  }
 %>
 
 <article class="post-page container">
@@ -31,6 +50,20 @@
     <div class="article-content">
       <%- page.content %>
     </div>
+
+    <% if (relatedPosts.length > 0) { %>
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          <% relatedPosts.forEach(function(p) { %>
+            <a class="related-posts__item" href="<%- url_for(p.path) %>">
+              <strong><%= p.title %></strong>
+              <span><%= date(p.date, 'YYYY-MM-DD') %></span>
+            </a>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
 
     <nav class="post-nav" aria-label="相邻文章">
       <% if (page.prev) { %>
