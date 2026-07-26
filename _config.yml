@@ -99,3 +99,7 @@ feed:
   type: atom
   path: atom.xml
   limit: 20
+
+# Markdown rendering config
+marked:
+  smartypants: false
