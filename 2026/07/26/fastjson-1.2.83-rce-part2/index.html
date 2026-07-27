@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="zh-CN">
+  
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0f13" id="meta-theme-color">
+  <meta name="color-scheme" content="dark light">
+  <title>Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick — Lyle</title>
+  <meta name="description" content="0. 引言2130706433 &amp;#x3D; 127.0.0.1。Java 的 URL 解析接受十进制整数形式的 IP，这个行为源自 4.2BSD 的 inet_aton，距今四十年。 在 fastjson 1.2.83 的利用链里，checkAutoType 会把 @type 值中的 . 替换为 /，点分 IP 当场被毁，整数 IP 原样存活。于是 jar">
+  <meta name="author" content="Lyle">
+  <link rel="canonical" href="https://lylemi.github.io/2026/07/26/fastjson-1.2.83-rce-part2/">
+  <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick — Lyle">
+  <meta property="og:description" content="0. 引言2130706433 &amp;#x3D; 127.0.0.1。Java 的 URL 解析接受十进制整数形式的 IP，这个行为源自 4.2BSD 的 inet_aton，距今四十年。 在 fastjson 1.2.83 的利用链里，checkAutoType 会把 @type 值中的 . 替换为 /，点分 IP 当场被毁，整数 IP 原样存活。于是 jar">
+  <meta property="og:url" content="https://lylemi.github.io/2026/07/26/fastjson-1.2.83-rce-part2/">
+  <meta property="og:site_name" content="Lyle&#39;s Blog">
+  <script>
+    (function () {
+      var doc = document.documentElement;
+      doc.classList.add('js');
+      try {
+        var theme = localStorage.getItem('trace-theme');
+        if (theme === 'light' || theme === 'dark') doc.dataset.theme = theme;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preload" href="/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-27">
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+  <body class="page-layout-post">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+    <div class="read-progress" id="read-progress" aria-hidden="true"></div>
+    <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-name" href="/">Lyle</a>
+    <nav class="site-nav" aria-label="主导航">
+      
+        <a href="/">文章</a>
+      
+        <a href="/#projects">项目</a>
+      
+        <a href="/archives/">归档</a>
+      
+      <a href="https://github.com/LyleMi" target="_blank" rel="me noopener">GitHub</a>
+      <button type="button" data-search-open>搜索</button>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="切换深浅色主题">[light]</button>
+    </nav>
+  </div>
+</header>
+
+    <main id="main-content">
+      
+
+<article class="post-page container">
+  <div class="post-layout">
+    <header class="post-header">
+      <h1>Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick</h1>
+      <div class="post-meta">
+        <time datetime="2026-07-26T15:00:00.000Z">2026-07-26</time>
+        <span>16 分钟阅读</span>
+        
+          <a href="/tags/Fastjson/">Fastjson</a>
+        
+          <a href="/tags/RCE/">RCE</a>
+        
+          <a href="/tags/Java/">Java</a>
+        
+          <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a>
+        
+          <a href="/tags/%E5%AE%89%E5%85%A8%E6%96%B9%E6%B3%95%E8%AE%BA/">安全方法论</a>
+        
+      </div>
+    </header>
+
+    
+      <aside class="post-toc">
+        <strong>目录</strong>
+        <nav aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0-%E5%BC%95%E8%A8%80"><span class="toc-text">0. 引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BA%94%E4%B8%AA-Trick"><span class="toc-text">1. 五个 Trick</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%95%B4%E6%95%B0-IP"><span class="toc-text">1. 整数 IP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-proc-self-fd"><span class="toc-text">2. &#x2F;proc&#x2F;self&#x2F;fd</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-polyglot-JAR"><span class="toc-text">3. polyglot JAR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-ASM-%E9%9D%9E%E6%B3%95%E7%B1%BB%E5%90%8D"><span class="toc-text">4. ASM 非法类名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-unicode-type"><span class="toc-text">5. unicode @type</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%85%B1%E5%90%8C%E7%BB%93%E6%9E%84"><span class="toc-text">2. 共同结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Trick-%E6%98%AF%E6%80%8E%E4%B9%88%E6%9D%A5%E7%9A%84"><span class="toc-text">3. Trick 是怎么来的</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%A1%8C%E4%B8%BA%E5%85%88%E4%BA%8E-trick"><span class="toc-text">3.1 行为先于 trick</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%BA%A6%E6%9D%9F%E5%82%AC%E7%94%9F-trick"><span class="toc-text">3.2 约束催生 trick</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E9%85%8D%E5%AF%B9%EF%BC%9Afeat-%E7%BA%A6%E6%9D%9F-trick"><span class="toc-text">3.3 配对：feat + 约束 &#x3D; trick</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E4%BA%BA%E7%9A%84%E5%88%A4%E6%96%AD%E7%94%A8%E5%9C%A8%E4%BA%86%E5%93%AA"><span class="toc-text">3.4 人的判断用在了哪</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E8%83%BD%E4%B8%8D%E8%83%BD%E8%87%AA%E5%8A%A8%E5%8C%96"><span class="toc-text">4. 能不能自动化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">5. 参考资料</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%8E%9F%E5%A7%8B%E6%8A%AB%E9%9C%B2"><span class="toc-text">5.1 原始披露</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%AE%98%E6%96%B9%E4%B8%8E%E5%8E%82%E5%95%86%E9%80%9A%E5%91%8A"><span class="toc-text">5.2 官方与厂商通告</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%8A%80%E6%9C%AF%E5%88%86%E6%9E%90"><span class="toc-text">5.3 技术分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-PoC-%E4%BB%93%E5%BA%93"><span class="toc-text">5.4 PoC 仓库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E5%B7%A5%E5%85%B7%E4%B8%8E%E6%96%87%E6%A1%A3"><span class="toc-text">5.5 工具与文档</span></a></li></ol></li></ol></nav>
+      </aside>
+    
+    <div class="article-content">
+      <h2 id="0-引言"><a href="#0-引言" class="headerlink" title="0. 引言"></a>0. 引言</h2><p><code>2130706433</code> &#x3D; <code>127.0.0.1</code>。Java 的 URL 解析接受十进制整数形式的 IP，这个行为源自 4.2BSD 的 <code>inet_aton</code>，距今四十年。</p>
+<p>在 fastjson 1.2.83 的利用链里，<code>checkAutoType</code> 会把 <code>@type</code> 值中的 <code>.</code> 替换为 <code>/</code>，点分 IP 当场被毁，整数 IP 原样存活。于是 <code>jar:http://2130706433:18081/x!/poc</code> 成了一个可用的远程类地址。</p>
+<p>一个四十年前的解析器行为，被一个防御措施激活，变成了利用链上的关键一环。</p>
+<span id="more"></span>
+
+<p>上篇里我们把这条链从头到尾拆了一遍。这条链上有一串 trick：整数 IP、<code>/proc/self/fd</code>、polyglot JAR、ASM 非法类名、unicode <code>@type</code> 编码。</p>
+<p>漏洞分析里到处是&quot;trick&quot;这个词，但它从来不是一个可以照着执行的清单。&quot;这里需要一个 trick&quot;——然后呢？去哪找，找到了怎么验证，验证了怎么留给下一个人复用？这个词一个都不回答。</p>
+<p>其他领域有现成的答案。二进制安全把 gadget 做成了工业：ROPgadget 这类工具机械扫描代码段，找 gadget 不需要灵感。行为层能不能做同样的事？这篇文章用五个 trick 当样本，拆开看它们分别利用了什么、有什么共同结构、能不能系统地找。</p>
+<h2 id="1-五个-Trick"><a href="#1-五个-Trick" class="headerlink" title="1. 五个 Trick"></a>1. 五个 Trick</h2><h3 id="1-整数-IP"><a href="#1-整数-IP" class="headerlink" title="1. 整数 IP"></a>1. 整数 IP</h3><p>Java 的 <code>InetAddress</code> 和 <code>URL</code> 解析接受十进制整数形式的 IP。<code>2130706433</code> &#x3D; <code>0x7F000001</code> &#x3D; <code>127.0.0.1</code>。这个行为继承自 BSD <code>inet_aton</code>，规范除了点分四段还允许点分两段、点分三段、单个十进制数、十六进制数等写法，存在四十年了。</p>
+<p>上篇的利用链里，<code>checkAutoType</code> 把 <code>@type</code> 值的 <code>.</code> 全替换成 <code>/</code>，点分 IP 当场被摧毁，整数 IP 原样存活。于是 <code>jar:http://2130706433:18081/x!/poc</code> 成了一个可用的远程类地址。</p>
+<p>它的 Gap 夹在 URL 解析的规范行为和开发者&quot;IP 就是点分四段&quot;的默认假设之间。输入经过了一个会破坏点号的字符串变换，但你仍然需要表达含点的标识符——这时候该想起它。</p>
+<h3 id="2-proc-self-fd"><a href="#2-proc-self-fd" class="headerlink" title="2. &#x2F;proc&#x2F;self&#x2F;fd"></a>2. &#x2F;proc&#x2F;self&#x2F;fd</h3><p>Linux 把进程打开的文件描述符暴露在文件系统里，<code>/proc/self/fd/N</code> 是 fd N 的路径化身。这个机制本来是为 <code>lsof</code> 等诊断工具设计的，但任何接受本地文件路径的 API 都能用它。</p>
+<p>fastjson 案中，JDK 的 <code>URLJarFile.retrieve</code> 把远程 JAR 落盘为匿名临时文件（<code>jar_cache*</code>），路径不可知，但 fd 号可以枚举。<code>jar:file:/proc/self/fd/N!/poc</code> 绕过了&quot;路径必须可知&quot;的限制。</p>
+<p>Gap 出在同一个接口的两种用法之间：诊断通道变成了寻址通道。这个 trick 出身很老——PHP LFI 时代就是社区知识，CTF 常规武器，最近被组合进 Java <code>jar:file:</code> 链。当你需要把一个刚写入的、匿名的、路径不可知的临时文件变成可寻址的路径时，该想起它。</p>
+<h3 id="3-polyglot-JAR"><a href="#3-polyglot-JAR" class="headerlink" title="3. polyglot JAR"></a>3. polyglot JAR</h3><p>zip 格式从文件尾部定位中央目录，JDK 的 ZipFile 实现容忍前缀垃圾。PNG、GIF 等图片格式则从头部解析。两种解析方向相反，一个文件可以同时是合法图片和合法 JAR——这就是 GIFAR 的思路（2008 年前后）。</p>
+<p>利用链里，上传通道只验图片头，攻击者送入的却是带恶意 class 的 JAR。无出网场景下，上传 polyglot JAR 加 <code>jar:file:</code> 本地路径可以构成 staging 链（这个方向还没有完整实测，见上篇 E1&#x2F;E2）。</p>
+<p>Gap 在两个 parser 对同一字节流的解析方向不同：zip 从尾部读，图片从头读。需要把受控字节塞进一个类型受检的通道时，该想起它。</p>
+<h3 id="4-ASM-非法类名"><a href="#4-ASM-非法类名" class="headerlink" title="4. ASM 非法类名"></a>4. ASM 非法类名</h3><p>Java 语言的标识符语法（javac 强制）远窄于 classfile 里非限定名的规则。JVMS §4.2 的禁止集只有 <code>. ; [ /</code>（以及方法名的 <code>&lt; &gt;</code>）。含 <code>:</code>、<code>!</code> 的类名任何 javac 都编译不出来，但 JVM 接受，ASM 可以直接写这样的字节码。</p>
+<p>fastjson 案中，恶意类的名字本身就是一个 URL（<code>jar:http://2130706433:18081/x!/poc</code>），必须用 ASM 生成。</p>
+<p>这个 trick 的 Gap 甚至不在两个组件之间，而在同一厂商的两份文档之间：Java 语言规范和 JVM 规范，两份不相洽的权威文本。五个 trick 里最纯粹的一个。需要构造语言语法不允许、但运行时接受的标识符时，该想起它。</p>
+<h3 id="5-unicode-type"><a href="#5-unicode-type" class="headerlink" title="5. unicode @type"></a>5. unicode @type</h3><p>JSON 字符串允许 <code>\uXXXX</code> 转义。fastjson 案中，WAF 按字面特征匹配 <code>&quot;@type&quot;</code>，fastjson 在解析时把 <code>&quot;@type&quot;</code> 解码为 <code>&quot;@type&quot;</code>。检查发生在解码前，生效发生在解码后。</p>
+<p>Gap 在规范化的时点：WAF 看到的是字面，fastjson 看到的是解码结果。通道上有基于字面&#x2F;模式的检查、而下游 parser 存在解码或规范化步骤时，该想起它。</p>
+<h2 id="2-共同结构"><a href="#2-共同结构" class="headerlink" title="2. 共同结构"></a>2. 共同结构</h2><p>把五个 trick 的 Gap 列在一起看：</p>
+<table>
+<thead>
+<tr>
+<th>trick</th>
+<th>语义 A</th>
+<th>语义 B</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>整数 IP</td>
+<td>URL spec（inet_aton 遗产）</td>
+<td>开发者假设（IP&#x3D;点分四段）</td>
+</tr>
+<tr>
+<td>&#x2F;proc&#x2F;self&#x2F;fd</td>
+<td>意图用途（诊断接口）</td>
+<td>可达用途（路径化身）</td>
+</tr>
+<tr>
+<td>polyglot JAR</td>
+<td>zip spec（从尾部定位）</td>
+<td>JDK 实现（容忍前缀垃圾）</td>
+</tr>
+<tr>
+<td>ASM 非法类名</td>
+<td>Java 语言规范</td>
+<td>JVM 规范</td>
+</tr>
+<tr>
+<td>unicode @type</td>
+<td>WAF 的 JSON</td>
+<td>fastjson 的 JSON</td>
+</tr>
+</tbody></table>
+<p>没有一例是代码写错了。每一例都是两份各自成立的语义，在某个交叉点上不兼容。</p>
+<p>这个概念在二进制安全里已经有成熟的对应用：gadget。ROP&#x2F;JOP 里，gadget 是从已有代码中回收、按功能索引、跨场景复用的指令片段。ROPgadget 这类工具可以机械扫描代码段找 gadget，不需要灵感。</p>
+<p>trick 就是行为层的 gadget。跟二进制 gadget 的区别是：ROPgadget 扫的是代码段（静态的），行为层扫的是组件的行为特征（要跑起来才知道）。但思路是一样的：从已有的东西里回收可复用的资产，按场景索引。</p>
+<p>换句话说：trick 是一段被武器化的语义分歧，从原始上下文中抽象出来、命名、按约束模式索引，成为可跨场景复用的资产。</p>
+<h2 id="3-Trick-是怎么来的"><a href="#3-Trick-是怎么来的" class="headerlink" title="3. Trick 是怎么来的"></a>3. Trick 是怎么来的</h2><p>把五个 trick 的产生过程考古一遍，最明显的发现是时间错位：使 trick 成立的行为事实，远早于 trick 本身。</p>
+<h3 id="3-1-行为先于-trick"><a href="#3-1-行为先于-trick" class="headerlink" title="3.1 行为先于 trick"></a>3.1 行为先于 trick</h3><table>
+<thead>
+<tr>
+<th>trick</th>
+<th>行为事实存在</th>
+<th>被武器化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>整数 IP</td>
+<td>inet_aton 接受整数形式，4.2BSD（约 1983）</td>
+<td>SSRF 过滤绕过（2010s）</td>
+</tr>
+<tr>
+<td>&#x2F;proc&#x2F;self&#x2F;fd</td>
+<td>Linux procfs 暴露 fd（九十年代初）</td>
+<td>PHP LFI（2000s）；Java 链（2026）</td>
+</tr>
+<tr>
+<td>polyglot JAR</td>
+<td>zip 尾部目录（1989）+ JDK 容忍前缀垃圾（1997）</td>
+<td>GIFAR（2008）</td>
+</tr>
+<tr>
+<td>ASM 非法类名</td>
+<td>JVMS §4.2 与 JLS 标识符规则分歧（1996）</td>
+<td>fastjson 链（2026）</td>
+</tr>
+<tr>
+<td>unicode @type</td>
+<td>JSON <code>\uXXXX</code> 转义（自有规范起）</td>
+<td>WAF 字面匹配绕过（2010s）</td>
+</tr>
+</tbody></table>
+<p>行为事实先于武器化存在，多数早十年以上。攻击者造不出 inet_aton 的宽容，也造不出 JVM 对非法类名的接受。这些行为是出厂即有的，和任何攻击意图无关。本文把它们叫做 <strong>feat</strong>。</p>
+<p>feat 层是可以机械扫描的。二进制世界已经示范过了：ROPgadget 不模拟黑客找 gadget 的认知过程，它绕开认知直接扫代码段。feat 扫描是同一性质的操作：读配置、起一次服务、枚举 handler，不需要理解攻击意图。</p>
+<h3 id="3-2-约束催生-trick"><a href="#3-2-约束催生-trick" class="headerlink" title="3.2 约束催生 trick"></a>3.2 约束催生 trick</h3><p>feat 一直在那里，但变成 trick 需要一个触发条件：约束。</p>
+<p>整数 IP 当了四十年解析器冷知识。它变成 trick，是因为&quot;输入经过摧毁点号的变换、但仍需表达含点标识符&quot;这个约束出现了。约束从哪来？</p>
+<table>
+<thead>
+<tr>
+<th>trick</th>
+<th>约束</th>
+<th>约束的制造者</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>整数 IP</td>
+<td>点号被 replace 摧毁，但需表达含点标识符</td>
+<td>fastjson checkAutoType，防御机制的组成部分</td>
+</tr>
+<tr>
+<td>unicode @type</td>
+<td>通道上有字面匹配检查</td>
+<td>WAF，防御</td>
+</tr>
+<tr>
+<td>polyglot JAR</td>
+<td>通道只放行图片</td>
+<td>上传校验，防御</td>
+</tr>
+<tr>
+<td>ASM 非法类名</td>
+<td>类名必须是一个 URL</td>
+<td>链内构造：攻击者自造的中段需求</td>
+</tr>
+<tr>
+<td>&#x2F;proc&#x2F;self&#x2F;fd</td>
+<td>匿名临时文件需变为可寻址路径</td>
+<td>链内构造：JDK 落盘行为 × 攻击者的路径选择</td>
+</tr>
+</tbody></table>
+<p>约束的最大来源是防御本身。防御每上线一次，就在客观上批量催生了一批潜在的配对。checkAutoType 上线那天，&quot;整数 IP 活过点号摧毁&quot;就客观成立了，只是还没有人完成它。第二来源是链内状态：组合链走到中途，会自造中段需求。</p>
+<h3 id="3-3-配对：feat-约束-trick"><a href="#3-3-配对：feat-约束-trick" class="headerlink" title="3.3 配对：feat + 约束 &#x3D; trick"></a>3.3 配对：feat + 约束 &#x3D; trick</h3><p>trick 诞生的过程可以拆成四步：</p>
+<ol>
+<li><strong>约束出现</strong>：防御部署或链内状态制造了新约束</li>
+<li><strong>候选生成</strong>：在 feat 库存里找满足约束的候选</li>
+<li><strong>实证验证</strong>：跑一次。整数 IP 活过变换了吗？活了</li>
+<li><strong>著录</strong>：命名、抽象、按场景索引，进入可复用库存</li>
+</ol>
+<p>候选生成的四个来源，机械化的程度不一样：</p>
+<table>
+<thead>
+<tr>
+<th>来源</th>
+<th>机制</th>
+<th>例子</th>
+<th>可机械化程度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>feat 注册表读取</td>
+<td>读组件的扩展点清单</td>
+<td>transport 槽的完整候选 &#x3D; 运行时注册的 URLStreamHandler 集合</td>
+<td>完全</td>
+</tr>
+<tr>
+<td>差分挖掘</td>
+<td>两个实现互测，找分歧点</td>
+<td>desync 研究、parser differential fuzzing</td>
+<td>高，但需人工做相关性分诊</td>
+</tr>
+<tr>
+<td>社区知识检索</td>
+<td>writeup&#x2F;CTF&#x2F;漏洞史按场景重索引</td>
+<td>整数 IP、polyglot 的跨场景迁移</td>
+<td>中，本质是老约束下的配对迁移</td>
+</tr>
+<tr>
+<td>中段约束生产</td>
+<td>链内自造需求并求解</td>
+<td>&#x2F;proc&#x2F;self&#x2F;fd 两阶段</td>
+<td>低，真正的发明前沿</td>
+</tr>
+</tbody></table>
+<p>这解释了&quot;涌现&quot;到底是怎么回事：一个新约束来了，在既有索引里查不到哪个 feat 满足它，配对只能靠人的识别。涌现不是 trick 的神秘属性，而是约束的新颖性暂时击败了索引。老约束（过滤器、类型检查、出口管控）是个反复出现的小家族，所以老配对能跨场景迁移。这也是社区知识在新约束面前必然失灵的原因。</p>
+<p>这也解释了为什么&quot;我想要一个 trick&quot;是个没办法回答的问题。没有约束，就没有成功标准（第 3 步无从验证）、没有检索键（第 2 步无从定向）。约束把许愿变成了可解的问题：它同时给出成功标准、检索方向和配对成立的判定条件。上篇的格子矩阵回头看正是一排等待配对的约束：格子提问，feat 作答。</p>
+<h3 id="3-4-人的判断用在了哪"><a href="#3-4-人的判断用在了哪" class="headerlink" title="3.4 人的判断用在了哪"></a>3.4 人的判断用在了哪</h3><p>上面说的四步里，有两个子类型当前还依赖人的判断，暂时没有完备的机械方法。</p>
+<p>一是链内自造需求。组合链走到中途，产生了&quot;需要不含点的标识符&quot;&quot;需要匿名文件可寻址&quot;这样的中段需求——这些需求从哪来、怎么定义，当前没有机械方法。利用链的构造，本质上是把&quot;我要 RCE&quot;逐级分解成一串定义清楚的子目标，每个子目标再去找配对的 feat。fastjson 案就是例子：三个中段约束一旦被分解出来，求解反而便宜；贵的是分解本身。</p>
+<p>二是新约束下的候选配对。老约束（过滤器、类型检查、出口管控）是个反复出现的小家族，既有索引能覆盖；新约束第一次出现时，索引里查不到哪个 feat 满足它，只能靠人的启发式搜索。</p>
+<p>这两处都没有完备的机械方法。但这不说明&quot;原则上不可自动化&quot;——二进制世界的 gadget 扫描一开始也没有。边界在哪应该实测，不由言辞划定。</p>
+<h2 id="4-能不能自动化"><a href="#4-能不能自动化" class="headerlink" title="4. 能不能自动化"></a>4. 能不能自动化</h2><p>&quot;trick 能不能被完整枚举&quot;需要实测，不是嘴上说说。按上面的层次拆开：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>可枚举性</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>feat 层（单组件行为存量）</td>
+<td>可机械化扫描</td>
+<td>差分测试、spec 挖掘、注册表读取均有成功先例</td>
+</tr>
+<tr>
+<td>约束层</td>
+<td>可枚举，但持续新生</td>
+<td>从部署中提取约束是机械操作；新约束主要来自防御部署，一直在长</td>
+</tr>
+<tr>
+<td>跨系统组合 Gap</td>
+<td>退化为环境枚举问题</td>
+<td>按行为等价类采样，而非版本枚举</td>
+</tr>
+<tr>
+<td>候选配对搜索（无基底处）</td>
+<td>启发式搜索，无完备性保证</td>
+<td>空间可枚举，但无基底时完备枚举不可行</td>
+</tr>
+<tr>
+<td>配对检验（给定 feat + 约束）</td>
+<td>机械、便宜</td>
+<td>跑一次实验就知道</td>
+</tr>
+</tbody></table>
+<p>feat 层里，一部分 feat 枚举可以降级为配置枚举。fastjson 案 transport 槽位的完整候选清单，不在任何 writeup 里，而在目标运行时实际注册的 URL handler 集合里。读注册表是机械操作。行为层缺的对应物，原因要拆成两半：扫描本身没人做，配对验证做得起的人少。feat 扫描廉价（读配置、起一次服务），但候选配对的作用域实测要起环境，单条成本远高于 gadget 的静态校验。</p>
+<p><strong>一个可以跑的测量方案</strong>：对 Java 资源加载 transport 槽跑一条 feat 扫描流水线。枚举 JDK 内建 handler 和常见容器注册的 handler，逐个实测 <code>jar:&lt;proto&gt;:</code> 资源名行为，对照已知库存（http&#x2F;https&#x2F;file&#x2F;ftp 等）算召回率。收回已知项说明机械扫描有效；漏掉的精确定位问题出在哪个连接层；发现新项直接扩充库存。三类结果都有信息量，实验说了算。</p>
+<h2 id="5-参考资料"><a href="#5-参考资料" class="headerlink" title="5. 参考资料"></a>5. 参考资料</h2><h3 id="5-1-原始披露"><a href="#5-1-原始披露" class="headerlink" title="5.1 原始披露"></a>5.1 原始披露</h3><table>
+<thead>
+<tr>
+<th>来源</th>
+<th>URL</th>
+<th>日期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Kirill Firsov 首次披露推文（另见同作者推文 <a target="_blank" rel="noopener" href="https://x.com/k_firsov/status/2078872296476057713">2078872296476057713</a>，奇安信通告引用）</td>
+<td><a target="_blank" rel="noopener" href="https://x.com/k_firsov/status/2078872293745570032">https://x.com/k_firsov/status/2078872293745570032</a></td>
+<td>2026-07-19</td>
+</tr>
+<tr>
+<td>原作者完整研究文档（fearsoff.org）</td>
+<td><a target="_blank" rel="noopener" href="https://fearsoff.org/cn/research/fastjson-1-2-83-rce">https://fearsoff.org/cn/research/fastjson-1-2-83-rce</a></td>
+<td>2026-07-22</td>
+</tr>
+</tbody></table>
+<h3 id="5-2-官方与厂商通告"><a href="#5-2-官方与厂商通告" class="headerlink" title="5.2 官方与厂商通告"></a>5.2 官方与厂商通告</h3><table>
+<thead>
+<tr>
+<th>来源</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>官方 Security Advisory（alibaba&#x2F;fastjson2 Wiki）</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson2/wiki/Security-Advisory:-Remote-Code-Execution-in-fastjson-1.2.68%E2%80%931.2.83">https://github.com/alibaba/fastjson2/wiki/Security-Advisory:-Remote-Code-Execution-in-fastjson-1.2.68%E2%80%931.2.83</a></td>
+</tr>
+<tr>
+<td>CVE-2026-16723（NVD）</td>
+<td><a target="_blank" rel="noopener" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16723">https://nvd.nist.gov/vuln/detail/CVE-2026-16723</a></td>
+</tr>
+<tr>
+<td>腾讯云早期通告</td>
+<td><a target="_blank" rel="noopener" href="https://cloud.tencent.com/announce/detail/2375">https://cloud.tencent.com/announce/detail/2375</a></td>
+</tr>
+<tr>
+<td>腾讯云 CVE-2026-16723 正式通告</td>
+<td><a target="_blank" rel="noopener" href="https://cloud.tencent.com/announce/detail/2381">https://cloud.tencent.com/announce/detail/2381</a></td>
+</tr>
+<tr>
+<td>奇安信 CERT 首次通告（QVD-2026-43021）</td>
+<td><a target="_blank" rel="noopener" href="https://www.secrss.com/articles/92316">https://www.secrss.com/articles/92316</a></td>
+</tr>
+<tr>
+<td>奇安信 CERT 复现更新（gm7.org 转载）</td>
+<td><a target="_blank" rel="noopener" href="https://www.gm7.org/archives/132224">https://www.gm7.org/archives/132224</a></td>
+</tr>
+<tr>
+<td>fastjson 1.2.83 Release 页</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson/releases">https://github.com/alibaba/fastjson/releases</a></td>
+</tr>
+<tr>
+<td>猎户攻防实验室预警</td>
+<td><a target="_blank" rel="noopener" href="https://www.gm7.org/archives/131981">https://www.gm7.org/archives/131981</a></td>
+</tr>
+<tr>
+<td>大连理工大学安全公告</td>
+<td><a target="_blank" rel="noopener" href="https://wlaq.dlut.edu.cn/info/1097/8405.htm">https://wlaq.dlut.edu.cn/info/1097/8405.htm</a></td>
+</tr>
+</tbody></table>
+<h3 id="5-3-技术分析"><a href="#5-3-技术分析" class="headerlink" title="5.3 技术分析"></a>5.3 技术分析</h3><table>
+<thead>
+<tr>
+<th>来源</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>9eek 源码级分析（技术栈 &#x2F; 博客园）</td>
+<td><a target="_blank" rel="noopener" href="https://jishuzhan.net/article/2079870411771879426">https://jishuzhan.net/article/2079870411771879426</a> ；<a target="_blank" rel="noopener" href="https://www.cnblogs.com/9eek/p/21793398">https://www.cnblogs.com/9eek/p/21793398</a></td>
+</tr>
+<tr>
+<td>LoRexxar 技术分析</td>
+<td><a target="_blank" rel="noopener" href="https://lorexxar.cn/2026/07/21/fs1-2-83rce/">https://lorexxar.cn/2026/07/21/fs1-2-83rce/</a></td>
+</tr>
+<tr>
+<td>GCSA &#x2F; Foresight 深度分析</td>
+<td><a target="_blank" rel="noopener" href="https://foresightnews.pro/article/detail/98990">https://foresightnews.pro/article/detail/98990</a></td>
+</tr>
+<tr>
+<td>Detect-DefenseLab 全版本通杀研究</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection">https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection</a></td>
+</tr>
+<tr>
+<td>FreeBuf 完整分析复现</td>
+<td><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/491546.html">https://www.freebuf.com/articles/web/491546.html</a></td>
+</tr>
+<tr>
+<td>Mrxn 默认配置 RCE 分析</td>
+<td><a target="_blank" rel="noopener" href="https://mrxn.net/jswz/fastjson-1-2-83-default-config-rce.html">https://mrxn.net/jswz/fastjson-1-2-83-default-config-rce.html</a></td>
+</tr>
+<tr>
+<td>CSDN PoC 综合分析</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/lingggggaaaa/article/details/163064101">https://blog.csdn.net/lingggggaaaa/article/details/163064101</a></td>
+</tr>
+<tr>
+<td>CSDN 实战复现与企业排查</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42376192/article/details/163121562">https://blog.csdn.net/weixin_42376192/article/details/163121562</a></td>
+</tr>
+</tbody></table>
+<h3 id="5-4-PoC-仓库"><a href="#5-4-PoC-仓库" class="headerlink" title="5.4 PoC 仓库"></a>5.4 PoC 仓库</h3><table>
+<thead>
+<tr>
+<th>仓库</th>
+<th>URL</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>wouijvziqy&#x2F;Fastjson-JsonType-RCE-PoC</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/wouijvziqy/Fastjson-JsonType-RCE-PoC">https://github.com/wouijvziqy/Fastjson-JsonType-RCE-PoC</a></td>
+<td>最早公开，已删除</td>
+</tr>
+<tr>
+<td>ThanatosXingYu&#x2F;2026FastjsonPoC</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/ThanatosXingYu/2026FastjsonPoC">https://github.com/ThanatosXingYu/2026FastjsonPoC</a></td>
+<td>完整构建脚本与复现步骤</td>
+</tr>
+<tr>
+<td>seklure&#x2F;fastjson-jsontype-rce-poc</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/seklure/fastjson-jsontype-rce-poc">https://github.com/seklure/fastjson-jsontype-rce-poc</a></td>
+<td>轻量 PoC</td>
+</tr>
+<tr>
+<td>dinosn&#x2F;fastjson-jsontype-rce-lab</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/dinosn/fastjson-jsontype-rce-lab">https://github.com/dinosn/fastjson-jsontype-rce-lab</a></td>
+<td>Docker 靶场</td>
+</tr>
+<tr>
+<td>fzypl&#x2F;Fastjson-JsonType-RCE-Demo</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/fzypl/Fastjson-JsonType-RCE-Demo">https://github.com/fzypl/Fastjson-JsonType-RCE-Demo</a></td>
+<td>演示 Demo</td>
+</tr>
+<tr>
+<td>zg-sec&#x2F;fastjson-json-type-rce</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/zg-sec/fastjson-json-type-rce">https://github.com/zg-sec/fastjson-json-type-rce</a></td>
+<td>诸葛安全版</td>
+</tr>
+<tr>
+<td>YoungBear&#x2F;FastjsonPoc</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/YoungBear/FastjsonPoc">https://github.com/YoungBear/FastjsonPoc</a></td>
+<td>通用 PoC</td>
+</tr>
+<tr>
+<td>Detect-DefenseLab&#x2F;fastjson-1.2.83-rce-detection</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection">https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection</a></td>
+<td>全版本通杀 + 三层防御</td>
+</tr>
+</tbody></table>
+<h3 id="5-5-工具与文档"><a href="#5-5-工具与文档" class="headerlink" title="5.5 工具与文档"></a>5.5 工具与文档</h3><ul>
+<li>ASM 官网与文档：<a target="_blank" rel="noopener" href="https://asm.ow2.io/%EF%BC%88%E6%A0%87%E6%9C%AC">https://asm.ow2.io/（标本</a> 5 的字节码生成工具）</li>
+<li>fastjson safeMode 文档：<a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson/wiki/enable_autotype">https://github.com/alibaba/fastjson/wiki/enable_autotype</a></li>
+<li>fastjson 1.x → 2.x 升级指南：<a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson2/wiki/fastjson_1_upgrade_cn">https://github.com/alibaba/fastjson2/wiki/fastjson_1_upgrade_cn</a></li>
+</ul>
+
+    </div>
+
+    
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          
+            <a class="related-posts__item" href="/2026/07/26/fastjson-1.2.83-rce-part1/">
+              <strong>Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析</strong>
+              <span>2026-07-26</span>
+            </a>
+          
+        </div>
+      </section>
+    
+
+    <nav class="post-nav" aria-label="相邻文章">
+      
+        <span></span>
+      
+      
+        <a href="/2026/07/26/fastjson-1.2.83-rce-part1/">
+          <span>下一篇</span>
+          <strong>Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析</strong>
+        </a>
+      
+    </nav>
+  </div>
+</article>
+
+    </main>
+    <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <span>© 2026 Lyle</span>
+    <div>
+      <a href="https://github.com/LyleMi" target="_blank" rel="me noopener">GitHub</a>
+      <a href="https://twitter.com/LyleCrash" target="_blank" rel="me noopener">Twitter</a>
+    </div>
+  </div>
+</footer>
+
+    
+<dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title">
+  <div class="search-dialog__header">
+    <h2 id="search-title">搜索文章</h2>
+    <button type="button" data-search-close aria-label="关闭搜索">关闭</button>
+  </div>
+  <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
+  <p id="search-status">输入关键词开始搜索。</p>
+  <ol id="search-results"></ol>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick","url":"/2026/07/26/fastjson-1.2.83-rce-part2/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","安全方法论","Security"]},{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["Coding Agent","AgentMeter","LLM","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+</dialog>
+
+    <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
+<div class="trailblazer-cat-cake" id="trailblazer-cat-cake">
+  <div class="trailblazer-cat-cake__bubble" id="trailblazer-cat-cake-bubble" role="status" aria-live="polite"></div>
+  <button class="trailblazer-cat-cake__btn" type="button" aria-label="猫猫糕：阮·梅造物，开拓者款" aria-controls="trailblazer-cat-cake-bubble">
+    <img class="trailblazer-cat-cake__img" src="/img/trailblazer-cat-cake.png" alt="" aria-hidden="true" draggable="false">
+  </button>
+</div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="返回顶部">↑</button>
+    <div class="img-lightbox" id="img-lightbox" aria-hidden="true">
+      <button type="button" class="img-lightbox__close">✕ 关闭</button>
+      <img alt="">
+    </div>
+    <script src="/js/trace.js" defer></script>
+  </body>
+</html>

